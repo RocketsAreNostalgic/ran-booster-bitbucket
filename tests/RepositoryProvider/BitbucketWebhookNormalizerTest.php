@@ -17,7 +17,7 @@ use RAN\Secrets\SecretsFile;
 
 final class BitbucketWebhookNormalizerTest extends TestCase {
 
-	private const GLOBAL_SECRET    = 'global-bitbucket-webhook-secret';
+	private const OWNER_SECRET    = 'owner-bitbucket-webhook-secret';
 	private const OTHER_SECRET     = 'other-bitbucket-webhook-secret';
 	private const BODY_CANARY      = 'body-canary-private-value';
 	private const REPOSITORY       = 'RocketsAreNostalgic/ran.booster';
@@ -92,7 +92,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		$body       = 'Hello World!';
 		$signature  = 'sha256=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9';
 		$normalizer = $this->normalizer(
-			array( $this->profile( $secret, 'global', '' ) )
+			array( $this->profile( $secret, 'owner', 'RocketsAreNostalgic' ) )
 		);
 		$request    = ( new WebhookRequest(
 			ProviderCode::parse( 'bb' ),
@@ -102,7 +102,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'X-Hub-Signature' => $signature,
 			),
 			self::RETAINED_HEADERS
-		) )->withVerification( $this->verification( 'global', '' ) );
+		) )->withVerification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 
 		self::assertTrue( $normalizer->normalizeWebhook( $request )->isIgnored() );
 	}
@@ -219,7 +219,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'X-Hub-Signature' => $this->signature( $body ),
 			),
 			self::RETAINED_HEADERS
-		) )->withVerification( $this->verification( 'global', '' ) );
+		) )->withVerification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 
 		self::assertTrue( $this->normalizer()->normalizeWebhook( $request )->isIgnored() );
 	}
@@ -294,7 +294,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'X-Hub-Signature' => $this->signature( $body ),
 			),
 			self::RETAINED_HEADERS
-		) )->withVerification( $this->verification( 'global', '' ) );
+		) )->withVerification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 
 		$normalized = $this->normalizer()->normalizeWebhook( $request )->getEvents()[0];
 
@@ -312,7 +312,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'X-Hub-Signature' => $this->signature( $body ),
 			),
 			self::RETAINED_HEADERS
-		) )->withVerification( $this->verification( 'global', '' ) );
+		) )->withVerification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 
 		self::assertTrue( $this->normalizer()->normalizeWebhook( $request )->isIgnored() );
 	}
@@ -524,7 +524,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	#[DataProvider( 'authorizedScopeProvider' )]
 	public function testMatchedProfilesAuthorizeOnlyTheirConfiguredScope( string $scope, string $target ): void {
 		$body       = $this->encode( $this->validPushPayload() );
-		$normalizer = $this->normalizer( array( $this->profile( self::GLOBAL_SECRET, $scope, $target ) ) );
+		$normalizer = $this->normalizer( array( $this->profile( self::OWNER_SECRET, $scope, $target ) ) );
 
 		self::assertTrue( $normalizer->normalizeWebhook( $this->verifiedRequest( $body, $scope, $target ) )->hasEvents() );
 	}
@@ -533,15 +533,15 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	 * @return iterable<string, array{string, string}>
 	 */
 	public static function authorizedScopeProvider(): iterable {
-		yield 'global' => array( 'global', '' );
-		yield 'workspace case insensitive' => array( 'workspace', 'rocketsarenostalgic' );
+		yield 'owner' => array( 'owner', 'RocketsAreNostalgic' );
+		yield 'workspace case insensitive' => array( 'owner', 'rocketsarenostalgic' );
 		yield 'repository case insensitive' => array( 'repository', 'rocketsarenostalgic/RAN.BOOSTER' );
 	}
 
 	#[DataProvider( 'unauthorizedScopeProvider' )]
 	public function testMatchedSecretOutsideItsConfiguredScopeIsRejected( string $scope, string $target ): void {
 		$body       = $this->encode( $this->validPushPayload() );
-		$normalizer = $this->normalizer( array( $this->profile( self::GLOBAL_SECRET, $scope, $target ) ) );
+		$normalizer = $this->normalizer( array( $this->profile( self::OWNER_SECRET, $scope, $target ) ) );
 
 		$this->assertRejected(
 			401,
@@ -553,15 +553,15 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	 * @return iterable<string, array{string, string}>
 	 */
 	public static function unauthorizedScopeProvider(): iterable {
-		yield 'different workspace' => array( 'workspace', 'ProtestsAndSuffragettes' );
+		yield 'different workspace' => array( 'owner', 'ProtestsAndSuffragettes' );
 		yield 'different repository' => array( 'repository', 'RocketsAreNostalgic/other-plugin' );
 		yield 'unknown scope' => array( 'project', 'RocketsAreNostalgic' );
 	}
 
 	public function testASecondRequestCannotReuseTheFirstRequestsMatchedProfile(): void {
 		$profiles   = array(
-			$this->profile( self::GLOBAL_SECRET, 'workspace', 'RocketsAreNostalgic' ),
-			$this->profile( self::OTHER_SECRET, 'workspace', 'ProtestsAndSuffragettes' ),
+			$this->profile( self::OWNER_SECRET, 'owner', 'RocketsAreNostalgic' ),
+			$this->profile( self::OTHER_SECRET, 'owner', 'ProtestsAndSuffragettes' ),
 		);
 		$normalizer = $this->normalizer( $profiles );
 		$body       = $this->encode( $this->validPushPayload() );
@@ -571,7 +571,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		$this->assertRejected(
 			401,
 			fn (): WebhookEnvelope => $normalizer->normalizeWebhook(
-				$this->verifiedRequest( $body, 'workspace', 'ProtestsAndSuffergettes', self::OTHER_SECRET )
+				$this->verifiedRequest( $body, 'owner', 'ProtestsAndSuffergettes', self::OTHER_SECRET )
 			)
 		);
 	}
@@ -589,7 +589,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 
 		self::assertSame( ProviderDiagnosticResult::WARNING, $result->status );
 		self::assertSame( 'bb.webhook.delivery_unverified', $result->code );
-		self::assertStringNotContainsString( self::GLOBAL_SECRET, $output );
+		self::assertStringNotContainsString( self::OWNER_SECRET, $output );
 		self::assertStringNotContainsString( self::OTHER_SECRET, $output );
 	}
 
@@ -615,7 +615,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	 * @param list<array<string, mixed>>|null $profiles Secret profiles.
 	 */
 	private function normalizer( ?array $profiles = null ): BitbucketWebhookNormalizer {
-		$profiles ??= array( $this->profile( self::GLOBAL_SECRET, 'global', '' ) );
+		$profiles ??= array( $this->profile( self::OWNER_SECRET, 'owner', 'RocketsAreNostalgic' ) );
 
 		$secrets = new class( $profiles ) extends SecretsFile {
 
@@ -647,7 +647,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		string $body,
 		string $event = 'repo:push',
 		string $deliveryId = self::DELIVERY_ID,
-		string $secret = self::GLOBAL_SECRET
+		string $secret = self::OWNER_SECRET
 	): WebhookRequest {
 		return $this->requestWithSignature( $body, $this->signature( $body, $secret ), $event, $deliveryId );
 	}
@@ -667,10 +667,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'X-Hub-Signature' => $signature,
 			),
 			self::RETAINED_HEADERS
-		) )->withVerification( $this->verification( 'global', '' ) );
+		) )->withVerification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 	}
 
-	private function verifiedRequest( string $body, string $scope, string $target, string $secret = self::GLOBAL_SECRET ): WebhookRequest {
+	private function verifiedRequest( string $body, string $scope, string $target, string $secret = self::OWNER_SECRET ): WebhookRequest {
 		return $this->request( $body, 'repo:push', self::DELIVERY_ID, $secret )
 			->withVerification( $this->verification( $scope, $target ) );
 	}
@@ -764,7 +764,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
-	private function signature( string $body, string $secret = self::GLOBAL_SECRET ): string {
+	private function signature( string $body, string $secret = self::OWNER_SECRET ): string {
 		return 'sha256=' . hash_hmac( 'sha256', $body, $secret );
 	}
 
@@ -790,7 +790,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		} catch ( WebhookRejected $exception ) {
 			self::assertSame( $statusCode, $exception->getStatusCode() );
 			self::assertNotSame( '', $exception->getMessage() );
-			self::assertStringNotContainsString( self::GLOBAL_SECRET, $exception->getMessage() );
+			self::assertStringNotContainsString( self::OWNER_SECRET, $exception->getMessage() );
 			self::assertStringNotContainsString( self::OTHER_SECRET, $exception->getMessage() );
 			self::assertStringNotContainsString( self::BODY_CANARY, $exception->getMessage() );
 		}

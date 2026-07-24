@@ -11,8 +11,6 @@ use RuntimeException;
 
 final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 
-	private const SECRET_CONSTANT = 'RAN_BOOSTER_BITBUCKET_WEBHOOK_SECRET';
-
 	public function getProvider(): ProviderCode {
 		return ProviderCode::parse( 'bb' );
 	}
@@ -36,16 +34,19 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 			? trim( $metadata['authority_id'] )
 			: '';
 
-		if ( ! in_array( $scope, array( 'global', 'workspace', 'repository' ), true ) ) {
+		if ( ! in_array( $scope, array( 'owner', 'repository' ), true ) ) {
 			throw new RuntimeException( 'Webhook secret scope is not supported by this provider.' );
 		}
 
-		if ( 'global' === $scope ) {
-			$target = '';
-		} elseif ( 'workspace' === $scope && ! $this->isWorkspace( $target ) ) {
+		if ( 'owner' === $scope && ! $this->isWorkspace( $target ) ) {
 			throw new RuntimeException( 'Workspace-scoped webhook secrets require a valid provider workspace.' );
 		} elseif ( 'repository' === $scope && ! $this->isRepository( $target ) ) {
 			throw new RuntimeException( 'Repository-scoped webhook secrets require a workspace/repository target.' );
+		}
+		if ( 'owner' === $scope ) {
+			$authorityId = '';
+		} elseif ( '' === $authorityId || strlen( $authorityId ) > 191 || 1 === preg_match( '/[\x00-\x1F\x7F]/', $authorityId ) ) {
+			throw new RuntimeException( 'Repository-scoped webhook secrets require a stable repository identity.' );
 		}
 
 		return array(
@@ -58,24 +59,11 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 	}
 
 	public function getConstantNames(): array {
-		return array( self::SECRET_CONSTANT );
+		return array();
 	}
 
 	public function webhookFromConstants( array $constants ): ?array {
-		$secret = $constants[ self::SECRET_CONSTANT ] ?? '';
-		if ( ! is_string( $secret ) || '' === trim( $secret ) ) {
-			return null;
-		}
-
-		return $this->normalizeWebhook(
-			array(
-				'label'        => 'Deployment configuration',
-				'scope'        => 'global',
-				'target'       => '',
-				'authority_id' => '',
-			),
-			$secret
-		);
+		return null;
 	}
 
 	public function authorizeWebhook(
@@ -92,8 +80,7 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		foreach ( $verification->getProfiles() as $profile ) {
 			$scope  = strtolower( trim( $profile['scope'] ) );
 			$target = strtolower( trim( $profile['target'], " \t\n\r\0\x0B/" ) );
-			if ( 'global' === $scope
-				|| ( 'workspace' === $scope && '' !== $target && $target === $workspace )
+			if ( ( 'owner' === $scope && '' !== $target && $target === $workspace )
 				|| ( 'repository' === $scope
 					&& '' !== $profile['authority_id']
 					&& hash_equals( $profile['authority_id'], $repositoryAuthorityId ) )

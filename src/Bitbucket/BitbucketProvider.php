@@ -82,15 +82,7 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 				),
 				array(
 					new WebhookScopeMetadata(
-						'global',
-						'All Bitbucket repositories',
-						false,
-						'',
-						'',
-						'Use one secret for Bitbucket repositories without a more specific match.'
-					),
-					new WebhookScopeMetadata(
-						'workspace',
+						'owner',
 						'Bitbucket workspace',
 						true,
 						'Workspace',
