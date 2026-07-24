@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.0/phpunit.xsd"
+	bootstrap="tests/bootstrap.php"
+	cacheDirectory=".phpunit.cache"
+	colors="true"
+	backupGlobals="false">
+	<testsuites>
+		<testsuite name="Unit Tests">
+			<file>tests/RepositoryProvider/BitbucketApiClientTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketArchivePreparerTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketCredentialValidatorTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketRepositoryBrowserTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketRepositoryCoordinatesTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketWebhookNormalizerTest.php</file>
+			<file>tests/RepositoryProvider/BitbucketWebhookPolicyTest.php</file>
+		</testsuite>
+	</testsuites>
+</phpunit>
