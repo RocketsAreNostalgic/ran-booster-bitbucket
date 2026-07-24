@@ -23,6 +23,8 @@
 	"scripts": {
 		"test:unit": "../ran-booster/vendor/bin/phpunit --configuration phpunit.xml",
 		"lint:php": "../ran-booster/vendor/bin/phpcs --standard=../ran-booster/.phpcs.xml --exclude=WordPress.WP.I18n --report=summary ran-booster-bitbucket.php autoload.php src",
+		"build:release": "bash scripts/build-release.sh",
+		"verify:release": "bash scripts/verify-release.sh",
 		"check": [
 			"@test:unit",
 			"@lint:php"
