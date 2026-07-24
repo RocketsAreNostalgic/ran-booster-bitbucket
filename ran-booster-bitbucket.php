@@ -7,6 +7,7 @@
  * Version: 0.1.0-alpha.1
  * Requires at least: 7.0
  * Requires PHP: 8.3
+ * Requires Plugins: ran-booster
  * Author: Rockets Are Nostalgic
  * Author URI: https://github.com/RocketsAreNostalgic
  * License: GPL-2.0-or-later

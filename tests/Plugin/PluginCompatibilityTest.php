@@ -8,6 +8,13 @@ use PHPUnit\Framework\TestCase;
 
 final class PluginCompatibilityTest extends TestCase {
 
+	public function testPluginHeaderDeclaresBoosterAsItsNativeDependency(): void {
+		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
+
+		self::assertIsString( $plugin );
+		self::assertStringContainsString( 'Requires Plugins: ran-booster', $plugin );
+	}
+
 	public function testItFailsClosedWithoutBooster(): void {
 		$result = $this->runFixture( 'absent' );
 
