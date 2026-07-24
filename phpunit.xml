@@ -7,13 +7,8 @@
 	backupGlobals="false">
 	<testsuites>
 		<testsuite name="Unit Tests">
-			<file>tests/RepositoryProvider/BitbucketApiClientTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketArchivePreparerTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketCredentialValidatorTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketRepositoryBrowserTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketRepositoryCoordinatesTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketWebhookNormalizerTest.php</file>
-			<file>tests/RepositoryProvider/BitbucketWebhookPolicyTest.php</file>
+			<directory suffix="Test.php">tests/RepositoryProvider</directory>
+			<directory suffix="Test.php">tests/Plugin</directory>
 		</testsuite>
 	</testsuites>
 </phpunit>

@@ -1,6 +1,7 @@
 {
     "name": "ran/booster-bitbucket",
     "description": "Bitbucket Cloud provider for RAN Booster.",
+    "version": "0.1.0-alpha.1",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "support": {
@@ -21,13 +22,16 @@
         "phpcompatibility/phpcompatibility-paragonie": "^2.0@dev"
     },
 	"scripts": {
-		"test:unit": "../ran-booster/vendor/bin/phpunit --configuration phpunit.xml",
-		"lint:php": "../ran-booster/vendor/bin/phpcs --standard=../ran-booster/.phpcs.xml --exclude=WordPress.WP.I18n --report=summary ran-booster-bitbucket.php autoload.php src",
+		"test:unit": "vendor/bin/phpunit --configuration phpunit.xml",
+		"lint:php": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
+		"lint:php:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
+		"lint:syntax": "find . -path ./vendor -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
 		"build:release": "bash scripts/build-release.sh",
 		"verify:release": "bash scripts/verify-release.sh",
 		"check": [
 			"@test:unit",
-			"@lint:php"
+			"@lint:php",
+			"@lint:syntax"
 		]
 	},
     "config": {

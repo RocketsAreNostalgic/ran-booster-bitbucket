@@ -1,0 +1,34 @@
+name: Quality
+
+on:
+    pull_request:
+    push:
+        branches:
+            - main
+
+jobs:
+    quality:
+        runs-on: ubuntu-latest
+        env:
+            RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: ran-booster-bitbucket
+            - uses: actions/checkout@v4
+              with:
+                  repository: RocketsAreNostalgic/ran-booster
+                  path: ran-booster
+                  token: ${{ secrets.RAN_BOOSTER_CORE_READ_TOKEN || github.token }}
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  tools: composer:v2
+            - run: composer install --no-interaction --prefer-dist
+              working-directory: ran-booster
+            - run: composer install --no-interaction --prefer-dist
+              working-directory: ran-booster-bitbucket
+            - run: composer check
+              working-directory: ran-booster-bitbucket
+            - run: composer build:release
+              working-directory: ran-booster-bitbucket

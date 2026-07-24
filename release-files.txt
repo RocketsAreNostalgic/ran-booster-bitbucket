@@ -1,4 +1,5 @@
 NOTICE.md
+README.md
 autoload.php
 index.php
 license.txt

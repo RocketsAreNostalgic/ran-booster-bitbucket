@@ -8,14 +8,18 @@ Stable tag: 0.1.0-alpha.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Bitbucket Cloud repository provider for RAN Booster.
+Bitbucket Cloud repository provider for compatible RAN Booster Provider API 5.
 
 == Description ==
 
-This add-on restores the familiar Bitbucket Cloud tab and documentation in a
-compatible RAN Booster installation. It supports the same public and private
+This add-on restores the familiar Bitbucket Cloud tab and provider documentation
+in a compatible RAN Booster installation. It supports public and private
 repository discovery, API-token credential validation, archive preparation,
-webhook handling and diagnostics as the bundled provider it replaces.
+webhook handling and diagnostics.
+
+This is a dependent, private GitHub release artifact, not a WordPress.org
+distribution. It performs no provider registration or remote calls when RAN
+Booster Provider API 5 is absent or incompatible.
 
 == Installation ==
 

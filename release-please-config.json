@@ -1,0 +1,28 @@
+{
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+	"bootstrap-sha": "afb08bd",
+	"packages": {
+		".": {
+			"release-type": "php",
+			"package-name": "ran-booster-bitbucket",
+			"changelog-path": "CHANGELOG.md",
+			"include-component-in-tag": false,
+			"include-v-in-tag": true,
+			"extra-files": [
+				{
+					"type": "generic",
+					"path": "ran-booster-bitbucket.php"
+				},
+				{
+					"type": "generic",
+					"path": "readme.txt"
+				},
+				{
+					"type": "json",
+					"path": "composer.json",
+					"jsonpath": "$.version"
+				}
+			]
+		}
+	}
+}
