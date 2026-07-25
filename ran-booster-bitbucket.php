@@ -28,13 +28,17 @@ add_action(
 	static function ( object $registry ): void {
 		if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 			|| 5 !== RAN_BOOSTER_PROVIDER_API_VERSION
+			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
+			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
 			|| ! $registry instanceof \RAN\RepositoryProvider\ProviderRegistry ) {
 			return;
 		}
 
+		$logging = $registry->logging();
+
 		$registry->registerWithCredentialStore(
 			'bb',
-			static function ( \RAN\RepositoryProvider\ProviderCredentialStore $credentials ): \RAN\RepositoryProvider\RepositoryProvider {
+			static function ( \RAN\RepositoryProvider\ProviderCredentialStore $credentials ) use ( $logging ): \RAN\RepositoryProvider\RepositoryProvider {
 				$api      = new \RAN\Booster\Bitbucket\BitbucketApiClient();
 				$loader   = new \RAN\Booster\Bitbucket\BitbucketCredentialLoader( $credentials );
 				$browser  = new \RAN\Booster\Bitbucket\BitbucketRepositoryBrowser( $loader, $api );
@@ -45,7 +49,8 @@ add_action(
 					new \RAN\Booster\Bitbucket\BitbucketCredentialValidator( $loader, $api ),
 					$browser,
 					$archives,
-					$webhooks
+					$webhooks,
+					$logging
 				);
 			}
 		);
@@ -55,7 +60,8 @@ add_action(
 add_action(
 	'admin_notices',
 	static function (): void {
-		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 5 === RAN_BOOSTER_PROVIDER_API_VERSION ) {
+		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 5 === RAN_BOOSTER_PROVIDER_API_VERSION
+			&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' ) && 1 === RAN_BOOSTER_LOGGING_API_VERSION ) {
 			return;
 		}
 

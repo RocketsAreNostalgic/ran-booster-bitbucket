@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RAN\Booster\Bitbucket;
 
+use RAN\AddOn\Logging\LoggingFacade;
 use RAN\RepositoryProvider\Admin\CredentialFieldMetadata;
 use RAN\RepositoryProvider\Admin\CredentialKindMetadata;
 use RAN\RepositoryProvider\Admin\ProviderAdminMetadata;
@@ -44,9 +45,10 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 		private BitbucketCredentialValidator $credentialValidator,
 		private BitbucketRepositoryBrowser $browser,
 		private BitbucketArchivePreparer $archives,
-		private BitbucketWebhookNormalizer $webhooks
+		private BitbucketWebhookNormalizer $webhooks,
+		?LoggingFacade $logging = null
 	) {
-		$this->diagnostics      = new BitbucketDiagnostics( $credentialValidator, $browser );
+		$this->diagnostics      = new BitbucketDiagnostics( $credentialValidator, $browser, $logging );
 		$this->credentialPolicy = new BitbucketCredentialPolicy();
 		$this->metadata         = new ProviderMetadata(
 			ProviderCode::parse( 'bb' ),

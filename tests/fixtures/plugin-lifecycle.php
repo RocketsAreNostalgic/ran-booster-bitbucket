@@ -39,6 +39,7 @@ if ( 'compatible' === $mode ) {
 
 	require $coreAutoload;
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
+	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
 }
 
 if ( 'inactive' !== $mode ) {
