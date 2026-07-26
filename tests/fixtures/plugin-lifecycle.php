@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'compatible', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'compatible', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -13,7 +13,8 @@ define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 
 /** @param callable $callback */
-function add_action( string $hook, callable $callback ): void {
+function add_action( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
+	unset( $priority, $acceptedArgs );
 	$GLOBALS['ran_booster_bitbucket_fixture_actions'][ $hook ][] = $callback;
 }
 
@@ -21,8 +22,26 @@ function esc_html__( string $text ): string {
 	return $text;
 }
 
+function esc_html_e( string $text ): void {
+	echo $text;
+}
+
+function esc_url( string $url ): string {
+	return $url;
+}
+
+function admin_url( string $path ): string {
+	return 'https://example.test/wp-admin/' . ltrim( $path, '/' );
+}
+
 if ( 'incompatible' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 4 );
+}
+
+if ( 'incompatible-addon' === $mode ) {
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
+	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 6 );
 }
 
 if ( 'compatible' === $mode ) {
@@ -40,6 +59,7 @@ if ( 'compatible' === $mode ) {
 	require $coreAutoload;
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
 }
 
 if ( 'inactive' !== $mode ) {
@@ -47,8 +67,17 @@ if ( 'inactive' !== $mode ) {
 }
 
 $callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
+$documentationCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_documentation_after_provider_bb'] ?? array();
+$documentation = '';
+if ( array() !== $documentationCallbacks ) {
+	ob_start();
+	$documentationCallbacks[0]( 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
+	$documentation = (string) ob_get_clean();
+}
 $result    = array(
 	'provider_callbacks'           => count( $callbacks ),
+	'documentation_callbacks'      => count( $documentationCallbacks ),
+	'documentation'                => $documentation,
 	'provider_loaded'              => class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ),
 	'registered'                   => false,
 	'provider_code'                => '',

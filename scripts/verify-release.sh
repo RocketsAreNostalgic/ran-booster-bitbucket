@@ -47,6 +47,34 @@ if unzip -Z1 "$archive" | grep -Eq '(^|/)(tests|vendor|build|scripts|\.github|\.
 	exit 1
 fi
 
+plugin=$(unzip -p "$archive" ran-booster-bitbucket/ran-booster-bitbucket.php)
+guide=$(unzip -p "$archive" ran-booster-bitbucket/views/documentation.php)
+
+if ! grep -Fq "RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "7 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "ran_booster_documentation_after_provider_bb" <<< "$plugin"; then
+	echo "Archive must require Add-on API 7 and register the native Bitbucket documentation action." >&2
+	exit 1
+fi
+
+for required_guide_text in \
+	"ran-booster-documentation-bitbucket-cloud" \
+	"Repositories: Read (read:repository:bitbucket)" \
+	"Set up Push-to-Deploy manually" \
+	"Move or recover a package with Transporter" \
+	"Deactivation, deletion and provider cleanup" \
+	"Private releases and support"; do
+	if ! grep -Fq "$required_guide_text" <<< "$guide"; then
+		echo "Archive Bitbucket guide is incomplete: missing $required_guide_text." >&2
+		exit 1
+	fi
+done
+
+if grep -Eq '<(form|input|button)([[:space:]>])|wp_nonce|admin_post_' <<< "$guide"; then
+	echo "Archive Bitbucket guide must remain non-interactive." >&2
+	exit 1
+fi
+
 temporary=$(mktemp -d)
 unzip -q "$archive" -d "$temporary"
 while IFS= read -r file; do

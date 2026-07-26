@@ -8,6 +8,7 @@
 	<file>ran-booster-bitbucket.php</file>
 	<file>autoload.php</file>
 	<file>src</file>
+	<file>views</file>
 
 	<arg name="basepath" value="."/>
 	<arg name="colors"/>

@@ -19,6 +19,8 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'absent' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
 	}
@@ -27,6 +29,18 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'incompatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
+		self::assertFalse( $result['provider_loaded'] );
+		self::assertFalse( $result['registered'] );
+	}
+
+	public function testItFailsClosedWithAddOnApiSix(): void {
+		$result = $this->runFixture( 'incompatible-addon' );
+
+		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
 	}
@@ -35,6 +49,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'compatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
@@ -42,10 +57,30 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
+	public function testCompatibleGenerationRendersOneCompleteNonInteractiveGuide(): void {
+		$result = $this->runFixture( 'compatible' );
+		$guide  = $result['documentation'];
+
+		self::assertIsString( $guide );
+		self::assertSame( 1, substr_count( $guide, 'id="ran-booster-documentation-bitbucket-cloud"' ) );
+		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
+		self::assertStringContainsString( 'Connect a package', $guide );
+		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
+		self::assertStringContainsString( 'Move or recover a package with Transporter', $guide );
+		self::assertStringContainsString( 'Deactivation, deletion and provider cleanup', $guide );
+		self::assertStringContainsString( 'Private releases and support', $guide );
+		self::assertStringNotContainsString( '<form', $guide );
+		self::assertStringNotContainsString( '<input', $guide );
+		self::assertStringNotContainsString( 'wp_nonce', $guide );
+		self::assertStringNotContainsString( 'admin_post_', $guide );
+	}
+
 	public function testDeactivatedAddOnDoesNotContributeAProviderHook(): void {
 		$result = $this->runFixture( 'inactive' );
 
 		self::assertSame( 0, $result['provider_callbacks'] );
+		self::assertSame( 0, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['registered'] );
 	}
 
