@@ -12,6 +12,9 @@ on:
                 required: true
                 type: string
 
+permissions:
+    contents: read
+
 jobs:
     quality:
         runs-on: ubuntu-latest
@@ -19,15 +22,25 @@ jobs:
             RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
             RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'main' }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6.0.2
               with:
                   path: ran-booster-bitbucket
-            - uses: actions/checkout@v4
+                  persist-credentials: false
+            - name: Require private Core read deploy key
+              env:
+                  CORE_READ_SSH_KEY: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
+              run: |
+                  if [ -z "$CORE_READ_SSH_KEY" ]; then
+                      echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
+                      exit 1
+                  fi
+            - uses: actions/checkout@v6.0.2
               with:
                   repository: RocketsAreNostalgic/ran-booster
                   path: ran-booster
                   ref: ${{ env.RAN_BOOSTER_CORE_REF }}
-                  token: ${{ secrets.RAN_BOOSTER_CORE_READ_TOKEN || github.token }}
+                  ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
+                  persist-credentials: false
             - name: Confirm exact Core release tag
               if: ${{ github.event_name == 'workflow_dispatch' }}
               run: test "$(git describe --tags --exact-match HEAD)" = "$RAN_BOOSTER_CORE_REF"
