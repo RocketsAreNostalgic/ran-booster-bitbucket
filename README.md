@@ -1,8 +1,9 @@
 # RAN Booster Bitbucket Cloud
 
 RAN Booster Bitbucket Cloud is a premium add-on for RAN Booster. It restores
-the Bitbucket Cloud provider, its settings tab, and provider documentation
-through the exact RAN Booster Provider API 5 and Logging API 1 contracts.
+the Bitbucket Cloud provider and its settings tab through the exact RAN Booster
+Provider API 5 and Logging API 1 contracts. Its full add-on-owned Documentation
+guide is a known pre-release gap.
 
 ## Compatibility and safety
 
@@ -15,7 +16,9 @@ through the exact RAN Booster Provider API 5 and Logging API 1 contracts.
 
 1. Install and activate compatible RAN Booster.
 2. Install and activate the private Bitbucket release ZIP.
-3. Open RAN Booster; the Bitbucket tab follows GitHub and contributes its provider documentation.
+3. Open RAN Booster; the Bitbucket tab follows GitHub. Until the pre-release
+   documentation work lands, use the concise setup guidance on that provider
+   surface.
 
 Deactivating the add-on stops it from registering the `bb` provider. It owns no
 installation records or credential storage to remove.

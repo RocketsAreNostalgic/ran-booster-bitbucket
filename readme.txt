@@ -12,10 +12,11 @@ Bitbucket Cloud repository provider for compatible RAN Booster Provider API 5.
 
 == Description ==
 
-This add-on restores the familiar Bitbucket Cloud tab and provider documentation
-in a compatible RAN Booster installation. It supports public and private
-repository discovery, API-token credential validation, archive preparation,
-webhook handling and diagnostics.
+This add-on restores the familiar Bitbucket Cloud tab in a compatible RAN
+Booster installation. It supports public and private repository discovery,
+API-token credential validation, archive preparation, webhook handling and
+diagnostics. Its full add-on-owned Documentation guide remains a pre-release
+requirement.
 
 This is a dependent, private GitHub release artifact, not a WordPress.org
 distribution. It performs no provider registration or remote calls when RAN
