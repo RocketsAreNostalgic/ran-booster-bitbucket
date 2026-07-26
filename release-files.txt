@@ -6,3 +6,4 @@ license.txt
 ran-booster-bitbucket.php
 readme.txt
 src
+views

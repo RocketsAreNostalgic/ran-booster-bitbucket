@@ -16,7 +16,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	public function __construct(
 		private BitbucketCredentialValidator $credentials,
 		private BitbucketRepositoryBrowser $browser,
-		private ?LoggingFacade $logging = null
+		private LoggingFacade $logging
 	) {
 	}
 
@@ -169,8 +169,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	}
 
 	private function loggedResult( string $step, ProviderDiagnosticResult $result ): ProviderDiagnosticResult {
-		if ( ProviderDiagnosticResult::PASSED !== $result->status
-			&& null !== $this->logging ) {
+		if ( ProviderDiagnosticResult::PASSED !== $result->status ) {
 			$this->logging->log(
 				'Bitbucket diagnostics returned a non-success outcome',
 				array(
@@ -186,10 +185,6 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	}
 
 	private function logException( string $message, \Throwable $exception, string $step ): void {
-		if ( null === $this->logging ) {
-			return;
-		}
-
 		$this->logging->logException(
 			$message,
 			$exception,

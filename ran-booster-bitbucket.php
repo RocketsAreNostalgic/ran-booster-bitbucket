@@ -4,7 +4,9 @@
  * Plugin Name: RAN Booster Bitbucket Cloud
  * Plugin URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket
  * Description: Bitbucket Cloud provider for RAN Booster.
+ * x-release-please-start-version
  * Version: 0.1.0-alpha.1
+ * x-release-please-end
  * Requires at least: 7.0
  * Requires PHP: 8.3
  * Requires Plugins: ran-booster
@@ -27,9 +29,11 @@ add_action(
 	'ran_booster_register_providers',
 	static function ( object $registry ): void {
 		if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-			|| 5 !== RAN_BOOSTER_PROVIDER_API_VERSION
+			|| 6 !== RAN_BOOSTER_PROVIDER_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
+			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
+			|| 7 !== RAN_BOOSTER_ADDON_API_VERSION
 			|| ! $registry instanceof \RAN\RepositoryProvider\ProviderRegistry ) {
 			return;
 		}
@@ -58,10 +62,31 @@ add_action(
 );
 
 add_action(
+	'ran_booster_documentation_after_provider_bb',
+	static function ( string $documentationUrl, string $scope ): void {
+		if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
+			|| 6 !== RAN_BOOSTER_PROVIDER_API_VERSION
+			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
+			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
+			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
+			|| 7 !== RAN_BOOSTER_ADDON_API_VERSION ) {
+			return;
+		}
+
+		unset( $documentationUrl, $scope );
+
+		require __DIR__ . '/views/documentation.php';
+	},
+	10,
+	2
+);
+
+add_action(
 	'admin_notices',
 	static function (): void {
-		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 5 === RAN_BOOSTER_PROVIDER_API_VERSION
-			&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' ) && 1 === RAN_BOOSTER_LOGGING_API_VERSION ) {
+		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 6 === RAN_BOOSTER_PROVIDER_API_VERSION
+			&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' ) && 1 === RAN_BOOSTER_LOGGING_API_VERSION
+			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) && 7 === RAN_BOOSTER_ADDON_API_VERSION ) {
 			return;
 		}
 

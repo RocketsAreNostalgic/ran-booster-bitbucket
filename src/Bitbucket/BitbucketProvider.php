@@ -46,7 +46,7 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 		private BitbucketRepositoryBrowser $browser,
 		private BitbucketArchivePreparer $archives,
 		private BitbucketWebhookNormalizer $webhooks,
-		?LoggingFacade $logging = null
+		LoggingFacade $logging
 	) {
 		$this->diagnostics      = new BitbucketDiagnostics( $credentialValidator, $browser, $logging );
 		$this->credentialPolicy = new BitbucketCredentialPolicy();

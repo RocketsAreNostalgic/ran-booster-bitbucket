@@ -10,12 +10,24 @@ use RAN\Booster\Bitbucket\BitbucketApiClient;
 use RAN\Booster\Bitbucket\BitbucketArchivePreparer;
 use RAN\Booster\Bitbucket\BitbucketCredentialLoader;
 use RAN\Booster\Bitbucket\BitbucketCredentialValidator;
+use RAN\Booster\Bitbucket\BitbucketDiagnostics;
 use RAN\Booster\Bitbucket\BitbucketProvider;
 use RAN\Booster\Bitbucket\BitbucketRepositoryBrowser;
 use RAN\Booster\Bitbucket\BitbucketWebhookNormalizer;
 use RAN\RepositoryProvider\ProviderDiagnosticRequest;
 
 final class BitbucketDiagnosticsLoggingTest extends TestCase {
+
+	public function testProviderAndDiagnosticsRequireTheCoreLoggingFacade(): void {
+		$providerLogging    = ( new \ReflectionMethod( BitbucketProvider::class, '__construct' ) )->getParameters()[4];
+		$diagnosticsLogging = ( new \ReflectionMethod( BitbucketDiagnostics::class, '__construct' ) )->getParameters()[2];
+
+		foreach ( array( $providerLogging, $diagnosticsLogging ) as $parameter ) {
+			self::assertSame( LoggingFacade::class, (string) $parameter->getType() );
+			self::assertFalse( $parameter->allowsNull() );
+			self::assertFalse( $parameter->isOptional() );
+		}
+	}
 
 	public function testNonSuccessDiagnosticOutcomesUseTheInjectedCoreFacade(): void {
 		$logger = new class() implements LoggingFacade {

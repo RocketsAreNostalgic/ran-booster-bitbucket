@@ -42,7 +42,8 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			new BitbucketCredentialValidator( $loader, $api ),
 			new BitbucketRepositoryBrowser( $loader, $api ),
 			new BitbucketArchivePreparer( $loader, $api ),
-			new BitbucketWebhookNormalizer( $store )
+			new BitbucketWebhookNormalizer( $store ),
+			new BitbucketLoggingStub()
 		);
 		$result   = $provider->validateCredential( 'profile' );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();

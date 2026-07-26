@@ -5,12 +5,19 @@ on:
     push:
         branches:
             - main
+    workflow_dispatch:
+        inputs:
+            core-ref:
+                description: Exact RAN Booster tag to verify before release
+                required: true
+                type: string
 
 jobs:
     quality:
         runs-on: ubuntu-latest
         env:
             RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
+            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'main' }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -19,7 +26,12 @@ jobs:
               with:
                   repository: RocketsAreNostalgic/ran-booster
                   path: ran-booster
+                  ref: ${{ env.RAN_BOOSTER_CORE_REF }}
                   token: ${{ secrets.RAN_BOOSTER_CORE_READ_TOKEN || github.token }}
+            - name: Confirm exact Core release tag
+              if: ${{ github.event_name == 'workflow_dispatch' }}
+              run: test "$(git describe --tags --exact-match HEAD)" = "$RAN_BOOSTER_CORE_REF"
+              working-directory: ran-booster
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: '8.3'

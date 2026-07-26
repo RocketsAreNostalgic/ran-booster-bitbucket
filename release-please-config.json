@@ -8,6 +8,10 @@
 			"changelog-path": "CHANGELOG.md",
 			"include-component-in-tag": false,
 			"include-v-in-tag": true,
+			"versioning": "prerelease",
+			"prerelease": true,
+			"prerelease-type": "alpha",
+			"bump-minor-pre-major": true,
 			"extra-files": [
 				{
 					"type": "generic",

@@ -15,26 +15,89 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Requires Plugins: ran-booster', $plugin );
 	}
 
+	public function testReleasePleaseOwnsEveryPluginVersionSource(): void {
+		$root     = dirname( __DIR__, 2 );
+		$plugin   = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
+		$readme   = file_get_contents( $root . '/readme.txt' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
+		$composer = json_decode(
+			(string) file_get_contents( $root . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		$manifest = json_decode(
+			(string) file_get_contents( $root . '/.release-please-manifest.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+
+		self::assertIsString( $plugin );
+		self::assertIsString( $readme );
+		self::assertIsArray( $composer );
+		self::assertIsArray( $manifest );
+		self::assertMatchesRegularExpression(
+			'/x-release-please-start-version\\R \\* Version: ([^\\s]+)\\R \\* x-release-please-end/',
+			$plugin
+		);
+		self::assertMatchesRegularExpression(
+			'/<!-- x-release-please-start-version -->\\RStable tag: ([^\\s]+)\\R<!-- x-release-please-end -->/',
+			$readme
+		);
+
+		preg_match( '/\\* Version: ([^\\s]+)/', $plugin, $pluginVersion );
+		preg_match( '/Stable tag: ([^\\s]+)/', $readme, $readmeVersion );
+
+		self::assertSame( $manifest['.'], $pluginVersion[1] ?? null );
+		self::assertSame( $manifest['.'], $readmeVersion[1] ?? null );
+		self::assertSame( $manifest['.'], $composer['version'] ?? null );
+	}
+
 	public function testItFailsClosedWithoutBooster(): void {
 		$result = $this->runFixture( 'absent' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithAnIncompatibleProviderApi(): void {
+	public function testItFailsClosedWithProviderApiFive(): void {
 		$result = $this->runFixture( 'incompatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiFiveAndKeepsReleaseCatalogOptional(): void {
+	public function testItFailsClosedWithAddOnApiSix(): void {
+		$result = $this->runFixture( 'incompatible-addon' );
+
+		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
+		self::assertFalse( $result['provider_loaded'] );
+		self::assertFalse( $result['registered'] );
+	}
+
+	public function testItFailsClosedWithAnIncompatibleLoggingApi(): void {
+		$result = $this->runFixture( 'incompatible-logging' );
+
+		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
+		self::assertFalse( $result['provider_loaded'] );
+		self::assertFalse( $result['registered'] );
+	}
+
+	public function testItRegistersOnlyAgainstProviderApiSixAndKeepsReleaseCatalogOptional(): void {
 		$result = $this->runFixture( 'compatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
@@ -42,10 +105,30 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
+	public function testCompatibleGenerationRendersOneCompleteNonInteractiveGuide(): void {
+		$result = $this->runFixture( 'compatible' );
+		$guide  = $result['documentation'];
+
+		self::assertIsString( $guide );
+		self::assertSame( 1, substr_count( $guide, 'id="ran-booster-documentation-bitbucket-cloud"' ) );
+		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
+		self::assertStringContainsString( 'Connect a package', $guide );
+		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
+		self::assertStringContainsString( 'Move or recover a package with Transporter', $guide );
+		self::assertStringContainsString( 'Deactivation, deletion and provider cleanup', $guide );
+		self::assertStringContainsString( 'Private releases and support', $guide );
+		self::assertStringNotContainsString( '<form', $guide );
+		self::assertStringNotContainsString( '<input', $guide );
+		self::assertStringNotContainsString( 'wp_nonce', $guide );
+		self::assertStringNotContainsString( 'admin_post_', $guide );
+	}
+
 	public function testDeactivatedAddOnDoesNotContributeAProviderHook(): void {
 		$result = $this->runFixture( 'inactive' );
 
 		self::assertSame( 0, $result['provider_callbacks'] );
+		self::assertSame( 0, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['registered'] );
 	}
 

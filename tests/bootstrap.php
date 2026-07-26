@@ -36,5 +36,6 @@ if ( ! function_exists( 'esc_html__' ) ) {
 }
 require __DIR__ . '/RepositoryProvider/BitbucketCredentialValidationSecretsStub.php';
 require __DIR__ . '/RepositoryProvider/BitbucketCredentialValidationTransportError.php';
+require __DIR__ . '/RepositoryProvider/BitbucketLoggingStub.php';
 require __DIR__ . '/RepositoryProvider/BitbucketProviderCredentialStore.php';
 require __DIR__ . '/RepositoryProvider/BitbucketRepositoryBrowserSecretsStub.php';
