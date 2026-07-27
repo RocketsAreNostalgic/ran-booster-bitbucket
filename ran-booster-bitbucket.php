@@ -28,7 +28,9 @@ require __DIR__ . '/autoload.php';
 add_action(
 	'ran_booster_register_providers',
 	static function ( object $registry ): void {
-		if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
+		if ( ( defined( 'RAN_BOOSTER_RUNTIME_MODE' )
+				&& 'single_site_supported' !== RAN_BOOSTER_RUNTIME_MODE )
+			|| ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 			|| 6 !== RAN_BOOSTER_PROVIDER_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
@@ -64,7 +66,9 @@ add_action(
 add_action(
 	'ran_booster_documentation_after_provider_bb',
 	static function ( string $documentationUrl, string $scope ): void {
-		if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
+		if ( ( defined( 'RAN_BOOSTER_RUNTIME_MODE' )
+				&& 'single_site_supported' !== RAN_BOOSTER_RUNTIME_MODE )
+			|| ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 			|| 6 !== RAN_BOOSTER_PROVIDER_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION

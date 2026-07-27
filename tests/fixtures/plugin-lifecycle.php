@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'incompatible-logging', 'compatible', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'incompatible-logging', 'compatible', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -52,7 +52,7 @@ if ( 'incompatible-logging' === $mode ) {
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
 }
 
-if ( 'compatible' === $mode ) {
+if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
 	$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
 	$coreRoot = false === $coreRoot || '' === $coreRoot
 		? dirname( __DIR__, 3 ) . '/ran-booster'
@@ -68,6 +68,10 @@ if ( 'compatible' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
+}
+
+if ( 'unsupported-multisite' === $mode ) {
+	define( 'RAN_BOOSTER_RUNTIME_MODE', 'multisite_unsupported' );
 }
 
 if ( 'inactive' !== $mode ) {
@@ -94,7 +98,7 @@ $result    = array(
 	'remote_calls'                 => 0,
 );
 
-if ( 'compatible' === $mode ) {
+if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public function credentialProfiles(): array {
 			return array();
@@ -129,10 +133,12 @@ if ( 'compatible' === $mode ) {
 	);
 
 	$callbacks[0]( $registry );
-	$provider                             = $registry->get( 'bb' );
-	$result['registered']                 = true;
-	$result['provider_code']              = $provider->getMetadata()->code->value;
-	$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
+	$result['registered'] = array_key_exists( 'bb', $registry->all() );
+	if ( $result['registered'] ) {
+		$provider                             = $registry->get( 'bb' );
+		$result['provider_code']              = $provider->getMetadata()->code->value;
+		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
+	}
 } elseif ( array() !== $callbacks ) {
 	$callbacks[0]( new stdClass() );
 }

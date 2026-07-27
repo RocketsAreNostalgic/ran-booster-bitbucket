@@ -105,6 +105,18 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
+	public function testUnsupportedMultisiteCallbacksStayInertDespiteCompatibleApis(): void {
+		$result = $this->runFixture( 'unsupported-multisite' );
+
+		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( '', $result['documentation'] );
+		self::assertFalse( $result['provider_loaded'] );
+		self::assertFalse( $result['registered'] );
+		self::assertFalse( $result['credential_store_was_scoped'] );
+		self::assertSame( 0, $result['remote_calls'] );
+	}
+
 	public function testCompatibleGenerationRendersOneCompleteNonInteractiveGuide(): void {
 		$result = $this->runFixture( 'compatible' );
 		$guide  = $result['documentation'];
