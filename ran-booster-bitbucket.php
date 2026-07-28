@@ -63,9 +63,9 @@ add_action(
 	}
 );
 
-add_action(
-	'ran_booster_documentation_after_provider_bb',
-	static function ( string $documentationUrl, string $scope ): void {
+add_filter(
+	'ran_booster_documentation_sections_after_provider_bb',
+	static function ( array $sections, string $documentationUrl, string $scope ): array {
 		if ( ( defined( 'RAN_BOOSTER_RUNTIME_MODE' )
 				&& 'single_site_supported' !== RAN_BOOSTER_RUNTIME_MODE )
 			|| ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -74,15 +74,22 @@ add_action(
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
 			|| 7 !== RAN_BOOSTER_ADDON_API_VERSION ) {
-			return;
+			return $sections;
 		}
 
 		unset( $documentationUrl, $scope );
+		$sections[] = array(
+			'id'      => 'ran-booster-documentation-bitbucket-cloud',
+			'summary' => __( 'Bitbucket Cloud add-on', 'ran-booster-bitbucket' ),
+			'content' => static function (): void {
+				require __DIR__ . '/views/documentation.php';
+			},
+		);
 
-		require __DIR__ . '/views/documentation.php';
+		return $sections;
 	},
 	10,
-	2
+	3
 );
 
 add_action(

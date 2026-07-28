@@ -10,9 +10,6 @@ $ran_booster_bitbucket_install_theme_url  = admin_url( 'admin.php?page=ran-boost
 $ran_booster_bitbucket_support_url        = 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues';
 
 ?>
-<details id="ran-booster-documentation-bitbucket-cloud" class="ran-booster-documentation__section">
-	<summary><?php esc_html_e( 'Bitbucket Cloud add-on', 'ran-booster-bitbucket' ); ?></summary>
-	<div class="ran-booster-documentation__content">
 		<p><?php esc_html_e( 'The Bitbucket Cloud add-on connects RAN Booster to public and private Bitbucket repositories. It supplies repository discovery, archive downloads, credential checks, signed webhook handling and provider diagnostics while Core remains responsible for package records, secrets, deployment policy and deployment execution.', 'ran-booster-bitbucket' ); ?></p>
 
 		<h3><?php esc_html_e( 'Create the narrowest API token', 'ran-booster-bitbucket' ); ?></h3>
@@ -63,5 +60,3 @@ $ran_booster_bitbucket_support_url        = 'https://github.com/RocketsAreNostal
 		<p><?php esc_html_e( 'Updates are supplied as verified private GitHub release ZIPs with a matching SHA-256 checksum. Generated source archives are not distributable WordPress packages. Losing future private-release access does not deactivate or restrict a GPL copy already installed on this site.', 'ran-booster-bitbucket' ); ?></p>
 		<p><?php esc_html_e( 'For ordinary, non-sensitive support, use the private repository’s GitHub issue tracker. Never post API tokens, account email addresses, webhook secrets, signed URLs, private release assets or customer data in an issue. For a suspected security vulnerability, use the confidential contact supplied with the private release; if no confidential route is available, request one without disclosing the sensitive details.', 'ran-booster-bitbucket' ); ?></p>
 		<p><a href="<?php echo esc_url( $ran_booster_bitbucket_support_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open Bitbucket add-on support', 'ran-booster-bitbucket' ); ?><span class="screen-reader-text"><?php esc_html_e( ' (opens in a new tab)', 'ran-booster-bitbucket' ); ?></span></a></p>
-	</div>
-</details>

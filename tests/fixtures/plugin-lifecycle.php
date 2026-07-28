@@ -11,6 +11,7 @@ if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', '
 
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
+$GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
 
 /** @param callable $callback */
 function add_action( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
@@ -18,7 +19,17 @@ function add_action( string $hook, callable $callback, int $priority = 10, int $
 	$GLOBALS['ran_booster_bitbucket_fixture_actions'][ $hook ][] = $callback;
 }
 
+/** @param callable $callback */
+function add_filter( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
+	unset( $priority, $acceptedArgs );
+	$GLOBALS['ran_booster_bitbucket_fixture_filters'][ $hook ][] = $callback;
+}
+
 function esc_html__( string $text ): string {
+	return $text;
+}
+
+function __( string $text ): string {
 	return $text;
 }
 
@@ -79,16 +90,21 @@ if ( 'inactive' !== $mode ) {
 }
 
 $callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
-$documentationCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_documentation_after_provider_bb'] ?? array();
-$documentation = '';
-if ( array() !== $documentationCallbacks ) {
-	ob_start();
-	$documentationCallbacks[0]( 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
-	$documentation = (string) ob_get_clean();
+$documentationFilters = $GLOBALS['ran_booster_bitbucket_fixture_filters']['ran_booster_documentation_sections_after_provider_bb'] ?? array();
+$documentationSections = array();
+$documentation          = '';
+if ( array() !== $documentationFilters ) {
+	$documentationSections = $documentationFilters[0]( array(), 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
+	if ( array() !== $documentationSections ) {
+		ob_start();
+		$documentationSections[0]['content']();
+		$documentation = (string) ob_get_clean();
+	}
 }
 $result    = array(
 	'provider_callbacks'           => count( $callbacks ),
-	'documentation_callbacks'      => count( $documentationCallbacks ),
+	'documentation_filters'        => count( $documentationFilters ),
+	'documentation_sections'       => count( $documentationSections ),
 	'documentation'                => $documentation,
 	'provider_loaded'              => class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ),
 	'registered'                   => false,

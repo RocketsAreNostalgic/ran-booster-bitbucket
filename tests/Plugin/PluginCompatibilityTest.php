@@ -57,7 +57,8 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'absent' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 1, $result['documentation_filters'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
@@ -67,7 +68,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'incompatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
@@ -77,7 +78,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'incompatible-addon' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
@@ -87,7 +88,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'incompatible-logging' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
@@ -97,7 +98,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'compatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 1, $result['documentation_sections'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
@@ -109,7 +110,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'unsupported-multisite' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 1, $result['documentation_callbacks'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
@@ -122,7 +123,7 @@ final class PluginCompatibilityTest extends TestCase {
 		$guide  = $result['documentation'];
 
 		self::assertIsString( $guide );
-		self::assertSame( 1, substr_count( $guide, 'id="ran-booster-documentation-bitbucket-cloud"' ) );
+		self::assertStringNotContainsString( '<details', $guide );
 		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
 		self::assertStringContainsString( 'Connect a package', $guide );
 		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
@@ -139,7 +140,8 @@ final class PluginCompatibilityTest extends TestCase {
 		$result = $this->runFixture( 'inactive' );
 
 		self::assertSame( 0, $result['provider_callbacks'] );
-		self::assertSame( 0, $result['documentation_callbacks'] );
+		self::assertSame( 0, $result['documentation_filters'] );
+		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['registered'] );
 	}

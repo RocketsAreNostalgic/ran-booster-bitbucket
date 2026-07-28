@@ -32,6 +32,6 @@ final class CoreContractTest extends TestCase {
 			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*7\\s*\\)/",
 			$core
 		);
-		self::assertStringContainsString( 'ran_booster_documentation_after_provider_', $documentation );
+		self::assertStringContainsString( 'ran_booster_documentation_sections_after_provider_', $documentation );
 	}
 }
