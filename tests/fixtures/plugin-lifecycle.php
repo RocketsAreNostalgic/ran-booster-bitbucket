@@ -48,19 +48,19 @@ function admin_url( string $path ): string {
 if ( 'incompatible' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
 }
 
 if ( 'incompatible-addon' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 6 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 8 );
 }
 
 if ( 'incompatible-logging' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 0 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
 }
 
 if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
@@ -78,7 +78,7 @@ if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
 	require $coreAutoload;
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 7 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
 }
 
 if ( 'unsupported-multisite' === $mode ) {

@@ -35,7 +35,7 @@ add_action(
 			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			|| 7 !== RAN_BOOSTER_ADDON_API_VERSION
+			|| 9 !== RAN_BOOSTER_ADDON_API_VERSION
 			|| ! $registry instanceof \RAN\RepositoryProvider\ProviderRegistry ) {
 			return;
 		}
@@ -73,7 +73,7 @@ add_filter(
 			|| ! defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 			|| 1 !== RAN_BOOSTER_LOGGING_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			|| 7 !== RAN_BOOSTER_ADDON_API_VERSION ) {
+			|| 9 !== RAN_BOOSTER_ADDON_API_VERSION ) {
 			return $sections;
 		}
 
@@ -97,7 +97,7 @@ add_action(
 	static function (): void {
 		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 6 === RAN_BOOSTER_PROVIDER_API_VERSION
 			&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' ) && 1 === RAN_BOOSTER_LOGGING_API_VERSION
-			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) && 7 === RAN_BOOSTER_ADDON_API_VERSION ) {
+			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) && 9 === RAN_BOOSTER_ADDON_API_VERSION ) {
 			return;
 		}
 

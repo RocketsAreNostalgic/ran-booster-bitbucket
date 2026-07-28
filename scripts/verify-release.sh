@@ -55,14 +55,18 @@ if ! grep -Fq "RAN_BOOSTER_PROVIDER_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "1 !== RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "7 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "ran_booster_documentation_after_provider_bb" <<< "$plugin"; then
-	echo "Archive must require Provider API 6, Logging API 1 and Add-on API 7, and register the native Bitbucket documentation action." >&2
+	|| ! grep -Fq "9 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "ran_booster_documentation_sections_after_provider_bb" <<< "$plugin"; then
+	echo "Archive must require Provider API 6, Logging API 1 and Add-on API 9, and register the native Bitbucket documentation filter." >&2
+	exit 1
+fi
+
+if ! grep -Fq "ran-booster-documentation-bitbucket-cloud" <<< "$plugin"; then
+	echo "Archive Bitbucket documentation section registration is incomplete." >&2
 	exit 1
 fi
 
 for required_guide_text in \
-	"ran-booster-documentation-bitbucket-cloud" \
 	"Repositories: Read (read:repository:bitbucket)" \
 	"Set up Push-to-Deploy manually" \
 	"Move or recover a package with Transporter" \
