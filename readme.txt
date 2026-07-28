@@ -3,7 +3,7 @@ Contributors: rocketsarenostalgic
 Tags: git, deploy, deployment, bitbucket
 Requires at least: 7.0
 Tested up to: 7.0
-Requires PHP: 8.3
+Requires PHP: 8.2
 <!-- x-release-please-start-version -->
 Stable tag: 0.1.0-alpha.1
 <!-- x-release-please-end -->

@@ -8,7 +8,7 @@
  * Version: 0.1.0-alpha.1
  * x-release-please-end
  * Requires at least: 7.0
- * Requires PHP: 8.3
+ * Requires PHP: 8.2
  * Requires Plugins: ran-booster
  * Author: Rockets Are Nostalgic
  * Author URI: https://github.com/RocketsAreNostalgic

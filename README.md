@@ -8,7 +8,7 @@ Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
-- Requires WordPress 7.0+, PHP 8.3+ (PHP 8.4 recommended), and compatible RAN Booster Provider API 6, Logging API 1 and Add-on API 7.
+- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and compatible RAN Booster Provider API 6, Logging API 1 and Add-on API 7.
 - Provider API 6 and Add-on API 7 make the Core-owned Logging API 1 facade mandatory throughout registry, provider and diagnostics construction; there is no nullable or silent logging fallback.
 - Without compatible Booster, it makes no remote calls or provider registrations and shows administrators a safe compatibility notice.
 - It receives credential data only through Booster's provider-scoped reader. It neither stores credentials nor reads Booster's sidecar paths, Core container, or Core storage.

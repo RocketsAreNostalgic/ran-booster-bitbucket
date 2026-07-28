@@ -3,7 +3,7 @@
 	<description>Product-source standards for the RAN Booster Bitbucket add-on.</description>
 
 	<config name="minimum_supported_wp_version" value="7.0"/>
-	<config name="testVersion" value="8.3-"/>
+	<config name="testVersion" value="8.2-"/>
 
 	<file>ran-booster-bitbucket.php</file>
 	<file>autoload.php</file>
