@@ -9,7 +9,11 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
 - The add-on may intentionally use public RAN Booster runtime classes and the installed Core vendor autoloader after that exact guard. Do not vendor, copy, or ship RAN Booster code.
 - Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`.
-- The add-on owns one non-interactive guide at `ran_booster_documentation_after_provider_bb`. It receives only the canonical documentation URL and administration scope, imports no Core documentation classes, and must not add forms, nonces, remote calls, assets, mutations, or service acquisition to that callback.
+- The add-on owns one non-interactive guide at
+  `ran_booster_documentation_sections_after_provider_bb`. It receives only the
+  canonical documentation URL and administration scope, imports no Core
+  documentation classes, and must not add forms, nonces, remote calls, assets,
+  mutations, or service acquisition to that callback.
 
 ## Development and release
 
