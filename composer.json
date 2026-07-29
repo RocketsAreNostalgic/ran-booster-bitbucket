@@ -1,7 +1,7 @@
 {
     "name": "ran/booster-bitbucket",
     "description": "Bitbucket Cloud provider for RAN Booster.",
-    "version": "0.1.0-alpha.1",
+    "version": "0.1.0-alpha.2",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "support": {
@@ -21,19 +21,19 @@
         "phpcompatibility/php-compatibility": "^10.0@dev",
         "phpcompatibility/phpcompatibility-paragonie": "^2.0@dev"
     },
-	"scripts": {
-		"test:unit": "vendor/bin/phpunit --configuration phpunit.xml",
-		"lint:php": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
-		"lint:php:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
-		"lint:syntax": "find . -path ./vendor -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
-		"build:release": "bash scripts/build-release.sh",
-		"verify:release": "bash scripts/verify-release.sh",
-		"check": [
-			"@test:unit",
-			"@lint:php",
-			"@lint:syntax"
-		]
-	},
+    "scripts": {
+        "test:unit": "vendor/bin/phpunit --configuration phpunit.xml",
+        "lint:php": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
+        "lint:php:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
+        "lint:syntax": "find . -path ./vendor -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "build:release": "bash scripts/build-release.sh",
+        "verify:release": "bash scripts/verify-release.sh",
+        "check": [
+            "@test:unit",
+            "@lint:php",
+            "@lint:syntax"
+        ]
+    },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
