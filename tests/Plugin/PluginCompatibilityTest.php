@@ -95,10 +95,28 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItRegistersOnlyAgainstProviderApiSixAndKeepsReleaseCatalogOptional(): void {
-		$result = $this->runFixture( 'compatible' );
+		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
+		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 0, $result['admin_interaction_callbacks'] );
+		self::assertTrue( $result['markers_defined_when_loaded'] );
+		self::assertTrue( $result['registered'] );
+		self::assertSame( 'bb', $result['provider_code'] );
+		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertFalse( $result['implements_release_catalog'] );
+		self::assertSame( 0, $result['remote_calls'] );
+	}
+
+	public function testItRegistersWhenTheAddOnLoadsBeforeCompatibleCoreMarkers(): void {
+		$result = $this->runFixture( 'compatible-addon-first' );
+
+		self::assertSame( 1, $result['provider_callbacks'] );
+		self::assertSame( 1, $result['documentation_sections'] );
+		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 0, $result['admin_interaction_callbacks'] );
+		self::assertFalse( $result['markers_defined_when_loaded'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
@@ -146,7 +164,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	/** @return array<string, bool|int|string> */
+	/** @return array<string, bool|int|string|null> */
 	private function runFixture( string $mode ): array {
 		$fixture = dirname( __DIR__ ) . '/fixtures/plugin-lifecycle.php';
 		$command = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $fixture ) . ' ' . escapeshellarg( $mode );

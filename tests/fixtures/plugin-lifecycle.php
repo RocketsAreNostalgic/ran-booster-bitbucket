@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'incompatible-logging', 'compatible', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'incompatible-logging', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -12,6 +12,17 @@ if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', '
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
+$addOnLoaded                              = false;
+$markersDefinedWhenAddOnLoaded           = null;
+$compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
+$loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
+	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
+		&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
+		&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
+		&& defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' );
+	require dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php';
+	$addOnLoaded = true;
+};
 
 /** @param callable $callback */
 function add_action( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
@@ -63,7 +74,7 @@ if ( 'incompatible-logging' === $mode ) {
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
 }
 
-if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
+if ( in_array( $mode, $compatibleModes, true ) ) {
 	$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
 	$coreRoot = false === $coreRoot || '' === $coreRoot
 		? dirname( __DIR__, 3 ) . '/ran-booster'
@@ -75,22 +86,28 @@ if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
 		exit( 3 );
 	}
 
+	if ( 'compatible-addon-first' === $mode ) {
+		$loadAddOn();
+	}
+
 	require $coreAutoload;
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
+	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 1 );
 }
 
 if ( 'unsupported-multisite' === $mode ) {
 	define( 'RAN_BOOSTER_RUNTIME_MODE', 'multisite_unsupported' );
 }
 
-if ( 'inactive' !== $mode ) {
-	require dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php';
+if ( 'inactive' !== $mode && ! $addOnLoaded ) {
+	$loadAddOn();
 }
 
 $callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
 $documentationFilters = $GLOBALS['ran_booster_bitbucket_fixture_filters']['ran_booster_documentation_sections_after_provider_bb'] ?? array();
+$adminInteractionCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_admin_interaction_ready'] ?? array();
 $documentationSections = array();
 $documentation          = '';
 if ( array() !== $documentationFilters ) {
@@ -106,6 +123,11 @@ $result    = array(
 	'documentation_filters'        => count( $documentationFilters ),
 	'documentation_sections'       => count( $documentationSections ),
 	'documentation'                => $documentation,
+	'admin_interaction_callbacks'  => count( $adminInteractionCallbacks ),
+	'admin_interaction_api_version' => defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' )
+		? RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION
+		: null,
+	'markers_defined_when_loaded'  => $markersDefinedWhenAddOnLoaded,
 	'provider_loaded'              => class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ),
 	'registered'                   => false,
 	'provider_code'                => '',
@@ -114,7 +136,7 @@ $result    = array(
 	'remote_calls'                 => 0,
 );
 
-if ( in_array( $mode, array( 'compatible', 'unsupported-multisite' ), true ) ) {
+if ( in_array( $mode, $compatibleModes, true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public function credentialProfiles(): array {
 			return array();
