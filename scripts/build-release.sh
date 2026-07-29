@@ -35,5 +35,5 @@ done < release-files.txt
 mkdir -p build
 archive="build/ran-booster-bitbucket-$version.zip"
 git archive --format=zip --prefix=ran-booster-bitbucket/ --output="$archive" HEAD -- "${files[@]}"
-shasum -a 256 "$archive" > "$archive.sha256"
+( cd "$(dirname "$archive")" && shasum -a 256 "$(basename "$archive")" ) > "$archive.sha256"
 "$(dirname "$0")/verify-release.sh" "$archive"

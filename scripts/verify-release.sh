@@ -13,6 +13,15 @@ esac
 
 test -f "$archive"
 unzip -tqq "$archive"
+checksum="$archive.sha256"
+test -f "$checksum"
+archive_name=$(basename "$archive")
+expected_checksum=$(shasum -a 256 "$archive" | awk -v name="$archive_name" '{ print $1 "  " name }')
+if [[ "$(< "$checksum")" != "$expected_checksum" ]]; then
+	echo "Release checksum must contain only the archive basename." >&2
+	exit 1
+fi
+( cd "$(dirname "$archive")" && shasum -a 256 -c "$(basename "$checksum")" ) >/dev/null
 
 header_version=$(unzip -p "$archive" ran-booster-bitbucket/ran-booster-bitbucket.php | sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
 readme_version=$(unzip -p "$archive" ran-booster-bitbucket/readme.txt | sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
