@@ -21,3 +21,5 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 - Run `composer install`, `composer check`, and `composer build:release`. The add-on owns PHP tooling in its own `vendor/`; the sibling Core is a contract fixture, not a packaged dependency.
 - Releases are private GitHub artifacts. Do not add WordPress.org/SVN publishing or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files. The verified archive must contain the add-on-owned Bitbucket guide and exact native documentation hook.
 - Keep the entry header, `readme.txt` stable tag, `composer.json` version, Release Please manifest, and changelog aligned.
+- Follow `RELEASE.md` for the authoritative release procedure, package
+  automation and required evidence.
