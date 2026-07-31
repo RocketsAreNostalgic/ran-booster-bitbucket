@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# ZIP stores timezone-naive timestamps, so fix the build zone for reproducibility.
+export TZ=UTC
+
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 cd "$root"
 
