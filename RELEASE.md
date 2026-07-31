@@ -9,7 +9,7 @@ private `RocketsAreNostalgic/ran-booster` repository as a read-only deploy key.
 Do not enable write access. The add-on repository's `GITHUB_TOKEN` cannot read
 that sibling private repository and is intentionally not used as a fallback.
 
-1. Review the Release Please pull request, including the header, `readme.txt`, `composer.json`, manifest and changelog versions.
+1. Review the Release Please pull request, including the header, `readme.txt`, manifest and changelog versions.
 2. On the resulting release commit, run `composer install --no-dev --no-interaction` only if production Composer dependencies are introduced. The current add-on intentionally ships none.
 3. Wait for the coordinated Core Release Please pull request to land and record its exact released `v...` tag in the Bitbucket release review. Older Add-on API generations are unsupported.
 4. Dispatch the Quality workflow on the Release Please pull-request branch with `core-ref` set to that exact Core tag (`gh workflow run quality.yml --ref <release-please-branch> -f core-ref=<core-tag>`). This explicit dispatch is required because a pull request maintained with `GITHUB_TOKEN` does not trigger another Actions workflow. Do not publish from a development-only run against Core `main`. The contract test must confirm Provider API 6, Logging API 1, Add-on API 11 and `ran_booster_documentation_sections_after_provider_bb`.

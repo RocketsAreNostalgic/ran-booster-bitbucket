@@ -1,7 +1,6 @@
 {
     "name": "ran/booster-bitbucket",
     "description": "Bitbucket Cloud provider for RAN Booster.",
-    "version": "0.1.0-alpha.2",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "support": {

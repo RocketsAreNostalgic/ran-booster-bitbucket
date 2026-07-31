@@ -50,7 +50,7 @@ final class PluginCompatibilityTest extends TestCase {
 
 		self::assertSame( $manifest['.'], $pluginVersion[1] ?? null );
 		self::assertSame( $manifest['.'], $readmeVersion[1] ?? null );
-		self::assertSame( $manifest['.'], $composer['version'] ?? null );
+		self::assertArrayNotHasKey( 'version', $composer );
 	}
 
 	public function testItFailsClosedWithoutBooster(): void {
