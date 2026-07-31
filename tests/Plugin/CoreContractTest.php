@@ -29,7 +29,7 @@ final class CoreContractTest extends TestCase {
 			$core
 		);
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*11\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*12\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(

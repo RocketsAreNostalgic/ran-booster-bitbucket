@@ -62,8 +62,8 @@ jobs:
               uses: actions/checkout@v6.0.2
               with:
                   repository: RocketsAreNostalgic/ran-booster
-                  # Booster v0.1.0-alpha.30.
-                  ref: bd4cf60a1e65e81fc48a536d1901d06fcfdeb7ff
+                  # Booster v0.1.0-alpha.32.
+                  ref: f79c4a86a96b5e55a3f7a7735f18bf12af11e294
                   path: ran-booster
                   persist-credentials: false
                   ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}

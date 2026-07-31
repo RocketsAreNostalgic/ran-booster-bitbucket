@@ -74,7 +74,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithAddOnApiSix(): void {
+	public function testItFailsClosedWithAddOnApiEleven(): void {
 		$result = $this->runFixture( 'incompatible-addon' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );

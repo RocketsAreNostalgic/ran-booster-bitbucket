@@ -63,9 +63,9 @@ if ! grep -Fq "RAN_BOOSTER_PROVIDER_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "1 !== RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "11 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "12 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "ran_booster_documentation_sections_after_provider_bb" <<< "$plugin"; then
-	echo "Archive must require Provider API 6, Logging API 1 and Add-on API 11, and register the native Bitbucket documentation filter." >&2
+	echo "Archive must require Provider API 6, Logging API 1 and Add-on API 12, and register the native Bitbucket documentation filter." >&2
 	exit 1
 fi
 
