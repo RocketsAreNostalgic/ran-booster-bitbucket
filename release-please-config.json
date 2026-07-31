@@ -20,11 +20,6 @@
 				{
 					"type": "generic",
 					"path": "readme.txt"
-				},
-				{
-					"type": "json",
-					"path": "composer.json",
-					"jsonpath": "$.version"
 				}
 			]
 		}

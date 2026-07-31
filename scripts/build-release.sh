@@ -13,10 +13,9 @@ fi
 version=$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' ran-booster-bitbucket.php)
 test -n "$version"
 readme_version=$(sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' readme.txt)
-composer_version=$(php -r '$manifest = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR); echo $manifest["version"] ?? "";')
 
-if [ "$version" != "$readme_version" ] || [ "$version" != "$composer_version" ]; then
-	echo "Plugin header, readme stable tag, and Composer version must match." >&2
+if [ "$version" != "$readme_version" ]; then
+	echo "Plugin header and readme stable tag must match." >&2
 	exit 1
 fi
 

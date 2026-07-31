@@ -25,10 +25,9 @@ fi
 
 header_version=$(unzip -p "$archive" ran-booster-bitbucket/ran-booster-bitbucket.php | sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
 readme_version=$(unzip -p "$archive" ran-booster-bitbucket/readme.txt | sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
-composer_version=$(php -r '$manifest = json_decode(file_get_contents("composer.json"), true, 512, JSON_THROW_ON_ERROR); echo $manifest["version"] ?? "";')
 
-if [ -z "$header_version" ] || [ "$header_version" != "$readme_version" ] || [ "$header_version" != "$composer_version" ]; then
-	echo "Archive header, readme stable tag, and Composer version must match." >&2
+if [ -z "$header_version" ] || [ "$header_version" != "$readme_version" ]; then
+	echo "Archive header and readme stable tag must match." >&2
 	exit 1
 fi
 
