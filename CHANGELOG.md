@@ -3,6 +3,13 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-alpha.4](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.3...v0.1.0-alpha.4) (2026-07-31)
+
+
+### Bug Fixes
+
+* normalize release ZIP timestamps to UTC ([#10](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/10)) ([53d2bbc](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/53d2bbc458631dfa6e8b84c8763074a7d93ab77d))
+
 ## [0.1.0-alpha.3](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.2...v0.1.0-alpha.3) (2026-07-31)
 
 
