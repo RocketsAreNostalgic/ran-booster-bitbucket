@@ -3,6 +3,14 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-alpha.3](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.2...v0.1.0-alpha.3) (2026-07-31)
+
+
+### Bug Fixes
+
+* remove redundant Composer version source ([#9](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/9)) ([d046910](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/d046910e0b4f309d8799477850fb1ef268aa6a27))
+* support Booster add-on API 11 ([#7](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/7)) ([b910167](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/b91016701ef56a85f38b8b44ae5246f5d38e9840))
+
 ## [0.1.0-alpha.2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.1...v0.1.0-alpha.2) (2026-07-29)
 
 
