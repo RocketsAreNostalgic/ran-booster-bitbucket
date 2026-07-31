@@ -3,6 +3,19 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-alpha.5](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.4...v0.1.0-alpha.5) (2026-07-31)
+
+
+### Bug Fixes
+
+* require Booster Add-on API 12 ([e5a1dd2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/e5a1dd260300e3c630015ae29263fc06d23deae1))
+* require Booster Add-on API 12 ([7e66e4c](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/7e66e4cf9bb7b4db9a06c7d879281b987aea4a41))
+
+
+### Miscellaneous Chores
+
+* pin Booster 0.1.0-alpha.32 ([201ea0d](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/201ea0d840eb9d2fb158966bc091f88d1397095f))
+
 ## [0.1.0-alpha.4](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.3...v0.1.0-alpha.4) (2026-07-31)
 
 
