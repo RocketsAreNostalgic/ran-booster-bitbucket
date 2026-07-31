@@ -10,7 +10,7 @@ Stable tag: 0.1.0-alpha.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Bitbucket Cloud provider and operational guide for the coordinated RAN Booster Add-on API 9 generation.
+Bitbucket Cloud provider and operational guide for the coordinated RAN Booster Add-on API 11 generation.
 
 == Description ==
 
@@ -23,7 +23,7 @@ and private support.
 
 This is a dependent, private GitHub release artifact, not a WordPress.org
 distribution. It performs no provider registration or remote calls when RAN
-Booster Provider API 6, Logging API 1 or Add-on API 9 is absent or incompatible.
+Booster Provider API 6, Logging API 1 or Add-on API 11 is absent or incompatible.
 
 == Installation ==
 

@@ -4,8 +4,8 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 ## Runtime contract
 
-- RAN Booster is required. This add-on supports exactly Provider API `6`, Logging API `1`, and the official-suite Add-on API `9` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
-- Provider API `6` and Add-on API `9` make the Core-owned Logging API `1` facade mandatory at every registry, provider, and diagnostics construction boundary. Do not add a nullable or silent logging fallback.
+- RAN Booster is required. This add-on supports exactly Provider API `6`, Logging API `1`, and the official-suite Add-on API `11` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
+- Provider API `6` and Add-on API `11` make the Core-owned Logging API `1` facade mandatory at every registry, provider, and diagnostics construction boundary. Do not add a nullable or silent logging fallback.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
 - The add-on may intentionally use public RAN Booster runtime classes and the installed Core vendor autoloader after that exact guard. Do not vendor, copy, or ship RAN Booster code.
 - Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`.
