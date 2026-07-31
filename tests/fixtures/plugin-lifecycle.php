@@ -59,19 +59,19 @@ function admin_url( string $path ): string {
 if ( 'incompatible' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 11 );
 }
 
 if ( 'incompatible-addon' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 8 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 10 );
 }
 
 if ( 'incompatible-logging' === $mode ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 0 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 11 );
 }
 
 if ( in_array( $mode, $compatibleModes, true ) ) {
@@ -93,7 +93,7 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 	require $coreAutoload;
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
 	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 9 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 11 );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 1 );
 }
 
