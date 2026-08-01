@@ -1,3 +1,15 @@
 /build/
 /.phpunit.cache/
 /vendor/
+
+# Private Booster-family planning and task state belongs in the Core-adjacent
+# private workbench, never in this distributable source repository.
+/.dex/
+/.agents/plans/
+/docs/plans/
+/docs/proposals/
+/docs/reviews/
+/docs/proofs/
+/docs/*-decision-register.md
+/docs/*-phase[0-9]-evidence.md
+/docs/executive-roadmap.md
