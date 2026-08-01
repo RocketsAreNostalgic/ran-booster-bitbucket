@@ -3,6 +3,13 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-alpha.6](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.5...v0.1.0-alpha.6) (2026-08-01)
+
+
+### Miscellaneous Chores
+
+* ignore private Booster planning state ([67810e8](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/67810e8e6523353832c5b8620a5c359c89d22464))
+
 ## [0.1.0-alpha.5](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.4...v0.1.0-alpha.5) (2026-07-31)
 
 
