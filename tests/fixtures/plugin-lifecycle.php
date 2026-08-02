@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'incompatible-logging', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -17,7 +17,6 @@ $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-		&& defined( 'RAN_BOOSTER_LOGGING_API_VERSION' )
 		&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
 		&& defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' );
 	require dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php';
@@ -57,20 +56,12 @@ function admin_url( string $path ): string {
 }
 
 if ( 'incompatible' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 5 );
-	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 12 );
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 13 );
 }
 
 if ( 'incompatible-addon' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
-	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 11 );
-}
-
-if ( 'incompatible-logging' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
-	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 0 );
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 7 );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', 12 );
 }
 
@@ -91,10 +82,9 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 	}
 
 	require $coreAutoload;
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
-	define( 'RAN_BOOSTER_LOGGING_API_VERSION', 1 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 12 );
-	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 1 );
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 7 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 13 );
+	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
 }
 
 if ( 'unsupported-multisite' === $mode ) {
@@ -150,17 +140,7 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 		return false;
 	}
 };
-	$logging = new class() implements \RAN\AddOn\Logging\LoggingFacade {
-		public function log( string $message, array $context = array() ): void {
-			unset( $message, $context );
-		}
-
-		public function logException( string $message, \Throwable $exception, array $context = array() ): void {
-			unset( $message, $exception, $context );
-		}
-	};
 	$registry = new \RAN\RepositoryProvider\ProviderRegistry(
-		$logging,
 		array(),
 		new \RAN\RepositoryProvider\ProviderSecretPolicyCatalog(),
 		static function ( \RAN\RepositoryProvider\ProviderCode $code ) use ( $store, &$result ): \RAN\RepositoryProvider\ProviderCredentialStore {

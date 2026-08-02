@@ -6,7 +6,11 @@ namespace Tests\RepositoryProvider;
 
 require_once __DIR__ . '/BitbucketCredentialValidatorWordPressFunctions.php';
 require_once __DIR__ . '/BitbucketRepositoryBrowserSecretsStub.php';
-require_once dirname( __DIR__, 3 ) . '/ran-booster/tests/RepositoryProvider/AuthenticatedPreparedArchiveWordPressFunctions.php';
+$corePath = getenv( 'RAN_BOOSTER_CORE_PATH' );
+if ( ! is_string( $corePath ) || '' === $corePath ) {
+	$corePath = dirname( __DIR__, 3 ) . '/ran-booster';
+}
+require_once $corePath . '/tests/RepositoryProvider/AuthenticatedPreparedArchiveWordPressFunctions.php';
 
 use PHPUnit\Framework\TestCase;
 use RAN\RepositoryProvider\AuthenticatedPreparedArchive;
