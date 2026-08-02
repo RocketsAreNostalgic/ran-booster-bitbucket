@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RAN\Booster\Bitbucket;
 
-use RAN\AddOn\Logging\LoggingFacade;
 use RAN\RepositoryProvider\ProviderDiagnosticBudgetExceeded;
 use RAN\RepositoryProvider\ProviderDiagnosticRequest;
 use RAN\RepositoryProvider\ProviderDiagnosticResult;
@@ -15,8 +14,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 
 	public function __construct(
 		private BitbucketCredentialValidator $credentials,
-		private BitbucketRepositoryBrowser $browser,
-		private LoggingFacade $logging
+		private BitbucketRepositoryBrowser $browser
 	) {
 	}
 
@@ -30,24 +28,20 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	private function credentialResult( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
 		$credentialId = $request->getCredentialId();
 		if ( null === $credentialId ) {
-			return $this->loggedResult(
-				'bb_credential_diagnostics',
-				new ProviderDiagnosticResult(
-					ProviderDiagnosticResult::NOT_CONFIGURED,
-					'bb.credential.not_configured',
-					'No Bitbucket credential was selected.',
-					'Select a credential to verify access to private repositories.'
-				)
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::NOT_CONFIGURED,
+				'bb.credential.not_configured',
+				'No Bitbucket credential was selected.',
+				'Select a credential to verify access to private repositories.'
 			);
 		}
 
 		try {
 			$result = $this->credentials->validateCredential( $credentialId, $request->claimRemoteCall(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
-			return $this->loggedResult( 'bb_credential_diagnostics', $this->budgetResult( 'bb.credential.budget_exhausted' ) );
-		} catch ( \Throwable $exception ) {
-			$this->logException( 'Bitbucket diagnostics credential check failed', $exception, 'bb_credential_diagnostics' );
-			return $this->loggedResult( 'bb_credential_diagnostics', $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' ) );
+			return $this->budgetResult( 'bb.credential.budget_exhausted' );
+		} catch ( \Throwable ) {
+			return $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
 		}
 
 		if ( $result->isValid() ) {
@@ -60,14 +54,11 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		}
 
 		if ( \RAN\RepositoryProvider\CredentialValidationResult::RATE_LIMITED === $result->reason ) {
-			return $this->loggedResult(
-				'bb_credential_diagnostics',
-				new ProviderDiagnosticResult(
-					ProviderDiagnosticResult::WARNING,
-					'bb.credential.rate_limited',
-					'Bitbucket rate-limited credential validation.',
-					'Try the check again after the rate limit resets.'
-				)
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::WARNING,
+				'bb.credential.rate_limited',
+				'Bitbucket rate-limited credential validation.',
+				'Try the check again after the rate limit resets.'
 			);
 		}
 
@@ -79,43 +70,36 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 			),
 			true
 		) ) {
-			return $this->loggedResult( 'bb_credential_diagnostics', $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' ) );
+			return $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
 		}
 
-		return $this->loggedResult(
-			'bb_credential_diagnostics',
-			new ProviderDiagnosticResult(
-				ProviderDiagnosticResult::FAILED,
-				'bb.credential.invalid',
-				'Bitbucket did not accept the selected credential.',
-				'Check the workspace, account email, API token, scope, and expiry.'
-			)
+		return new ProviderDiagnosticResult(
+			ProviderDiagnosticResult::FAILED,
+			'bb.credential.invalid',
+			'Bitbucket did not accept the selected credential.',
+			'Check the workspace, account email, API token, scope, and expiry.'
 		);
 	}
 
 	private function repositoryResult( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
 		$repository = $request->getRepository();
 		if ( null === $repository ) {
-			return $this->loggedResult(
-				'bb_repository_diagnostics',
-				new ProviderDiagnosticResult(
-					ProviderDiagnosticResult::NOT_CONFIGURED,
-					'bb.repository.not_configured',
-					'No Bitbucket repository was selected for the reachability check.',
-					'Select a repository to verify its visibility and scope.'
-				)
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::NOT_CONFIGURED,
+				'bb.repository.not_configured',
+				'No Bitbucket repository was selected for the reachability check.',
+				'Select a repository to verify its visibility and scope.'
 			);
 		}
 
 		try {
 			$this->browser->repository( $repository, $request->getCredentialId(), $request->claimRemoteCall(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
-			return $this->loggedResult( 'bb_repository_diagnostics', $this->budgetResult( 'bb.repository.budget_exhausted' ) );
+			return $this->budgetResult( 'bb.repository.budget_exhausted' );
 		} catch ( RuntimeException $exception ) {
-			return $this->loggedResult( 'bb_repository_diagnostics', $this->repositoryFailure( $exception ) );
-		} catch ( \Throwable $exception ) {
-			$this->logException( 'Bitbucket diagnostics repository check failed', $exception, 'bb_repository_diagnostics' );
-			return $this->loggedResult( 'bb_repository_diagnostics', $this->unavailableResult( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' ) );
+			return $this->repositoryFailure( $exception );
+		} catch ( \Throwable ) {
+			return $this->unavailableResult( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' );
 		}
 
 		return new ProviderDiagnosticResult(
@@ -165,34 +149,6 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 			$code,
 			$message,
 			'Try again and check Bitbucket service status if the problem continues.'
-		);
-	}
-
-	private function loggedResult( string $step, ProviderDiagnosticResult $result ): ProviderDiagnosticResult {
-		if ( ProviderDiagnosticResult::PASSED !== $result->status ) {
-			$this->logging->log(
-				'Bitbucket diagnostics returned a non-success outcome',
-				array(
-					'provider'     => 'bb',
-					'operation'    => 'diagnostics',
-					'outcome_code' => $result->code,
-					'step'         => $step,
-				)
-			);
-		}
-
-		return $result;
-	}
-
-	private function logException( string $message, \Throwable $exception, string $step ): void {
-		$this->logging->logException(
-			$message,
-			$exception,
-			array(
-				'provider'  => 'bb',
-				'operation' => 'diagnostics',
-				'step'      => $step,
-			)
 		);
 	}
 }

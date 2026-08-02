@@ -64,7 +64,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithProviderApiFive(): void {
+	public function testItFailsClosedWithProviderApiSix(): void {
 		$result = $this->runFixture( 'incompatible' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
@@ -74,7 +74,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithAddOnApiEleven(): void {
+	public function testItFailsClosedWithAddOnApiTwelve(): void {
 		$result = $this->runFixture( 'incompatible-addon' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
@@ -84,22 +84,12 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithAnIncompatibleLoggingApi(): void {
-		$result = $this->runFixture( 'incompatible-logging' );
-
-		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 0, $result['documentation_sections'] );
-		self::assertSame( '', $result['documentation'] );
-		self::assertFalse( $result['provider_loaded'] );
-		self::assertFalse( $result['registered'] );
-	}
-
-	public function testItRegistersOnlyAgainstProviderApiSixAndKeepsReleaseCatalogOptional(): void {
+	public function testItRegistersOnlyAgainstProviderApiSevenAndKeepsReleaseCatalogOptional(): void {
 		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
-		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 2, $result['admin_interaction_api_version'] );
 		self::assertSame( 0, $result['admin_interaction_callbacks'] );
 		self::assertTrue( $result['markers_defined_when_loaded'] );
 		self::assertTrue( $result['registered'] );
@@ -114,7 +104,7 @@ final class PluginCompatibilityTest extends TestCase {
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
-		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 2, $result['admin_interaction_api_version'] );
 		self::assertSame( 0, $result['admin_interaction_callbacks'] );
 		self::assertFalse( $result['markers_defined_when_loaded'] );
 		self::assertTrue( $result['registered'] );
