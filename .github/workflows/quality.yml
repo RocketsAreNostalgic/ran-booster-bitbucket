@@ -8,8 +8,9 @@ on:
     workflow_dispatch:
         inputs:
             core-ref:
-                description: Exact RAN Booster tag to verify before release
+                description: Exact RAN Booster commit to verify
                 required: true
+                default: 7083e83f7c8ea7e76655f8c21c212f06203e03a7
                 type: string
 
 concurrency:
@@ -24,7 +25,7 @@ jobs:
         runs-on: blacksmith-2vcpu-ubuntu-2404
         env:
             RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
-            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'main' }}
+            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '7083e83f7c8ea7e76655f8c21c212f06203e03a7' }}
         steps:
             - uses: actions/checkout@v6.0.2
               with:
@@ -45,9 +46,8 @@ jobs:
                   ref: ${{ env.RAN_BOOSTER_CORE_REF }}
                   ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
                   persist-credentials: false
-            - name: Confirm exact Core release tag
-              if: ${{ github.event_name == 'workflow_dispatch' }}
-              run: test "$(git describe --tags --exact-match HEAD)" = "$RAN_BOOSTER_CORE_REF"
+            - name: Confirm exact Core commit
+              run: test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
               working-directory: ran-booster
             - uses: shivammathur/setup-php@v2
               with:
