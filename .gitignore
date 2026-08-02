@@ -6,7 +6,11 @@
 # private workbench, never in this distributable source repository.
 /.dex/
 /.agents/plans/
+/.agents/decks/
+/.agents/blueprints/
 /docs/plans/
+/docs/decks/
+/docs/blueprints/
 /docs/proposals/
 /docs/reviews/
 /docs/proofs/
