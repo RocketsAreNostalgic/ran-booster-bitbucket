@@ -95,6 +95,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}
@@ -110,6 +111,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}

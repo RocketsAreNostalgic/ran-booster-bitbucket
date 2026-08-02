@@ -14,8 +14,16 @@ use RAN\Booster\Bitbucket\BitbucketProvider;
 use RAN\Booster\Bitbucket\BitbucketRepositoryBrowser;
 use RAN\Booster\Bitbucket\BitbucketWebhookNormalizer;
 use RAN\RepositoryProvider\ProviderDiagnosticRequest;
+use RAN\RepositoryProvider\ProviderCredentialStore;
 
 final class BitbucketDiagnosticsBoundaryTest extends TestCase {
+
+	public function testCredentialLoaderAcceptsOnlyTheProviderBoundStore(): void {
+		$parameter = ( new \ReflectionMethod( BitbucketCredentialLoader::class, '__construct' ) )->getParameters()[0] ?? null;
+
+		self::assertNotNull( $parameter );
+		self::assertSame( ProviderCredentialStore::class, (string) $parameter->getType() );
+	}
 
 	public function testProviderAndDiagnosticsExposeNoLoggingDependency(): void {
 		$providerTypes = array_map(

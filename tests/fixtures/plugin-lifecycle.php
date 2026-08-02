@@ -122,24 +122,33 @@ $result    = array(
 	'registered'                   => false,
 	'provider_code'                => '',
 	'credential_store_was_scoped'  => false,
+	'credential_store_reads'       => 0,
 	'implements_release_catalog'   => false,
 	'remote_calls'                 => 0,
 );
 
 if ( in_array( $mode, $compatibleModes, true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
+		public int $reads = 0;
+
 		public function credentialProfiles(): array {
+			++$this->reads;
+
 			return array();
 		}
 
-	public function credentialMaterial( ?string $id = null ): ?array {
-		return null;
-	}
+		public function credentialMaterial( ?string $id = null ): ?array {
+			++$this->reads;
 
-	public function hasWebhookProfile(): bool {
-		return false;
-	}
-};
+			return null;
+		}
+
+		public function hasWebhookProfile(): bool {
+			++$this->reads;
+
+			return false;
+		}
+	};
 	$registry = new \RAN\RepositoryProvider\ProviderRegistry(
 		array(),
 		new \RAN\RepositoryProvider\ProviderSecretPolicyCatalog(),
@@ -157,6 +166,7 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 		$result['provider_code']              = $provider->getMetadata()->code->value;
 		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
 	}
+	$result['credential_store_reads'] = $store->reads;
 } elseif ( array() !== $callbacks ) {
 	$callbacks[0]( new stdClass() );
 }
