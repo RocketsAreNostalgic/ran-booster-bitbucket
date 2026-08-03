@@ -7,7 +7,7 @@ namespace Tests\Plugin;
 use PHPUnit\Framework\TestCase;
 
 final class CoreContractTest extends TestCase {
-	private const COMPATIBLE_CORE_COMMIT = '6cca933ea349367c1486c0cf163ea3f9fa082887';
+	private const COMPATIBLE_CORE_COMMIT = '576b411b3e2e81670ab485cdf171d9615d4de28e';
 
 	public function testConfiguredCoreCheckoutPublishesTheRequiredApiGeneration(): void {
 		$coreRoot          = getenv( 'RAN_BOOSTER_CORE_PATH' );
@@ -53,9 +53,13 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $workflow );
 
 		self::assertStringContainsString( 'skip-github-release: true', $workflow );
+		self::assertStringContainsString( 'fetch-depth: 0', $workflow );
+		self::assertStringContainsString( 'git diff --quiet HEAD^ HEAD -- .release-please-manifest.json && manifest_changed=false', $workflow );
+		self::assertStringContainsString( 'gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases?per_page=100"', $workflow );
+		self::assertStringContainsString( 'select(.tag_name == $tag)', $workflow );
+		self::assertStringContainsString( '"$manifest_changed" == false', $workflow );
 		self::assertStringContainsString( 'git log -1 --format=%H -- .release-please-manifest.json', $workflow );
-		self::assertStringContainsString( 'isDraft,isImmutable,targetCommitish', $workflow );
-		self::assertStringContainsString( "*'(HTTP 404)'*", $workflow );
+		self::assertStringContainsString( "'.target_commitish'", $workflow );
 		self::assertStringContainsString( 'The published release is not immutable', $workflow );
 		self::assertStringContainsString( 'git checkout --detach "${RAN_RELEASE_COMMIT}"', $workflow );
 		self::assertMatchesRegularExpression(
