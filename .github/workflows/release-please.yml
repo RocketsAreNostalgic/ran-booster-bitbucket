@@ -146,7 +146,7 @@ jobs:
           if [[ "${RAN_RELEASE_STATE}" == absent ]]; then
               prerelease=()
               [[ "${RAN_RELEASE_VERSION}" == *-* ]] && prerelease=(--prerelease)
-              gh release create "${RAN_RELEASE_TAG}" --draft --target "${RAN_RELEASE_COMMIT}" --title "${RAN_RELEASE_TAG}" --generate-notes "${prerelease[@]}"
+              gh release create "${RAN_RELEASE_TAG}" --draft --target "${RAN_RELEASE_COMMIT}" --title "${RAN_RELEASE_TAG}" --generate-notes "${prerelease[@]}" --repo "${GITHUB_REPOSITORY}"
           fi
           gh release upload "${RAN_RELEASE_TAG}" \
               "build/ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip" \
@@ -155,7 +155,7 @@ jobs:
               --repo "${GITHUB_REPOSITORY}"
           remote="$(mktemp -d)"
           trap 'rm -rf "$remote"' EXIT
-          gh release download "${RAN_RELEASE_TAG}" --dir "$remote" --pattern "ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip*"
+          gh release download "${RAN_RELEASE_TAG}" --dir "$remote" --pattern "ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip*" --repo "${GITHUB_REPOSITORY}"
           cmp -s "build/ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip" "$remote/ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip"
           cmp -s "build/ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip.sha256" "$remote/ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip.sha256"
 
@@ -172,7 +172,7 @@ jobs:
           fi
           latest=(--latest)
           [[ "${RAN_RELEASE_VERSION}" == *-* ]] && latest=(--prerelease)
-          gh release edit "${RAN_RELEASE_TAG}" --draft=false "${latest[@]}"
+          gh release edit "${RAN_RELEASE_TAG}" --draft=false "${latest[@]}" --repo "${GITHUB_REPOSITORY}"
           immutable=false
           for delay in 0 2 2 2 2; do
             sleep "$delay"
