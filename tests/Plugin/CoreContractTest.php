@@ -7,7 +7,7 @@ namespace Tests\Plugin;
 use PHPUnit\Framework\TestCase;
 
 final class CoreContractTest extends TestCase {
-	private const COMPATIBLE_CORE_COMMIT = '576b411b3e2e81670ab485cdf171d9615d4de28e';
+	private const COMPATIBLE_CORE_COMMIT = 'f24eb3cc3775d1387e7eca956c2a8f78663aca36';
 
 	public function testConfiguredCoreCheckoutPublishesTheRequiredApiGeneration(): void {
 		$coreRoot          = getenv( 'RAN_BOOSTER_CORE_PATH' );
