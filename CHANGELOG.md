@@ -3,6 +3,14 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.3](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.2...v0.1.0-beta.3) (2026-08-03)
+
+
+### Bug Fixes
+
+* **release:** certify Core beta.3 compatibility ([fe2694f](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/fe2694fa5193062ffc37294b356dd348a179cfc8))
+* **release:** certify Core beta.3 compatibility ([18defab](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/18defabfba03fc37c530b89fbb583e37fca91f60))
+
 ## [0.1.0-beta.2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.1...v0.1.0-beta.2) (2026-08-03)
 
 
