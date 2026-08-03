@@ -3,6 +3,17 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.1...v0.1.0-beta.2) (2026-08-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* land P0 Core contract and release hardening ([#17](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/17))
+
+### Bug Fixes
+
+* land P0 Core contract and release hardening ([#17](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/17)) ([7221200](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/72212000337394b8d17f127e272d0cf6e9388195))
+
 ## [0.1.0-beta.1](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.5...v0.1.0-beta.1) (2026-08-02)
 
 
