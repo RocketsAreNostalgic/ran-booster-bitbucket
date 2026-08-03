@@ -94,8 +94,8 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: RocketsAreNostalgic/ran-booster
-          # Core v1.0.0-beta.3: Provider API 8 / Add-on API 14 compatibility baseline.
-          ref: f24eb3cc3775d1387e7eca956c2a8f78663aca36
+          # Core v1.0.0-beta.4: Provider API 8 / Add-on API 14 compatibility baseline.
+          ref: 96a2c93ae538bd107fadf2e7c1fb4eba4b726252
           path: ran-booster
           fetch-depth: 0
           persist-credentials: false
