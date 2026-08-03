@@ -31,9 +31,9 @@ add_action(
 		if ( ( defined( 'RAN_BOOSTER_RUNTIME_MODE' )
 				&& 'single_site_supported' !== RAN_BOOSTER_RUNTIME_MODE )
 			|| ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-			|| 7 !== RAN_BOOSTER_PROVIDER_API_VERSION
+			|| 8 !== RAN_BOOSTER_PROVIDER_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			|| 13 !== RAN_BOOSTER_ADDON_API_VERSION
+			|| 14 !== RAN_BOOSTER_ADDON_API_VERSION
 			|| ! $registry instanceof \RAN\RepositoryProvider\ProviderRegistry ) {
 			return;
 		}
@@ -64,9 +64,9 @@ add_filter(
 		if ( ( defined( 'RAN_BOOSTER_RUNTIME_MODE' )
 				&& 'single_site_supported' !== RAN_BOOSTER_RUNTIME_MODE )
 			|| ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-			|| 7 !== RAN_BOOSTER_PROVIDER_API_VERSION
+			|| 8 !== RAN_BOOSTER_PROVIDER_API_VERSION
 			|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			|| 13 !== RAN_BOOSTER_ADDON_API_VERSION ) {
+			|| 14 !== RAN_BOOSTER_ADDON_API_VERSION ) {
 			return $sections;
 		}
 
@@ -88,8 +88,8 @@ add_filter(
 add_action(
 	'admin_notices',
 	static function (): void {
-		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 7 === RAN_BOOSTER_PROVIDER_API_VERSION
-			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) && 13 === RAN_BOOSTER_ADDON_API_VERSION ) {
+		if ( defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) && 8 === RAN_BOOSTER_PROVIDER_API_VERSION
+			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) && 14 === RAN_BOOSTER_ADDON_API_VERSION ) {
 			return;
 		}
 

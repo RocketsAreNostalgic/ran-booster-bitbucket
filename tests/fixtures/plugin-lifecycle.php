@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'incompatible-addon', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -15,6 +15,9 @@ $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
+$incompatibleModes                       = array( 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first' );
+$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen-addon-first' );
+$coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 		&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
@@ -55,17 +58,7 @@ function admin_url( string $path ): string {
 	return 'https://example.test/wp-admin/' . ltrim( $path, '/' );
 }
 
-if ( 'incompatible' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 6 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 13 );
-}
-
-if ( 'incompatible-addon' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 7 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 12 );
-}
-
-if ( in_array( $mode, $compatibleModes, true ) ) {
+if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
 	$coreRoot = false === $coreRoot || '' === $coreRoot
 		? dirname( __DIR__, 3 ) . '/ran-booster'
@@ -77,13 +70,19 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 		exit( 3 );
 	}
 
-	if ( 'compatible-addon-first' === $mode ) {
+	if ( in_array( $mode, $addOnFirstModes, true ) ) {
 		$loadAddOn();
 	}
 
 	require $coreAutoload;
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 7 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 13 );
+	$apiVersions = match ( $mode ) {
+		'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first' => array( 7, 14 ),
+		'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first' => array( 8, 13 ),
+		'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first' => array( 7, 13 ),
+		default => array( 8, 14 ),
+	};
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
 }
 
@@ -124,10 +123,12 @@ $result    = array(
 	'credential_store_was_scoped'  => false,
 	'credential_store_reads'       => 0,
 	'implements_release_catalog'   => false,
+	'implements_webhook_fitness'   => false,
+	'implements_webhook_management' => false,
 	'remote_calls'                 => 0,
 );
 
-if ( in_array( $mode, $compatibleModes, true ) ) {
+if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public int $reads = 0;
 
@@ -165,6 +166,8 @@ if ( in_array( $mode, $compatibleModes, true ) ) {
 		$provider                             = $registry->get( 'bb' );
 		$result['provider_code']              = $provider->getMetadata()->code->value;
 		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
+		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
+		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
 	}
 	$result['credential_store_reads'] = $store->reads;
 } elseif ( array() !== $callbacks ) {
