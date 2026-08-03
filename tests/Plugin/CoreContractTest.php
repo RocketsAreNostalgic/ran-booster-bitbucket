@@ -71,4 +71,14 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( "--jq '.immutable'", $workflow );
 		self::assertStringContainsString( 'for delay in 0 2 2 2 2', $workflow );
 	}
+
+	public function testPackageReleaseCommandsDoNotDependOnTheGitWorkingDirectory(): void {
+		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/release-please.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		self::assertIsString( $workflow );
+
+		self::assertStringContainsString( 'gh release create "${RAN_RELEASE_TAG}" --draft --target "${RAN_RELEASE_COMMIT}" --title "${RAN_RELEASE_TAG}" --generate-notes "${prerelease[@]}" --repo "${GITHUB_REPOSITORY}"', $workflow );
+		self::assertStringContainsString( 'gh release download "${RAN_RELEASE_TAG}" --dir "$remote" --pattern "ran-booster-bitbucket-${RAN_RELEASE_VERSION}.zip*" --repo "${GITHUB_REPOSITORY}"', $workflow );
+		self::assertStringContainsString( 'gh release edit "${RAN_RELEASE_TAG}" --draft=false "${latest[@]}" --repo "${GITHUB_REPOSITORY}"', $workflow );
+		self::assertSame( 4, substr_count( $workflow, '--repo "${GITHUB_REPOSITORY}"' ) );
+	}
 }
