@@ -10,7 +10,7 @@ on:
             core-ref:
                 description: Exact RAN Booster commit to verify
                 required: true
-                default: 05e577867b1999f03dbcd451572defe32c71d509
+                default: 12a5a8cddea70c0f717e7ea0f30571d9568f6079
                 type: string
 
 concurrency:
@@ -25,7 +25,7 @@ jobs:
         runs-on: blacksmith-2vcpu-ubuntu-2404
         env:
             RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
-            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '05e577867b1999f03dbcd451572defe32c71d509' }}
+            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '12a5a8cddea70c0f717e7ea0f30571d9568f6079' }}
         steps:
             - uses: actions/checkout@v6.0.2
               with:
