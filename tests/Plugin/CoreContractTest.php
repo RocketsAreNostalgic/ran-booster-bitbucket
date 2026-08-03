@@ -7,7 +7,7 @@ namespace Tests\Plugin;
 use PHPUnit\Framework\TestCase;
 
 final class CoreContractTest extends TestCase {
-	private const COMPATIBLE_CORE_COMMIT = '576b411b3e2e81670ab485cdf171d9615d4de28e';
+	private const COMPATIBLE_CORE_COMMIT = 'f24eb3cc3775d1387e7eca956c2a8f78663aca36';
 
 	public function testConfiguredCoreCheckoutPublishesTheRequiredApiGeneration(): void {
 		$coreRoot          = getenv( 'RAN_BOOSTER_CORE_PATH' );
@@ -62,6 +62,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( "'.target_commitish'", $workflow );
 		self::assertStringContainsString( 'The published release is not immutable', $workflow );
 		self::assertStringContainsString( 'git checkout --detach "${RAN_RELEASE_COMMIT}"', $workflow );
+		self::assertStringContainsString( 'composer validate --strict --no-check-all --no-check-publish', $workflow );
 		self::assertMatchesRegularExpression(
 			'/name: Check out the exact release source\s+if: env\.RAN_RELEASE_PENDING == \'true\'\s+working-directory: ran-booster-bitbucket\s+run: git checkout --detach/s',
 			$workflow
