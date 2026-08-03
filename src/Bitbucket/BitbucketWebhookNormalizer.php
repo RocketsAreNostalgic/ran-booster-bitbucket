@@ -54,8 +54,8 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		return new ProviderDiagnosticResult(
 			ProviderDiagnosticResult::WARNING,
 			'bb.webhook.delivery_unverified',
-			'A Bitbucket webhook secret is configured, but Booster does not retain authenticated delivery history.',
-			'Send a Bitbucket test delivery and check its delivery result.'
+			'A Bitbucket webhook secret is configured, but that does not prove the remote hook or a matching delivery.',
+			'Send a Bitbucket test delivery, then compare Request History with the Provider request ID in Booster Activity.'
 		);
 	}
 

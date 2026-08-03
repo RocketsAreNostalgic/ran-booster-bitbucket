@@ -8,7 +8,8 @@ Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
-- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and compatible RAN Booster Provider API 8 and Add-on API 14.
+- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 8 and Add-on API 14.
+- `Requires Plugins: ran-booster` tells WordPress that Core is a package dependency; it does not prove API compatibility. The exact runtime markers remain authoritative, and a mismatch keeps provider registration and remote calls inert.
 - Provider API 8 supplies no logging capability. Provider diagnostics return bounded typed results to Core and never send exceptions or vendor text through a logging facade.
 - Without compatible Booster, it makes no remote calls or provider registrations and shows administrators a safe compatibility notice.
 - It receives credential data only through Booster's provider-scoped reader. It neither stores credentials nor reads Booster's sidecar paths, Core container, or Core storage.

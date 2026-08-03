@@ -589,6 +589,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 
 		self::assertSame( ProviderDiagnosticResult::WARNING, $result->status );
 		self::assertSame( 'bb.webhook.delivery_unverified', $result->code );
+		self::assertStringContainsString( 'does not prove the remote hook or a matching delivery', $output );
+		self::assertStringContainsString( 'Provider request ID in Booster Activity', $output );
 		self::assertStringNotContainsString( self::OWNER_SECRET, $output );
 		self::assertStringNotContainsString( self::OTHER_SECRET, $output );
 	}

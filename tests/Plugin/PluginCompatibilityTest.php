@@ -131,6 +131,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertIsString( $guide );
 		self::assertStringNotContainsString( '<details', $guide );
 		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
+		self::assertStringContainsString( 'trusted credential-bearing provider code', $guide );
+		self::assertStringContainsString( 'not confidentiality from hostile PHP', $guide );
 		self::assertStringContainsString( 'Connect a package', $guide );
 		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
 		self::assertStringContainsString( 'Move or recover a package with Transporter', $guide );

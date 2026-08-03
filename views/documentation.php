@@ -10,7 +10,8 @@ $ran_booster_bitbucket_install_theme_url  = admin_url( 'admin.php?page=ran-boost
 $ran_booster_bitbucket_support_url        = 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues';
 
 ?>
-		<p><?php esc_html_e( 'The Bitbucket Cloud add-on connects RAN Booster to public and private Bitbucket repositories. It supplies repository discovery, archive downloads, credential checks, signed webhook handling and provider diagnostics while Core remains responsible for package records, secrets, deployment policy and deployment execution.', 'ran-booster-bitbucket' ); ?></p>
+		<p><?php esc_html_e( 'The Bitbucket Cloud add-on connects RAN Booster to public and private Bitbucket repositories. It supplies repository discovery, archive downloads, credential checks, signed webhook handling and provider diagnostics while Core remains responsible for package records, secret custody, deployment policy and deployment execution.', 'ran-booster-bitbucket' ); ?></p>
+		<p><?php esc_html_e( 'This is trusted credential-bearing provider code. Core binds the provider to bb and supplies only a selected Bitbucket credential during an authorized provider operation. The add-on does not enumerate other provider credentials, store the plaintext or receive Core’s sidecar, key or container. This supported boundary is not confidentiality from hostile PHP running in the same WordPress process.', 'ran-booster-bitbucket' ); ?></p>
 
 		<h3><?php esc_html_e( 'Create the narrowest API token', 'ran-booster-bitbucket' ); ?></h3>
 		<p><?php esc_html_e( 'Public repositories do not require a token. For private repositories, create a dedicated, expiring Bitbucket Cloud API token for the Atlassian account that can access the intended workspace. Give it only Repositories: Read (read:repository:bitbucket). Booster does not need Webhooks, Pull requests, Projects, Pipelines, Runners, Issues, SSH keys, or any Write, Admin or Delete permission.', 'ran-booster-bitbucket' ); ?></p>

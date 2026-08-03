@@ -1,63 +1,63 @@
 name: Quality
 
 on:
-    pull_request:
-    push:
-        branches:
-            - main
-    workflow_dispatch:
-        inputs:
-            core-ref:
-                description: Exact RAN Booster commit to verify
-                required: true
-                default: 12a5a8cddea70c0f717e7ea0f30571d9568f6079
-                type: string
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      core-ref:
+        description: Exact RAN Booster commit to verify
+        required: true
+        default: 63059051062cfea0d6c3786e80a778b9b5fb7685
+        type: string
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    quality:
-        runs-on: blacksmith-2vcpu-ubuntu-2404
+  quality:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    env:
+      RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
+      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '63059051062cfea0d6c3786e80a778b9b5fb7685' }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          path: ran-booster-bitbucket
+          persist-credentials: false
+      - name: Require private Core read deploy key
         env:
-            RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
-            RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '12a5a8cddea70c0f717e7ea0f30571d9568f6079' }}
-        steps:
-            - uses: actions/checkout@v6.0.2
-              with:
-                  path: ran-booster-bitbucket
-                  persist-credentials: false
-            - name: Require private Core read deploy key
-              env:
-                  CORE_READ_SSH_KEY: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
-              run: |
-                  if [ -z "$CORE_READ_SSH_KEY" ]; then
-                      echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
-                      exit 1
-                  fi
-            - uses: actions/checkout@v6.0.2
-              with:
-                  repository: RocketsAreNostalgic/ran-booster
-                  path: ran-booster
-                  ref: ${{ env.RAN_BOOSTER_CORE_REF }}
-                  ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
-                  persist-credentials: false
-            - name: Confirm exact Core commit
-              run: test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
-              working-directory: ran-booster
-            - uses: shivammathur/setup-php@v2
-              with:
-                  php-version: '8.2'
-                  tools: composer:v2
-            - run: composer install --no-interaction --prefer-dist
-              working-directory: ran-booster
-            - run: composer install --no-interaction --prefer-dist
-              working-directory: ran-booster-bitbucket
-            - run: composer check
-              working-directory: ran-booster-bitbucket
-            - run: composer build:release
-              working-directory: ran-booster-bitbucket
+          CORE_READ_SSH_KEY: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
+        run: |
+          if [ -z "$CORE_READ_SSH_KEY" ]; then
+              echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
+              exit 1
+          fi
+      - uses: actions/checkout@v6.0.2
+        with:
+          repository: RocketsAreNostalgic/ran-booster
+          path: ran-booster
+          ref: ${{ env.RAN_BOOSTER_CORE_REF }}
+          ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
+          persist-credentials: false
+      - name: Confirm exact Core commit
+        run: test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
+        working-directory: ran-booster
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer:v2
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: ran-booster
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: ran-booster-bitbucket
+      - run: composer check
+        working-directory: ran-booster-bitbucket
+      - run: composer build:release
+        working-directory: ran-booster-bitbucket
