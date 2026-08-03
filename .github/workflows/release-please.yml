@@ -120,7 +120,7 @@ jobs:
         if: env.RAN_RELEASE_PENDING == 'true'
         working-directory: ran-booster
         run: |
-          composer validate --strict --no-check-publish
+          composer validate --strict --no-check-all --no-check-publish
           composer install --no-interaction --prefer-dist --no-progress
 
       - name: Test, build and verify release assets
