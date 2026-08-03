@@ -63,7 +63,7 @@ jobs:
         with:
           repository: RocketsAreNostalgic/ran-booster
           # Provider API 8 / Add-on API 14 compatibility baseline.
-          ref: 63059051062cfea0d6c3786e80a778b9b5fb7685
+          ref: 6cca933ea349367c1486c0cf163ea3f9fa082887
           path: ran-booster
           persist-credentials: false
           ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}

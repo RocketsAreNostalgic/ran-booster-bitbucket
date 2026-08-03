@@ -132,6 +132,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringNotContainsString( '<details', $guide );
 		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
 		self::assertStringContainsString( 'trusted credential-bearing provider code', $guide );
+		self::assertStringContainsString( 'may request individual Bitbucket credentials from that namespace more than once', $guide );
+		self::assertStringContainsString( 'cannot enumerate or read another provider’s credentials', $guide );
 		self::assertStringContainsString( 'not confidentiality from hostile PHP', $guide );
 		self::assertStringContainsString( 'Connect a package', $guide );
 		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
