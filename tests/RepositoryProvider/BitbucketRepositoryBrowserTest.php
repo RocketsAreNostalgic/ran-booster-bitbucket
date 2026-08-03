@@ -72,8 +72,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			new BitbucketCredentialValidator( $loader, $api ),
 			new BitbucketRepositoryBrowser( $loader, $api ),
 			new BitbucketArchivePreparer( $loader, $api ),
-			new BitbucketWebhookNormalizer( $store ),
-			new BitbucketLoggingStub()
+			new BitbucketWebhookNormalizer( $store )
 		);
 
 		self::assertInstanceOf( CredentialedPublicRepositoryBrowser::class, $provider );

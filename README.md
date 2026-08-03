@@ -2,17 +2,19 @@
 
 RAN Booster Bitbucket Cloud is a premium add-on for RAN Booster. It restores
 the Bitbucket Cloud provider and its settings tab through the exact RAN Booster
-Provider API 6 and Logging API 1 contracts. It requires the coordinated Add-on
-API 12 generation and contributes its complete operational guide directly after
+Provider API 8 contract. It requires the coordinated Add-on API 14 generation
+and contributes its complete operational guide directly after
 Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
-- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and compatible RAN Booster Provider API 6, Logging API 1 and Add-on API 12.
-- Provider API 6 and Add-on API 12 make the Core-owned Logging API 1 facade mandatory throughout registry, provider and diagnostics construction; there is no nullable or silent logging fallback.
+- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 8 and Add-on API 14.
+- `Requires Plugins: ran-booster` tells WordPress that Core is a package dependency; it does not prove API compatibility. The exact runtime markers remain authoritative, and a mismatch keeps provider registration and remote calls inert.
+- Provider API 8 supplies no logging capability. Provider diagnostics return bounded typed results to Core and never send exceptions or vendor text through a logging facade.
 - Without compatible Booster, it makes no remote calls or provider registrations and shows administrators a safe compatibility notice.
 - It receives credential data only through Booster's provider-scoped reader. It neither stores credentials nor reads Booster's sidecar paths, Core container, or Core storage.
 - The provider intentionally does not implement the optional `ReleaseCatalog` capability.
+- The provider intentionally does not yet implement the optional webhook fitness or management capabilities; manual Bitbucket webhook guidance remains the supported path.
 - Its documentation callback is non-interactive. It receives no Core object or facade and performs no remote work.
 
 ## Install and operate

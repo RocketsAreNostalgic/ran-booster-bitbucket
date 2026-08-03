@@ -59,13 +59,15 @@ plugin=$(unzip -p "$archive" ran-booster-bitbucket/ran-booster-bitbucket.php)
 guide=$(unzip -p "$archive" ran-booster-bitbucket/views/documentation.php)
 
 if ! grep -Fq "RAN_BOOSTER_PROVIDER_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "6 !== RAN_BOOSTER_PROVIDER_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "1 !== RAN_BOOSTER_LOGGING_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "8 !== RAN_BOOSTER_PROVIDER_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
-	|| ! grep -Fq "12 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
+	|| ! grep -Fq "14 !== RAN_BOOSTER_ADDON_API_VERSION" <<< "$plugin" \
 	|| ! grep -Fq "ran_booster_documentation_sections_after_provider_bb" <<< "$plugin"; then
-	echo "Archive must require Provider API 6, Logging API 1 and Add-on API 12, and register the native Bitbucket documentation filter." >&2
+	echo "Archive must require Provider API 8 and Add-on API 14, and register the native Bitbucket documentation filter." >&2
+	exit 1
+fi
+if grep -Fq 'RAN_BOOSTER_LOGGING_API_VERSION' <<< "$plugin"; then
+	echo "Archive contains the removed Core logging marker." >&2
 	exit 1
 fi
 

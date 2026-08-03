@@ -64,48 +64,33 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	public function testItFailsClosedWithProviderApiFive(): void {
-		$result = $this->runFixture( 'incompatible' );
-
-		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 0, $result['documentation_sections'] );
-		self::assertSame( '', $result['documentation'] );
-		self::assertFalse( $result['provider_loaded'] );
-		self::assertFalse( $result['registered'] );
+	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-seven-addon-fourteen' );
 	}
 
-	public function testItFailsClosedWithAddOnApiEleven(): void {
-		$result = $this->runFixture( 'incompatible-addon' );
-
-		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 0, $result['documentation_sections'] );
-		self::assertSame( '', $result['documentation'] );
-		self::assertFalse( $result['provider_loaded'] );
-		self::assertFalse( $result['registered'] );
+	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-thirteen' );
 	}
 
-	public function testItFailsClosedWithAnIncompatibleLoggingApi(): void {
-		$result = $this->runFixture( 'incompatible-logging' );
-
-		self::assertSame( 1, $result['provider_callbacks'] );
-		self::assertSame( 0, $result['documentation_sections'] );
-		self::assertSame( '', $result['documentation'] );
-		self::assertFalse( $result['provider_loaded'] );
-		self::assertFalse( $result['registered'] );
+	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-seven-addon-thirteen' );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiSixAndKeepsReleaseCatalogOptional(): void {
+	public function testItRegistersOnlyAgainstProviderApiEightWithoutClaimingOptionalCapabilities(): void {
 		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
-		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 2, $result['admin_interaction_api_version'] );
 		self::assertSame( 0, $result['admin_interaction_callbacks'] );
 		self::assertTrue( $result['markers_defined_when_loaded'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
+		self::assertFalse( $result['implements_webhook_fitness'] );
+		self::assertFalse( $result['implements_webhook_management'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
@@ -114,13 +99,16 @@ final class PluginCompatibilityTest extends TestCase {
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
-		self::assertSame( 1, $result['admin_interaction_api_version'] );
+		self::assertSame( 2, $result['admin_interaction_api_version'] );
 		self::assertSame( 0, $result['admin_interaction_callbacks'] );
 		self::assertFalse( $result['markers_defined_when_loaded'] );
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
+		self::assertFalse( $result['implements_webhook_fitness'] );
+		self::assertFalse( $result['implements_webhook_management'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
@@ -143,6 +131,10 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertIsString( $guide );
 		self::assertStringNotContainsString( '<details', $guide );
 		self::assertStringContainsString( 'Repositories: Read (read:repository:bitbucket)', $guide );
+		self::assertStringContainsString( 'trusted credential-bearing provider code', $guide );
+		self::assertStringContainsString( 'may request individual Bitbucket credentials from that namespace more than once', $guide );
+		self::assertStringContainsString( 'cannot enumerate or read another provider’s credentials', $guide );
+		self::assertStringContainsString( 'not confidentiality from hostile PHP', $guide );
 		self::assertStringContainsString( 'Connect a package', $guide );
 		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
 		self::assertStringContainsString( 'Move or recover a package with Transporter', $guide );
@@ -162,6 +154,21 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['documentation_sections'] );
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['registered'] );
+	}
+
+	private function assertTupleFailsClosedInBothLoadOrders( string $mode ): void {
+		foreach ( array( $mode => true, $mode . '-addon-first' => false ) as $fixtureMode => $markersDefinedWhenLoaded ) {
+			$result = $this->runFixture( $fixtureMode );
+
+			self::assertSame( 1, $result['provider_callbacks'], $fixtureMode );
+			self::assertSame( 0, $result['documentation_sections'], $fixtureMode );
+			self::assertSame( '', $result['documentation'], $fixtureMode );
+			self::assertSame( $markersDefinedWhenLoaded, $result['markers_defined_when_loaded'], $fixtureMode );
+			self::assertFalse( $result['provider_loaded'], $fixtureMode );
+			self::assertFalse( $result['registered'], $fixtureMode );
+			self::assertSame( 0, $result['credential_store_reads'], $fixtureMode );
+			self::assertSame( 0, $result['remote_calls'], $fixtureMode );
+		}
 	}
 
 	/** @return array<string, bool|int|string|null> */
