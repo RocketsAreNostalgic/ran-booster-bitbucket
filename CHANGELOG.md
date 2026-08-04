@@ -3,6 +3,51 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.5](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.4...v0.1.0-beta.5) (2026-08-04)
+
+
+### Bug Fixes
+
+* **deps:** certify Core beta.5 compatibility ([b1037c4](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/b1037c43b54a90f055a05a6c7cb4650502ba1421))
+* **deps:** certify Core beta.5 compatibility ([015512d](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/015512d36019ff8b60663ebaee482b954a8ad211))
+
+
+### Miscellaneous Chores
+
+* **main:** release 0.1.0-beta.4 ([0b6cb11](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/0b6cb11dae45bbf316008c1427172466c1c7ff32))
+
+## [0.1.0-beta.4](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.3...v0.1.0-beta.4) (2026-08-03)
+
+
+### Bug Fixes
+
+* **release:** certify Core beta.4 compatibility ([0b64d23](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/0b64d23457cea1d531c5eef5cda48c796b020438))
+* **release:** certify Core beta.4 compatibility ([87378d2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/87378d2629c82f4159b4ac3a51821466de71811f))
+
+
+### Miscellaneous Chores
+
+* **main:** release 0.1.0-beta.3 ([32bc0e7](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/32bc0e71ead19bc3caeda44cd3019396cd110168))
+
+## [0.1.0-beta.3](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.2...v0.1.0-beta.3) (2026-08-03)
+
+
+### Bug Fixes
+
+* **release:** certify Core beta.3 compatibility ([fe2694f](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/fe2694fa5193062ffc37294b356dd348a179cfc8))
+* **release:** certify Core beta.3 compatibility ([18defab](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/18defabfba03fc37c530b89fbb583e37fca91f60))
+
+## [0.1.0-beta.2](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.1...v0.1.0-beta.2) (2026-08-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* land P0 Core contract and release hardening ([#17](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/17))
+
+### Bug Fixes
+
+* land P0 Core contract and release hardening ([#17](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/17)) ([7221200](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/72212000337394b8d17f127e272d0cf6e9388195))
+
 ## [0.1.0-beta.1](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-alpha.5...v0.1.0-beta.1) (2026-08-02)
 
 

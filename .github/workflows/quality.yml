@@ -10,7 +10,7 @@ on:
       core-ref:
         description: Exact RAN Booster commit to verify
         required: true
-        default: 6cca933ea349367c1486c0cf163ea3f9fa082887
+        default: c992d612a827bef2bc6dea6993e25045087b6d52
         type: string
 
 concurrency:
@@ -25,9 +25,9 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404
     env:
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
-      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || '6cca933ea349367c1486c0cf163ea3f9fa082887' }}
+      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'c992d612a827bef2bc6dea6993e25045087b6d52' }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: ran-booster-bitbucket
           persist-credentials: false
@@ -39,17 +39,21 @@ jobs:
               echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
               exit 1
           fi
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: RocketsAreNostalgic/ran-booster
           path: ran-booster
           ref: ${{ env.RAN_BOOSTER_CORE_REF }}
+          fetch-depth: 0
           ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
           persist-credentials: false
       - name: Confirm exact Core commit
-        run: test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
+        run: |
+          test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
+          core_tag="$(git describe --tags --exact-match HEAD)"
+          [[ "${core_tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
         working-directory: ran-booster
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # 2.36.0
         with:
           php-version: "8.2"
           tools: composer:v2

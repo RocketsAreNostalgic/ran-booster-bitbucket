@@ -5,7 +5,7 @@
  * Plugin URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket
  * Description: Bitbucket Cloud provider for RAN Booster.
  * x-release-please-start-version
- * Version: 0.1.0-beta.1
+ * Version: 0.1.0-beta.5
  * x-release-please-end
  * Requires at least: 7.0
  * Requires PHP: 8.2
