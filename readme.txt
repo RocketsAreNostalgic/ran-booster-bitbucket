@@ -34,6 +34,12 @@ included manual Bitbucket webhook guidance.
 3. Open RAN Booster. The Bitbucket tab appears directly after GitHub.
 4. Open RAN Booster Documentation for the complete Bitbucket operational guide.
 
+Transporter copies only explicitly selected eligible file-stored credentials.
+Each carried credential requires an explicit import, saved-target or leave
+choice on a target where this compatible add-on is active; there is no fallback
+and no token permission assurance. Copying does not revoke or rotate the source
+API token.
+
 == Changelog ==
 
 = 0.1.0-alpha.1 =

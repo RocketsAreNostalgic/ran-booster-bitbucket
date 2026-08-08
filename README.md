@@ -26,6 +26,12 @@ Core's Bitbucket provider documentation.
    permissions, package connection, manual webhook setup, Transporter recovery,
    deactivation and private support.
 
+Transporter copies only explicitly selected eligible file-stored credentials.
+Each carried credential requires an explicit import, saved-target or leave
+choice on a target where this compatible add-on is active; there is no fallback
+and no token permission assurance. Copying does not revoke or rotate the source
+API token.
+
 Deactivating the add-on stops it from registering the `bb` provider. It owns no
 installation records or credential storage to remove.
 

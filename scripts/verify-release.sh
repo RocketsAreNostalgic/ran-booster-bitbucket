@@ -80,6 +80,8 @@ for required_guide_text in \
 	"Repositories: Read (read:repository:bitbucket)" \
 	"Set up Push-to-Deploy manually" \
 	"Move or recover a package with Transporter" \
+	"There is no credential or anonymous fallback" \
+	"does not remove, revoke or rotate the source API token" \
 	"Deactivation, deletion and provider cleanup" \
 	"Private releases and support"; do
 	if ! grep -Fq "$required_guide_text" <<< "$guide"; then

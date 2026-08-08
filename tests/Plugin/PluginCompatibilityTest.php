@@ -138,6 +138,10 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Connect a package', $guide );
 		self::assertStringContainsString( 'Set up Push-to-Deploy manually', $guide );
 		self::assertStringContainsString( 'Move or recover a package with Transporter', $guide );
+		self::assertStringContainsString( 'import the copied material, use a saved Bitbucket credential on that site, or leave its packages unchanged', $guide );
+		self::assertStringContainsString( 'There is no credential or anonymous fallback', $guide );
+		self::assertStringContainsString( 'does not assess token permissions', $guide );
+		self::assertStringContainsString( 'does not remove, revoke or rotate the source API token', $guide );
 		self::assertStringContainsString( 'Deactivation, deletion and provider cleanup', $guide );
 		self::assertStringContainsString( 'Private releases and support', $guide );
 		self::assertStringNotContainsString( '<form', $guide );
@@ -157,7 +161,12 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	private function assertTupleFailsClosedInBothLoadOrders( string $mode ): void {
-		foreach ( array( $mode => true, $mode . '-addon-first' => false ) as $fixtureMode => $markersDefinedWhenLoaded ) {
+		foreach (
+			array(
+				$mode                   => true,
+				$mode . '-addon-first' => false,
+			) as $fixtureMode => $markersDefinedWhenLoaded
+		) {
 			$result = $this->runFixture( $fixtureMode );
 
 			self::assertSame( 1, $result['provider_callbacks'], $fixtureMode );
