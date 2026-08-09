@@ -2,7 +2,7 @@
 
 RAN Booster Bitbucket is released as a private GitHub artifact, never through WordPress.org or SVN.
 
-The repository's Quality and release-package jobs require an Actions repository
+The repository's Quality jobs require an Actions repository
 secret named `RAN_BOOSTER_CORE_READ_SSH_KEY`. Store the private half of a
 dedicated SSH deploy-key pair in that secret, then add its public half to the
 private `RocketsAreNostalgic/ran-booster` repository as a read-only deploy key.
@@ -16,4 +16,4 @@ that sibling private repository and is intentionally not used as a fallback.
 5. Check out that same Core commit locally, set `RAN_BOOSTER_CORE_PATH` to it, run `composer check`, then run `composer build:release`.
 6. Inspect `build/ran-booster-bitbucket-<version>.zip` and its SHA-256 file. The verifier enforces one `ran-booster-bitbucket/` root, the exact allowlist, matching versions, PHP syntax, the native Bitbucket documentation hook and guide, and the absence of tests, vendor, Core code, caches, credentials, and development tooling.
 7. Install the ZIP beside the recorded Core release in a clean WordPress instance. Confirm the Bitbucket provider registers, its tab appears after GitHub, its complete guide appears after Core's Bitbucket provider guide, and deactivation removes both contributions by stopping add-on loading.
-8. Merge the Release Please pull request. In the same workflow run, the package-release job checks out the exact created tag and the pinned compatible Core release, repeats the checks and build, confirms the tag, package version and prerelease state, and attaches the verified ZIP and checksum to the private GitHub release. Do not distribute GitHub's generated source archives as the plugin package.
+8. Merge the Release Please pull request. The main-push Quality run tests the pinned compatible Core release and builds one verified ZIP and checksum. Only after that run succeeds, the serialized release workflow checks out its exact commit, proves the exact merged Release Please PR before mutation, downloads that exact run's retained artifact without rebuilding it, confirms the tag, package version and prerelease state, and attaches the ZIP and checksum to the private GitHub release. Do not distribute GitHub's generated source archives as the plugin package.

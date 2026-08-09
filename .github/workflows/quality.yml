@@ -14,20 +14,127 @@ on:
         type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: quality-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
-  quality:
+  runtime-archive:
+    name: Runtime archive
     runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    env:
+      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'c992d612a827bef2bc6dea6993e25045087b6d52' }}
+    outputs:
+      artifact-name: ${{ steps.archive.outputs.artifact-name }}
+      archive-sha256: ${{ steps.archive.outputs.archive-sha256 }}
+      release-candidate: ${{ steps.archive.outputs.release-candidate }}
+      source-commit: ${{ steps.archive.outputs.source-commit }}
+      version: ${{ steps.archive.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.2"
+          coverage: none
+          tools: composer:v2
+
+      - name: Build and verify the runtime archive once
+        id: archive
+        shell: bash
+        env:
+          RAN_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          RAN_PR_BASE: ${{ github.event.pull_request.base.ref }}
+          RAN_PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          RAN_PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          set -euo pipefail
+
+          release_candidate=false
+          if [[ "$GITHUB_EVENT_NAME" == pull_request \
+            && "$RAN_PR_AUTHOR" == 'github-actions[bot]' \
+            && "$RAN_PR_BASE" == main \
+            && "$RAN_PR_HEAD" == 'release-please--branches--main--components--ran-booster-bitbucket' \
+            && "$RAN_PR_HEAD_REPOSITORY" == "$GITHUB_REPOSITORY" ]]; then
+            release_candidate=true
+          fi
+
+          source_commit="$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == push ]] \
+            && ! git diff --quiet "${GITHUB_SHA}^1" "$GITHUB_SHA" -- .release-please-manifest.json; then
+            source_commit="$(git rev-parse "${GITHUB_SHA}^2")"
+            test "$(git log -1 --format=%H "$GITHUB_SHA" -- .release-please-manifest.json)" = "$source_commit"
+            test "$(git rev-parse "${GITHUB_SHA}^{tree}")" = "$(git rev-parse "${source_commit}^{tree}")"
+          fi
+
+          version="$(git show "${source_commit}:ran-booster-bitbucket.php" \
+            | sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')"
+          test -n "$version"
+          test "$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' ran-booster-bitbucket.php)" = "$version"
+          composer build:release
+
+          archive="build/ran-booster-bitbucket-${version}.zip"
+          checksum="${archive}.sha256"
+          test -f "$archive"
+          test -f "$checksum"
+          archive_sha256="$(sha256sum "$archive" | awk '{ print $1 }')"
+          artifact_name="ran-booster-bitbucket-runtime-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          jq -n \
+            --arg quality_commit "$GITHUB_SHA" \
+            --arg source_commit "$source_commit" \
+            --arg version "$version" \
+            --arg sha256 "$archive_sha256" \
+            --arg core_commit "$RAN_BOOSTER_CORE_REF" \
+            '{
+              schema: "ran-booster-bitbucket-ci-runtime",
+              schema_version: 1,
+              quality_commit: $quality_commit,
+              source_commit: $source_commit,
+              version: $version,
+              sha256: $sha256,
+              core_commit: $core_commit
+            }' > build/ran-booster-bitbucket-ci-runtime.json
+
+          {
+            printf 'artifact-name=%s\n' "$artifact_name"
+            printf 'archive-sha256=%s\n' "$archive_sha256"
+            printf 'release-candidate=%s\n' "$release_candidate"
+            printf 'source-commit=%s\n' "$source_commit"
+            printf 'version=%s\n' "$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload the verified runtime archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.archive.outputs.artifact-name }}
+          path: |
+            build/ran-booster-bitbucket-${{ steps.archive.outputs.version }}.zip
+            build/ran-booster-bitbucket-${{ steps.archive.outputs.version }}.zip.sha256
+            build/ran-booster-bitbucket-ci-runtime.json
+          if-no-files-found: error
+          retention-days: 7
+
+  quality:
+    name: Quality
+    needs: runtime-archive
+    if: ${{ needs.runtime-archive.outputs.release-candidate != 'true' }}
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
     env:
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
       RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'c992d612a827bef2bc6dea6993e25045087b6d52' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: ran-booster-bitbucket
           persist-credentials: false
@@ -35,11 +142,12 @@ jobs:
         env:
           CORE_READ_SSH_KEY: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
         run: |
-          if [ -z "$CORE_READ_SSH_KEY" ]; then
-              echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
-              exit 1
+          if [[ -z "$CORE_READ_SSH_KEY" ]]; then
+            echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
+            exit 1
           fi
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Check out compatible Booster Core
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: RocketsAreNostalgic/ran-booster
           path: ran-booster
@@ -47,21 +155,61 @@ jobs:
           fetch-depth: 0
           ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
           persist-credentials: false
-      - name: Confirm exact Core commit
+      - name: Confirm exact tag-backed Core commit
+        working-directory: ran-booster
         run: |
           test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
           core_tag="$(git describe --tags --exact-match HEAD)"
-          [[ "${core_tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
-        working-directory: ran-booster
-      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # 2.36.0
+          [[ "$core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: "8.2"
+          coverage: none
           tools: composer:v2
-      - run: composer install --no-interaction --prefer-dist
+      - name: Install Core development dependencies
         working-directory: ran-booster
-      - run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Install add-on development dependencies
         working-directory: ran-booster-bitbucket
-      - run: composer check
+        run: |
+          composer validate --strict --no-check-all --no-check-publish
+          composer install --no-interaction --prefer-dist --no-progress
+      - name: Run add-on quality checks
         working-directory: ran-booster-bitbucket
-      - run: composer build:release
+        run: composer check
+      - name: Download the verified runtime archive
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.runtime-archive.outputs.artifact-name }}
+          path: ran-booster-bitbucket/build
+      - name: Verify the shared runtime archive identity
         working-directory: ran-booster-bitbucket
+        shell: bash
+        run: |
+          set -euo pipefail
+          metadata='build/ran-booster-bitbucket-ci-runtime.json'
+          archive='build/ran-booster-bitbucket-${{ needs.runtime-archive.outputs.version }}.zip'
+          checksum="${archive}.sha256"
+          test -f "$metadata"
+          test -f "$archive"
+          test -f "$checksum"
+          jq -e \
+            --arg quality_commit "$GITHUB_SHA" \
+            --arg source_commit '${{ needs.runtime-archive.outputs.source-commit }}' \
+            --arg version '${{ needs.runtime-archive.outputs.version }}' \
+            --arg sha256 '${{ needs.runtime-archive.outputs.archive-sha256 }}' \
+            --arg core_commit "$RAN_BOOSTER_CORE_REF" \
+            '.schema == "ran-booster-bitbucket-ci-runtime"
+              and .schema_version == 1
+              and .quality_commit == $quality_commit
+              and .source_commit == $source_commit
+              and .version == $version
+              and .sha256 == $sha256
+              and .core_commit == $core_commit' \
+            "$metadata" >/dev/null
+          printf '%s  %s\n' '${{ needs.runtime-archive.outputs.archive-sha256 }}' "$archive" \
+            | sha256sum --check --strict
+          expected_checksum="$(printf '%s  %s' '${{ needs.runtime-archive.outputs.archive-sha256 }}' "$(basename "$archive")")"
+          test "$(< "$checksum")" = "$expected_checksum"
+          composer verify:release -- "$archive"
