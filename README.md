@@ -44,12 +44,15 @@ need a compatible sibling `../ran-booster` checkout with Composer dependencies:
 ```sh
 composer install
 composer check
+composer analyse
 composer build:release -- "$(git rev-parse HEAD)"
 ```
 
 Set `RAN_BOOSTER_CORE_PATH` if the Core checkout is elsewhere. The add-on owns
 its PHP tools in its local `vendor/`, but never packages a vendor tree or Core
-code in the release artifact.
+code in the release artifact. Static analysis is a non-blocking, Bitbucket-only
+pilot; read the decision record in [CONTRIBUTING.md](CONTRIBUTING.md) before
+raising its level, adding suppressions or adopting it elsewhere.
 
 ## Releases and support
 
