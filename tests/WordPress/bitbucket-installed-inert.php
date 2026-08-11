@@ -11,11 +11,15 @@ $mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
 if ( ! in_array( $mode, array( 'absent', 'incompatible' ), true ) ) {
 	throw new RuntimeException( 'A supported installed inertness mode is required.' );
 }
+$expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
+if ( false === $expectedVersion || '' === $expectedVersion ) {
+	throw new RuntimeException( 'The expected installed Bitbucket version is required.' );
+}
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 $pluginFile = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
 $pluginData = get_plugin_data( $pluginFile, false, false );
-if ( '0.1.0-beta.6' !== ( $pluginData['Version'] ?? null )
+if ( $expectedVersion !== ( $pluginData['Version'] ?? null )
 	|| 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket' !== ( $pluginData['UpdateURI'] ?? null )
 ) {
 	throw new RuntimeException( 'The inertness lane did not retain the exact installed Bitbucket candidate.' );

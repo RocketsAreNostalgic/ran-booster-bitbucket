@@ -16,13 +16,17 @@ $coreSource = getenv( 'RAN_BOOSTER_CORE_SOURCE_PATH' );
 if ( false === $coreSource || '' === $coreSource ) {
 	throw new RuntimeException( 'The exact certified Core source path is required.' );
 }
+$expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
+if ( false === $expectedVersion || '' === $expectedVersion ) {
+	throw new RuntimeException( 'The expected installed Bitbucket version is required.' );
+}
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 $pluginFile = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
 $pluginData = get_plugin_data( $pluginFile, false, false );
 $expected   = array(
 	'Name'            => 'RAN Booster Bitbucket Cloud',
-	'Version'         => '0.1.0-beta.6',
+	'Version'         => $expectedVersion,
 	'UpdateURI'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
 	'RequiresPlugins' => 'ran-booster',
 	'RequiresWP'      => '7.0',

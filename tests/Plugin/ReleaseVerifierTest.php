@@ -131,9 +131,10 @@ PYTHON;
 		self::assertSame( 1, $this->verify( $fixture['archive'], $fixture['commit'] ) );
 
 		$this->writeChecksum( $fixture['archive'] );
-		$parent = trim( (string) shell_exec( 'git -C ' . escapeshellarg( dirname( __DIR__, 2 ) ) . ' rev-parse ' . escapeshellarg( $fixture['commit'] . '^' ) ) );
-		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $parent );
-		self::assertSame( 1, $this->verify( $fixture['archive'], $parent ) );
+		$otherCommit = trim( (string) shell_exec( 'git -C ' . escapeshellarg( dirname( __DIR__, 2 ) ) . ' rev-list --max-parents=0 --max-count=1 HEAD' ) );
+		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $otherCommit );
+		self::assertNotSame( $fixture['commit'], $otherCommit );
+		self::assertSame( 1, $this->verify( $fixture['archive'], $otherCommit ) );
 	}
 
 	/** @return array{archive: string, commit: string} */
