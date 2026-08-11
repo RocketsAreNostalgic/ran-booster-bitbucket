@@ -19,10 +19,11 @@ Booster installation. It supports public and private repository discovery,
 API-token credential validation, archive preparation, webhook handling and
 diagnostics. Its add-on-owned Documentation guide covers API-token permissions,
 package connection, manual webhook setup, Transporter recovery, deactivation
-and private support.
+and support.
 
-This is a dependent, private GitHub release artifact, not a WordPress.org
-distribution. It performs no provider registration or remote calls when RAN
+This free official add-on is distributed as a verified GitHub release artifact,
+not through WordPress.org. It also serves as the production-shaped reference for
+maintained provider extensions. It performs no provider registration or remote calls when RAN
 Booster Provider API 8 or Add-on API 14 is absent or incompatible. The optional
 webhook fitness and management capabilities are not yet implemented; use the
 included manual Bitbucket webhook guidance.

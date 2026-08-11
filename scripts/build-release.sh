@@ -8,14 +8,17 @@ export TZ=UTC
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 cd "$root"
 
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-	echo "Refusing to build from a tracked dirty worktree." >&2
+source_commit=${1:?full source commit is required}
+if [[ ! "$source_commit" =~ ^[0-9a-f]{40}$ ]] \
+	|| ! git cat-file -e "${source_commit}^{commit}" 2>/dev/null \
+	|| [[ "$(git rev-parse "${source_commit}^{commit}")" != "$source_commit" ]]; then
+	echo "Source commit must be an existing full commit ID." >&2
 	exit 1
 fi
 
-version=$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' ran-booster-bitbucket.php)
+version=$(git show "${source_commit}:ran-booster-bitbucket.php" | sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
 test -n "$version"
-readme_version=$(sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' readme.txt)
+readme_version=$(git show "${source_commit}:readme.txt" | sed -n 's/^Stable tag:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')
 
 if [ "$version" != "$readme_version" ]; then
 	echo "Plugin header and readme stable tag must match." >&2
@@ -27,15 +30,15 @@ while IFS= read -r file; do
 	case "$file" in
 		''|'#'*) continue ;;
 	esac
-	if ! git cat-file -e "HEAD:$file" 2>/dev/null; then
-		echo "Release allowlist entry is missing from HEAD: $file" >&2
+	if ! git cat-file -e "$source_commit:$file" 2>/dev/null; then
+		echo "Release allowlist entry is missing from the source commit: $file" >&2
 		exit 1
 	fi
 	files+=( "$file" )
-done < release-files.txt
+done < <(git show "${source_commit}:release-files.txt")
 
 mkdir -p build
 archive="build/ran-booster-bitbucket-$version.zip"
-git archive --format=zip --prefix=ran-booster-bitbucket/ --output="$archive" HEAD -- "${files[@]}"
+git archive --format=zip --prefix=ran-booster-bitbucket/ --output="$archive" "$source_commit" -- "${files[@]}"
 ( cd "$(dirname "$archive")" && shasum -a 256 "$(basename "$archive")" ) > "$archive.sha256"
-"$(dirname "$0")/verify-release.sh" "$archive"
+"$(dirname "$0")/verify-release.sh" "$archive" "$source_commit"

@@ -7,6 +7,12 @@
         "issues": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues",
         "source": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket"
     },
+    "extra": {
+        "ran-booster-core-certification": {
+            "tag": "v1.0.0-beta.5",
+            "commit": "c992d612a827bef2bc6dea6993e25045087b6d52"
+        }
+    },
     "require": {
         "php": "^8.2"
     },
