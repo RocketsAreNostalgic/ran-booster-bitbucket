@@ -17,3 +17,15 @@ that sibling private repository and is intentionally not used as a fallback.
 6. Inspect `build/ran-booster-bitbucket-<version>.zip` and its SHA-256 file. The verifier enforces one `ran-booster-bitbucket/` root, the exact allowlist, matching versions, PHP syntax, the native Bitbucket documentation hook and guide, and the absence of tests, vendor, Core code, caches, credentials, and development tooling.
 7. Install the ZIP beside the recorded Core release in a clean WordPress instance. Confirm the Bitbucket provider registers, its tab appears after GitHub, its complete guide appears after Core's Bitbucket provider guide, and deactivation removes both contributions by stopping add-on loading.
 8. Merge the Release Please pull request. The main-push Quality run tests the pinned compatible Core release and builds one verified ZIP and checksum. Only after that run succeeds, the serialized release workflow checks out its exact commit, proves the exact merged Release Please PR before mutation, downloads that exact run's retained artifact without rebuilding it, confirms the tag, package version and prerelease state, and attaches the ZIP and checksum to the GitHub release. Do not distribute GitHub's generated source archives as the plugin package.
+
+## Disposable installed proof
+
+`tests/WordPress/bitbucket-installed-proof.sh` is the repeatable installed boundary for step 7. Point it only at an explicitly marked disposable WordPress site and provide the exact Core/Bitbucket archives, their SHA-256 digests, the full Bitbucket source commit and the certified Core source checkout. The driver verifies both archives before installation, confirms the installed Bitbucket tree exactly matches the retained ZIP, activates the dependency pair normally, exercises both stored plugin load orders, and runs missing/incompatible-Core inertness probes.
+
+The controlled provider operation uses the durable public fixture identity
+`rocketsarenostalgic/ran-booster-fixture-public-plugin` but intercepts the HTTP
+request with a deterministic WordPress transport response. It needs no live
+Bitbucket credential and does not read the site's saved credential store. The
+driver backs up and restores the original Core directory and `active_plugins`
+option, removes the installed Bitbucket candidate, and fails if cleanup cannot
+be proved.
