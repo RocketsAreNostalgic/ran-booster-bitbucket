@@ -13,6 +13,19 @@ final class PluginCompatibilityTest extends TestCase {
 
 		self::assertIsString( $plugin );
 		self::assertStringContainsString( 'Requires Plugins: ran-booster', $plugin );
+		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $plugin );
+	}
+
+	public function testEntrypointBootsOneFinalStatelessCompositionRoot(): void {
+		$root       = dirname( __DIR__, 2 );
+		$entrypoint = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local architecture contract.
+		require_once $root . '/autoload.php';
+		$plugin = new \ReflectionClass( \RAN\Booster\Bitbucket\Plugin::class );
+
+		self::assertIsString( $entrypoint );
+		self::assertStringContainsString( '\\RAN\\Booster\\Bitbucket\\Plugin::boot();', $entrypoint );
+		self::assertTrue( $plugin->isFinal() );
+		self::assertSame( array(), $plugin->getProperties() );
 	}
 
 	public function testReleasePleaseOwnsEveryPluginVersionSource(): void {
@@ -62,6 +75,16 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
+		self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'] );
+		self::assertSame( 0, $result['remote_calls'] );
+	}
+
+	public function testCompatibilityNoticeRequiresPluginActivationCapability(): void {
+		$result = $this->runFixture( 'absent-unprivileged' );
+
+		self::assertSame( '', $result['compatibility_notice'] );
+		self::assertFalse( $result['registered'] );
+		self::assertSame( 0, $result['remote_calls'] );
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
@@ -91,7 +114,9 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );
 		self::assertFalse( $result['implements_webhook_management'] );
-		self::assertSame( 0, $result['remote_calls'] );
+		self::assertSame( 1, $result['remote_calls'] );
+		self::assertSame( 'example/reference-plugin', $result['operation_locator'] );
+		self::assertSame( '', $result['compatibility_notice'] );
 	}
 
 	public function testItRegistersWhenTheAddOnLoadsBeforeCompatibleCoreMarkers(): void {
@@ -109,7 +134,9 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );
 		self::assertFalse( $result['implements_webhook_management'] );
-		self::assertSame( 0, $result['remote_calls'] );
+		self::assertSame( 1, $result['remote_calls'] );
+		self::assertSame( 'example/reference-plugin', $result['operation_locator'] );
+		self::assertSame( '', $result['compatibility_notice'] );
 	}
 
 	public function testUnsupportedMultisiteCallbacksStayInertDespiteCompatibleApis(): void {
@@ -122,6 +149,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 		self::assertFalse( $result['credential_store_was_scoped'] );
 		self::assertSame( 0, $result['remote_calls'] );
+		self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'] );
 	}
 
 	public function testCompatibleGenerationRendersOneCompleteNonInteractiveGuide(): void {
@@ -143,7 +171,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'does not assess token permissions', $guide );
 		self::assertStringContainsString( 'does not remove, revoke or rotate the source API token', $guide );
 		self::assertStringContainsString( 'Deactivation, deletion and provider cleanup', $guide );
-		self::assertStringContainsString( 'Private releases and support', $guide );
+		self::assertStringContainsString( 'Releases and support', $guide );
 		self::assertStringNotContainsString( '<form', $guide );
 		self::assertStringNotContainsString( '<input', $guide );
 		self::assertStringNotContainsString( 'wp_nonce', $guide );

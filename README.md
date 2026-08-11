@@ -1,6 +1,7 @@
 # RAN Booster Bitbucket Cloud
 
-RAN Booster Bitbucket Cloud is a premium add-on for RAN Booster. It restores
+RAN Booster Bitbucket Cloud is the free official Bitbucket add-on for RAN Booster
+and a production-shaped reference for maintained provider extensions. It restores
 the Bitbucket Cloud provider and its settings tab through the exact RAN Booster
 Provider API 8 contract. It requires the coordinated Add-on API 14 generation
 and contributes its complete operational guide directly after
@@ -20,11 +21,11 @@ Core's Bitbucket provider documentation.
 ## Install and operate
 
 1. Install and activate compatible RAN Booster.
-2. Install and activate the private Bitbucket release ZIP.
+2. Install and activate the verified Bitbucket release ZIP.
 3. Open RAN Booster; the Bitbucket tab follows GitHub.
 4. Open RAN Booster's Documentation tab for the add-on-owned guide to API-token
    permissions, package connection, manual webhook setup, Transporter recovery,
-   deactivation and private support.
+   deactivation and support.
 
 Transporter copies only explicitly selected eligible file-stored credentials.
 Each carried credential requires an explicit import, saved-target or leave
@@ -43,7 +44,7 @@ need a compatible sibling `../ran-booster` checkout with Composer dependencies:
 ```sh
 composer install
 composer check
-composer build:release
+composer build:release -- "$(git rev-parse HEAD)"
 ```
 
 Set `RAN_BOOSTER_CORE_PATH` if the Core checkout is elsewhere. The add-on owns
@@ -52,12 +53,12 @@ code in the release artifact.
 
 ## Releases and support
 
-Releases are private GitHub artifacts, not WordPress.org/SVN publications. See
+Releases are verified GitHub artifacts, not WordPress.org/SVN publications. See
 [RELEASE.md](RELEASE.md) and use Conventional Commits as described in
 [CONTRIBUTING.md](CONTRIBUTING.md). Report issues through the repository's
 GitHub issue tracker, but never include credentials, webhook secrets, signed
-URLs, private release assets or customer data. Use the confidential contact
-supplied with the private release for sensitive security reports.
+URLs, release assets or customer data. Request a confidential contact route
+without disclosing details before submitting a sensitive security report.
 
 ## Licence
 

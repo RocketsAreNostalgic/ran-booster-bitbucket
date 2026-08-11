@@ -6,12 +6,6 @@ on:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      core-ref:
-        description: Exact RAN Booster commit to verify
-        required: true
-        default: c992d612a827bef2bc6dea6993e25045087b6d52
-        type: string
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
@@ -25,8 +19,6 @@ jobs:
     name: Runtime archive
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 10
-    env:
-      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'c992d612a827bef2bc6dea6993e25045087b6d52' }}
     outputs:
       artifact-name: ${{ steps.archive.outputs.artifact-name }}
       archive-sha256: ${{ steps.archive.outputs.archive-sha256 }}
@@ -79,7 +71,10 @@ jobs:
             | sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p')"
           test -n "$version"
           test "$(sed -n 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*\([^[:space:]]*\)[[:space:]]*$/\1/p' ran-booster-bitbucket.php)" = "$version"
-          composer build:release
+          certification="$(git show "${source_commit}:composer.json" | jq -cer '.extra["ran-booster-core-certification"]')"
+          core_tag="$(jq -er '.tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' <<< "$certification")"
+          core_commit="$(jq -er '.commit | select(test("^[0-9a-f]{40}$"))' <<< "$certification")"
+          composer build:release -- "$source_commit"
 
           archive="build/ran-booster-bitbucket-${version}.zip"
           checksum="${archive}.sha256"
@@ -93,14 +88,16 @@ jobs:
             --arg source_commit "$source_commit" \
             --arg version "$version" \
             --arg sha256 "$archive_sha256" \
-            --arg core_commit "$RAN_BOOSTER_CORE_REF" \
+            --arg core_tag "$core_tag" \
+            --arg core_commit "$core_commit" \
             '{
               schema: "ran-booster-bitbucket-ci-runtime",
-              schema_version: 1,
+              schema_version: 2,
               quality_commit: $quality_commit,
               source_commit: $source_commit,
               version: $version,
               sha256: $sha256,
+              core_tag: $core_tag,
               core_commit: $core_commit
             }' > build/ran-booster-bitbucket-ci-runtime.json
 
@@ -131,12 +128,12 @@ jobs:
     timeout-minutes: 10
     env:
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
-      RAN_BOOSTER_CORE_REF: ${{ inputs.core-ref || 'c992d612a827bef2bc6dea6993e25045087b6d52' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: ran-booster-bitbucket
+          fetch-depth: 0
           persist-credentials: false
       - name: Require private Core read deploy key
         env:
@@ -146,6 +143,12 @@ jobs:
             echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
             exit 1
           fi
+      - name: Read the canonical Core certification
+        working-directory: ran-booster-bitbucket
+        run: |
+          core_tag="$(jq -er '.extra["ran-booster-core-certification"].tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' composer.json)"
+          core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          printf 'RAN_BOOSTER_CORE_TAG=%s\nRAN_BOOSTER_CORE_REF=%s\n' "$core_tag" "$core_commit" >> "$GITHUB_ENV"
       - name: Check out compatible Booster Core
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -160,6 +163,7 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
           core_tag="$(git describe --tags --exact-match HEAD)"
+          test "$core_tag" = "$RAN_BOOSTER_CORE_TAG"
           [[ "$core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
       - name: Set up PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
@@ -199,17 +203,19 @@ jobs:
             --arg source_commit '${{ needs.runtime-archive.outputs.source-commit }}' \
             --arg version '${{ needs.runtime-archive.outputs.version }}' \
             --arg sha256 '${{ needs.runtime-archive.outputs.archive-sha256 }}' \
+            --arg core_tag "$RAN_BOOSTER_CORE_TAG" \
             --arg core_commit "$RAN_BOOSTER_CORE_REF" \
             '.schema == "ran-booster-bitbucket-ci-runtime"
-              and .schema_version == 1
+              and .schema_version == 2
               and .quality_commit == $quality_commit
               and .source_commit == $source_commit
               and .version == $version
               and .sha256 == $sha256
+              and .core_tag == $core_tag
               and .core_commit == $core_commit' \
             "$metadata" >/dev/null
           printf '%s  %s\n' '${{ needs.runtime-archive.outputs.archive-sha256 }}' "$archive" \
             | sha256sum --check --strict
           expected_checksum="$(printf '%s  %s' '${{ needs.runtime-archive.outputs.archive-sha256 }}' "$(basename "$archive")")"
           test "$(< "$checksum")" = "$expected_checksum"
-          composer verify:release -- "$archive"
+          composer verify:release -- "$archive" '${{ needs.runtime-archive.outputs.source-commit }}'

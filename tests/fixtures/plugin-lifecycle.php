@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -58,6 +58,49 @@ function admin_url( string $path ): string {
 	return 'https://example.test/wp-admin/' . ltrim( $path, '/' );
 }
 
+function current_user_can( string $capability ): bool {
+	return 'activate_plugins' === $capability && 'absent-unprivileged' !== ( $GLOBALS['ran_booster_bitbucket_fixture_mode'] ?? '' );
+}
+
+function wp_parse_url( string $url ): array|false {
+	return parse_url( $url ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- WordPress fixture stand-in.
+}
+
+function wp_remote_get( string $url, array $arguments ): array {
+	unset( $url, $arguments );
+	++$GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
+
+	return array(
+		'response' => array( 'code' => 200 ),
+		'body'     => json_encode(
+			array(
+				'uuid'       => '{controlled-repository}',
+				'full_name'  => 'example/reference-plugin',
+				'is_private' => false,
+				'mainbranch' => array( 'name' => 'main' ),
+			),
+			JSON_THROW_ON_ERROR
+		),
+	);
+}
+
+function is_wp_error( mixed $value ): bool {
+	unset( $value );
+
+	return false;
+}
+
+function wp_remote_retrieve_response_code( array $response ): int {
+	return (int) $response['response']['code'];
+}
+
+function wp_remote_retrieve_body( array $response ): string {
+	return (string) $response['body'];
+}
+
+$GLOBALS['ran_booster_bitbucket_fixture_mode']         = $mode;
+$GLOBALS['ran_booster_bitbucket_fixture_remote_calls'] = 0;
+
 if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
 	$coreRoot = false === $coreRoot || '' === $coreRoot
@@ -97,8 +140,10 @@ if ( 'inactive' !== $mode && ! $addOnLoaded ) {
 $callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
 $documentationFilters = $GLOBALS['ran_booster_bitbucket_fixture_filters']['ran_booster_documentation_sections_after_provider_bb'] ?? array();
 $adminInteractionCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_admin_interaction_ready'] ?? array();
+$noticeCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['admin_notices'] ?? array();
 $documentationSections = array();
 $documentation          = '';
+$notice                 = '';
 if ( array() !== $documentationFilters ) {
 	$documentationSections = $documentationFilters[0]( array(), 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
 	if ( array() !== $documentationSections ) {
@@ -107,11 +152,18 @@ if ( array() !== $documentationFilters ) {
 		$documentation = (string) ob_get_clean();
 	}
 }
+
+if ( array() !== $noticeCallbacks ) {
+	ob_start();
+	$noticeCallbacks[0]();
+	$notice = (string) ob_get_clean();
+}
 $result    = array(
 	'provider_callbacks'           => count( $callbacks ),
 	'documentation_filters'        => count( $documentationFilters ),
 	'documentation_sections'       => count( $documentationSections ),
 	'documentation'                => $documentation,
+	'compatibility_notice'         => $notice,
 	'admin_interaction_callbacks'  => count( $adminInteractionCallbacks ),
 	'admin_interaction_api_version' => defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' )
 		? RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION
@@ -126,6 +178,7 @@ $result    = array(
 	'implements_webhook_fitness'   => false,
 	'implements_webhook_management' => false,
 	'remote_calls'                 => 0,
+	'operation_locator'            => '',
 );
 
 if ( in_array( $mode, $coreBackedModes, true ) ) {
@@ -168,10 +221,16 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
 		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
 		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
+		$repository = $provider->resolveRepository(
+			new \RAN\RepositoryProvider\RepositoryLookupRequest( 'example/reference-plugin', null, true )
+		);
+		$result['operation_locator'] = $repository->locator;
 	}
 	$result['credential_store_reads'] = $store->reads;
 } elseif ( array() !== $callbacks ) {
 	$callbacks[0]( new stdClass() );
 }
+
+$result['remote_calls'] = $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
 
 echo json_encode( $result, JSON_THROW_ON_ERROR );

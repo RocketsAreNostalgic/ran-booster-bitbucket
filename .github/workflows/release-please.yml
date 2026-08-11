@@ -158,16 +158,21 @@ jobs:
           test -f "$archive"
           test -f "$checksum"
           archive_sha256="$(jq -er '.sha256' "$metadata")"
+          certification="$(git show "${RAN_RELEASE_COMMIT}:composer.json" | jq -cer '.extra["ran-booster-core-certification"]')"
+          core_tag="$(jq -er '.tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' <<< "$certification")"
+          core_commit="$(jq -er '.commit | select(test("^[0-9a-f]{40}$"))' <<< "$certification")"
           jq -e \
             --arg quality_commit "$RAN_QUALITY_COMMIT" \
             --arg source_commit "$RAN_RELEASE_COMMIT" \
             --arg version "$RAN_RELEASE_VERSION" \
-            --arg core_commit 'c992d612a827bef2bc6dea6993e25045087b6d52' \
+            --arg core_tag "$core_tag" \
+            --arg core_commit "$core_commit" \
             '.schema == "ran-booster-bitbucket-ci-runtime"
-              and .schema_version == 1
+              and .schema_version == 2
               and .quality_commit == $quality_commit
               and .source_commit == $source_commit
               and .version == $version
+              and .core_tag == $core_tag
               and .core_commit == $core_commit
               and (.sha256 | test("^[0-9a-f]{64}$"))' \
             "$metadata" >/dev/null

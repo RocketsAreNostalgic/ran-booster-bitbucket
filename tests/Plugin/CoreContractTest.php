@@ -7,8 +7,6 @@ namespace Tests\Plugin;
 use PHPUnit\Framework\TestCase;
 
 final class CoreContractTest extends TestCase {
-	private const COMPATIBLE_CORE_COMMIT = 'c992d612a827bef2bc6dea6993e25045087b6d52';
-
 	public function testConfiguredCoreCheckoutPublishesTheRequiredApiGeneration(): void {
 		$coreRoot          = getenv( 'RAN_BOOSTER_CORE_PATH' );
 		$coreRoot          = false === $coreRoot || '' === $coreRoot
@@ -35,12 +33,22 @@ final class CoreContractTest extends TestCase {
 		);
 		self::assertStringNotContainsString( 'RAN_BOOSTER_LOGGING_API_VERSION', $core );
 		self::assertStringContainsString( 'ran_booster_documentation_sections_after_provider_', $documentation );
+
+		$certification = $this->certification();
+		$commit = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' rev-parse HEAD' );
+		$tag    = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' describe --tags --exact-match HEAD' );
+		self::assertIsString( $commit );
+		self::assertIsString( $tag );
+		self::assertSame( $certification['commit'], trim( $commit ) );
+		self::assertSame( $certification['tag'], trim( $tag ) );
 	}
 
 	public function testQualityPinsTheExactReleasedCoreAndCurrentSetupPhpAction(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertStringContainsString( self::COMPATIBLE_CORE_COMMIT, $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"].tag', $workflow );
+		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
 		self::assertStringContainsString( 'fetch-depth: 0', $workflow );
 		self::assertStringContainsString( 'git describe --tags --exact-match HEAD', $workflow );
 		self::assertStringContainsString( '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$', $workflow );
@@ -51,11 +59,12 @@ final class CoreContractTest extends TestCase {
 	public function testQualityBuildsAndSharesOneVerifiedArchive(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertSame( 1, substr_count( $workflow, 'composer build:release' ) );
+		self::assertSame( 1, substr_count( $workflow, 'composer build:release -- "$source_commit"' ) );
 		self::assertStringContainsString( 'release-please--branches--main--components--ran-booster-bitbucket', $workflow );
 		self::assertStringContainsString( 'RAN_PR_HEAD_REPOSITORY', $workflow );
 		self::assertStringContainsString( 'schema: "ran-booster-bitbucket-ci-runtime"', $workflow );
 		self::assertStringContainsString( 'core_commit: $core_commit', $workflow );
+		self::assertStringContainsString( 'core_tag: $core_tag', $workflow );
 		self::assertStringContainsString( 'ran-booster-bitbucket-runtime-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}', $workflow );
 		self::assertStringContainsString( 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a', $workflow );
 		self::assertStringContainsString( 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c', $workflow );
@@ -84,6 +93,8 @@ final class CoreContractTest extends TestCase {
 		self::assertStringNotContainsString( 'composer build:release', $workflow );
 		self::assertStringNotContainsString( 'setup-php@', $workflow );
 		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_READ_SSH_KEY', $workflow );
+		self::assertStringContainsString( 'git show "${RAN_RELEASE_COMMIT}:composer.json"', $workflow );
+		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
 	}
 
 	public function testReleaseProvesTheExactMergedPullRequestBeforePublishing(): void {
@@ -142,5 +153,25 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $workflow );
 
 		return $workflow;
+	}
+
+	/** @return array{tag: string, commit: string} */
+	private function certification(): array {
+		$composer = json_decode(
+			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		self::assertIsArray( $composer );
+		$certification = $composer['extra']['ran-booster-core-certification'] ?? null;
+		self::assertIsArray( $certification );
+		self::assertMatchesRegularExpression( '/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/', $certification['tag'] ?? '' );
+		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $certification['commit'] ?? '' );
+
+		return array(
+			'tag'    => (string) $certification['tag'],
+			'commit' => (string) $certification['commit'],
+		);
 	}
 }
