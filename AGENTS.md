@@ -4,8 +4,8 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 ## Runtime contract
 
-- RAN Booster is required. This add-on supports exactly Provider API `8` and the official-suite Add-on API `14` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
-- Provider API `8` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
+- RAN Booster is required. This add-on supports exactly Provider API `9` and the official-suite Add-on API `14` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
+- Provider API `9` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
 - Bitbucket does not yet claim the optional webhook fitness or management capabilities. Keep its existing provider behavior unchanged until a separately reviewed provider implementation proves those operations.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
 - The add-on may intentionally use public RAN Booster runtime classes and the installed Core vendor autoloader after that exact guard. Do not vendor, copy, or ship RAN Booster code.

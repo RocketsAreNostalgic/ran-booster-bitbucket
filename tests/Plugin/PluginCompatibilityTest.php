@@ -88,18 +88,18 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-seven-addon-fourteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-fourteen' );
 	}
 
 	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-thirteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-thirteen' );
 	}
 
 	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-seven-addon-thirteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-thirteen' );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiEightWithoutClaimingOptionalCapabilities(): void {
+	public function testItRegistersOnlyAgainstProviderApiNineWithoutClaimingOptionalCapabilities(): void {
 		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
@@ -110,6 +110,9 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertTrue( $result['delivery_evidence_was_scoped'] );
+		self::assertTrue( $result['owner_requires_managed_target'] );
+		self::assertSame( 200, $result['navigation_slot'] );
 		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );
@@ -130,6 +133,9 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['registered'] );
 		self::assertSame( 'bb', $result['provider_code'] );
 		self::assertTrue( $result['credential_store_was_scoped'] );
+		self::assertTrue( $result['delivery_evidence_was_scoped'] );
+		self::assertTrue( $result['owner_requires_managed_target'] );
+		self::assertSame( 200, $result['navigation_slot'] );
 		self::assertSame( 0, $result['credential_store_reads'] );
 		self::assertFalse( $result['implements_release_catalog'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );

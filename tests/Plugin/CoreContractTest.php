@@ -20,7 +20,7 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entryFile );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentationFile );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*8\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*9\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(

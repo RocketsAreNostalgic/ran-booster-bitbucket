@@ -87,7 +87,8 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 						true,
 						'Workspace',
 						'workspace-slug',
-						'Use this secret for repositories in one workspace.'
+						'Use this secret for repositories in one workspace.',
+						true
 					),
 					new WebhookScopeMetadata(
 						'repository',
@@ -121,7 +122,7 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 				),
 				new ProviderNavigationPlacement(
 					ProviderNavigationPlacement::GIT_HOST,
-					ProviderNavigationPlacement::BITBUCKET_SLOT
+					200
 				),
 				'workspace/repository'
 			)
