@@ -3,6 +3,25 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.8](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.7...v0.1.0-beta.8) (2026-08-13)
+
+
+### Features
+
+* support provider API 9 ([2596253](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/259625306bed5503ed0c15732066703ffde5f139))
+* support Provider API 9 ([8736fea](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/8736fea8ed8e2d875a7e09728e783b3dff251a32))
+
+
+### Bug Fixes
+
+* certify Core Provider API 9 release ([2555f4e](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/2555f4e0c550f153377d4ec1f943350c0f6a0886))
+
+
+### Miscellaneous Chores
+
+* add bounded PHPStan pilot ([ac29b98](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/ac29b98c53aeb6114a9014db62d41420699ef6c1))
+* **main:** release 0.1.0-beta.7 ([c8fa709](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/c8fa709ffbd23ed84e30f1fb556c51e925d7c382))
+
 ## [0.1.0-beta.7](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.6...v0.1.0-beta.7) (2026-08-11)
 
 
