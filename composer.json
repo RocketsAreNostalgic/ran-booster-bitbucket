@@ -9,8 +9,8 @@
     },
     "extra": {
         "ran-booster-core-certification": {
-            "tag": "v1.0.0-beta.5",
-            "commit": "c992d612a827bef2bc6dea6993e25045087b6d52"
+            "tag": "v1.0.0-beta.16",
+            "commit": "1212dc833514fecaa60d1643723a5dd720febc17"
         }
     },
     "require": {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-eight-addon-fourteen', 'provider-eight-addon-fourteen-addon-first', 'provider-nine-addon-thirteen', 'provider-nine-addon-thirteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -15,8 +15,8 @@ $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first' );
-$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-seven-addon-fourteen-addon-first', 'provider-eight-addon-thirteen-addon-first', 'provider-seven-addon-thirteen-addon-first' );
+$incompatibleModes                       = array( 'provider-eight-addon-fourteen', 'provider-eight-addon-fourteen-addon-first', 'provider-nine-addon-thirteen', 'provider-nine-addon-thirteen-addon-first', 'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first' );
+$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-eight-addon-fourteen-addon-first', 'provider-nine-addon-thirteen-addon-first', 'provider-eight-addon-thirteen-addon-first' );
 $coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -119,10 +119,10 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
-		'provider-seven-addon-fourteen', 'provider-seven-addon-fourteen-addon-first' => array( 7, 14 ),
+		'provider-eight-addon-fourteen', 'provider-eight-addon-fourteen-addon-first' => array( 8, 14 ),
+		'provider-nine-addon-thirteen', 'provider-nine-addon-thirteen-addon-first' => array( 9, 13 ),
 		'provider-eight-addon-thirteen', 'provider-eight-addon-thirteen-addon-first' => array( 8, 13 ),
-		'provider-seven-addon-thirteen', 'provider-seven-addon-thirteen-addon-first' => array( 7, 13 ),
-		default => array( 8, 14 ),
+		default => array( 9, 14 ),
 	};
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
@@ -173,6 +173,9 @@ $result    = array(
 	'registered'                   => false,
 	'provider_code'                => '',
 	'credential_store_was_scoped'  => false,
+	'delivery_evidence_was_scoped' => false,
+	'owner_requires_managed_target' => false,
+	'navigation_slot'              => 0,
 	'credential_store_reads'       => 0,
 	'implements_release_catalog'   => false,
 	'implements_webhook_fitness'   => false,
@@ -210,6 +213,15 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 			$result['credential_store_was_scoped'] = 'bb' === $code->value;
 
 			return $store;
+		},
+		static function ( \RAN\RepositoryProvider\ProviderCode $code ) use ( &$result ): \RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
+			$result['delivery_evidence_was_scoped'] = 'bb' === $code->value;
+
+			return new class() implements \RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
+				public function latestAuthenticatedDelivery(): ?\RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+					return null;
+				}
+			};
 		}
 	);
 
@@ -217,7 +229,10 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$result['registered'] = array_key_exists( 'bb', $registry->all() );
 	if ( $result['registered'] ) {
 		$provider                             = $registry->get( 'bb' );
-		$result['provider_code']              = $provider->getMetadata()->code->value;
+		$metadata                             = $provider->getMetadata();
+		$result['provider_code']              = $metadata->code->value;
+		$result['owner_requires_managed_target'] = $metadata->admin?->getWebhookScope( 'owner' )?->requiresManagedTarget ?? false;
+		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
 		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
 		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
 		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;

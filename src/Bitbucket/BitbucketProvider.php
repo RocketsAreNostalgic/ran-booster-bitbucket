@@ -87,7 +87,9 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 						true,
 						'Workspace',
 						'workspace-slug',
-						'Use this secret for repositories in one workspace.'
+						'Use this secret for repositories in one workspace.',
+						// Owner scopes must resolve to a configured managed package target.
+						true
 					),
 					new WebhookScopeMetadata(
 						'repository',
@@ -121,7 +123,8 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 				),
 				new ProviderNavigationPlacement(
 					ProviderNavigationPlacement::GIT_HOST,
-					ProviderNavigationPlacement::BITBUCKET_SLOT
+					// Place Bitbucket after GitHub among ordinary Git host providers.
+					200
 				),
 				'workspace/repository'
 			)
