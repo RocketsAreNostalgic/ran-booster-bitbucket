@@ -16,6 +16,46 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $plugin );
 	}
 
+	public function testExtensionRecordMatchesThePluginIdentityAndExactApiTuple(): void {
+		$root       = dirname( __DIR__, 2 );
+		$composer   = json_decode(
+			(string) file_get_contents( $root . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local extension record contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		$entrypoint = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local extension record contract.
+		$plugin     = file_get_contents( $root . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local extension record contract.
+
+		self::assertIsArray( $composer );
+		self::assertIsString( $entrypoint );
+		self::assertIsString( $plugin );
+		self::assertSame(
+			array(
+				'schema'            => 1,
+				'id'                => 'ran-booster-bitbucket',
+				'name'              => 'RAN Booster Bitbucket Cloud',
+				'plugin-basename'   => 'ran-booster-bitbucket/ran-booster-bitbucket.php',
+				'repository'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
+				'update-uri'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
+				'availability'      => 'free',
+				'requires-wordpress'=> '7.0',
+				'requires-php'      => '8.2',
+				'booster-apis'      => array( 'required' => array( 'provider' => 9, 'addon' => 15 ), 'optional' => array() ),
+				'maturity'          => 'beta',
+				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
+				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
+				'security-uri'      => null,
+				'readiness'         => 'public-release-required',
+			),
+			$composer['extra']['ran-booster-extension'] ?? null
+		);
+		self::assertStringContainsString( 'Plugin Name: RAN Booster Bitbucket Cloud', $entrypoint );
+		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
+		self::assertStringContainsString( '9 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '15 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
+	}
+
 	public function testEntrypointBootsOneFinalStatelessCompositionRoot(): void {
 		$root       = dirname( __DIR__, 2 );
 		$entrypoint = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local architecture contract.
@@ -88,15 +128,15 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-fourteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-fifteen' );
 	}
 
 	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-thirteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-fourteen' );
 	}
 
 	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-thirteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eight-addon-fourteen' );
 	}
 
 	public function testItRegistersOnlyAgainstProviderApiNineWithoutClaimingOptionalCapabilities(): void {

@@ -25,7 +25,7 @@
             "booster-apis": {
                 "required": {
                     "provider": 9,
-                    "addon": 14
+                    "addon": 15
                 },
                 "optional": {}
             },
