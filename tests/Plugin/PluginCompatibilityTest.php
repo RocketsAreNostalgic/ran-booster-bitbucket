@@ -39,7 +39,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'repository'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
 				'update-uri'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
 				'availability'      => 'free',
-				'requires-wordpress'=> '7.0',
+				'requires-wordpress' => '7.0',
 				'requires-php'      => '8.2',
 				'booster-apis'      => array( 'required' => array( 'provider' => 9, 'addon' => 15 ), 'optional' => array() ),
 				'maturity'          => 'beta',
