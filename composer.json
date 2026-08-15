@@ -9,8 +9,31 @@
     },
     "extra": {
         "ran-booster-core-certification": {
-            "tag": "v1.0.0-beta.16",
-            "commit": "1212dc833514fecaa60d1643723a5dd720febc17"
+            "tag": "v1.0.0-beta.18",
+            "commit": "a7066be8e6b49b1bd2665dc3a016fd34d682e05f"
+        },
+        "ran-booster-extension": {
+            "schema": 1,
+            "id": "ran-booster-bitbucket",
+            "name": "RAN Booster Bitbucket Cloud",
+            "plugin-basename": "ran-booster-bitbucket/ran-booster-bitbucket.php",
+            "repository": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket",
+            "update-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket",
+            "availability": "free",
+            "requires-wordpress": "7.0",
+            "requires-php": "8.2",
+            "booster-apis": {
+                "required": {
+                    "provider": 9,
+                    "addon": 15
+                },
+                "optional": {}
+            },
+            "maturity": "beta",
+            "documentation-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme",
+            "support-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues",
+            "security-uri": null,
+            "readiness": "public-release-required"
         }
     },
     "require": {
