@@ -3,6 +3,22 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.10](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.9...v0.1.0-beta.10) (2026-08-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **provider:** Provider API 9 is no longer supported.
+
+### Features
+
+* **provider:** require Core Provider API 10 ([bf29a68](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/bf29a6887c31ce446ae551fb281e7b4b44e7578b))
+
+
+### Miscellaneous Chores
+
+* **main:** release 0.1.0-beta.9 ([ea64047](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/ea64047ef64a9fc628195614409c0008972bad46))
+
 ## [0.1.0-beta.9](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.8...v0.1.0-beta.9) (2026-08-15)
 
 
