@@ -72,7 +72,7 @@ final class Plugin {
 	private static function hasCompatibleCore(): bool {
 		return ( ! defined( 'RAN_BOOSTER_RUNTIME_MODE' ) || 'single_site_supported' === RAN_BOOSTER_RUNTIME_MODE )
 			&& defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-			&& 9 === RAN_BOOSTER_PROVIDER_API_VERSION
+			&& 10 === RAN_BOOSTER_PROVIDER_API_VERSION
 			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
 			&& 15 === RAN_BOOSTER_ADDON_API_VERSION;
 	}

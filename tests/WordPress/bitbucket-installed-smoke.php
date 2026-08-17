@@ -48,7 +48,7 @@ if ( false === $addon || false === $core
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
 
-if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 9 !== RAN_BOOSTER_PROVIDER_API_VERSION
+if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 10 !== RAN_BOOSTER_PROVIDER_API_VERSION
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 15 !== RAN_BOOSTER_ADDON_API_VERSION
 ) {
 	throw new RuntimeException( 'The exact certified Core API generation is unavailable.' );
