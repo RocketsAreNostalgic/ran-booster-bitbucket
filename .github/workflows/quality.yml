@@ -205,6 +205,8 @@ jobs:
 
             files_json="$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files?per_page=100")" || return 1
             for trust_path in \
+              composer.json \
+              composer.lock \
               .github/workflows/quality.yml \
               .github/workflows/release-please.yml \
               scripts/build-release.sh \

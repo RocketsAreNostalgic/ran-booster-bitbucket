@@ -61,6 +61,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'workflow_sha', $workflow );
 		self::assertStringContainsString( 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c', $workflow );
 		self::assertStringContainsString( 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a', $workflow );
+		self::assertStringContainsString( "composer.json \\\n              composer.lock \\\n              .github/workflows/quality.yml", $workflow );
 	}
 
 	public function testReleaseCandidateIsExactBotDispatchedAndMinimallyInstalled(): void {
