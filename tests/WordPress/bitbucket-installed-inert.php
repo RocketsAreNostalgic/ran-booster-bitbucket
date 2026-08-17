@@ -26,8 +26,8 @@ if ( $expectedVersion !== ( $pluginData['Version'] ?? null )
 }
 
 if ( 'incompatible' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 8 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 14 );
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 9 );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', 15 );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
 }
 require $pluginFile;
@@ -60,8 +60,8 @@ if ( 0 !== $requests || array() !== $sections || class_exists( 'RAN\\Booster\\Bi
 	throw new RuntimeException( 'The installed Bitbucket candidate was not inert without exact Core.' );
 }
 if ( 'incompatible' === $mode
-	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 8 !== RAN_BOOSTER_PROVIDER_API_VERSION
-		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 14 !== RAN_BOOSTER_ADDON_API_VERSION )
+	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 9 !== RAN_BOOSTER_PROVIDER_API_VERSION
+		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 15 !== RAN_BOOSTER_ADDON_API_VERSION )
 ) {
 	throw new RuntimeException( 'The incompatible installed Core fixture is invalid.' );
 }
