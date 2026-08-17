@@ -10,7 +10,7 @@ Stable tag: 0.1.0-beta.10
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Bitbucket Cloud provider and operational guide for the coordinated RAN Booster Add-on API 15 generation.
+Bitbucket Cloud provider and operational guide for the coordinated RAN Booster Add-on API 16 generation.
 
 == Description ==
 
@@ -24,7 +24,7 @@ and support.
 This free official add-on is distributed as a verified GitHub release artifact,
 not through WordPress.org. It also serves as the production-shaped reference for
 maintained provider extensions. It performs no provider registration or remote calls when RAN
-Booster Provider API 10 or Add-on API 15 is absent or incompatible. The optional
+Booster Provider API 10 or Add-on API 16 is absent or incompatible. The optional
 webhook fitness and management capabilities are not yet implemented; use the
 included manual Bitbucket webhook guidance.
 

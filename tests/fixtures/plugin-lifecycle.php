@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-nine-addon-fifteen', 'provider-nine-addon-fifteen-addon-first', 'provider-ten-addon-fourteen', 'provider-ten-addon-fourteen-addon-first', 'provider-nine-addon-fourteen', 'provider-nine-addon-fourteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-nine-addon-sixteen', 'provider-nine-addon-sixteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first', 'provider-nine-addon-fifteen', 'provider-nine-addon-fifteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -15,8 +15,8 @@ $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-nine-addon-fifteen', 'provider-nine-addon-fifteen-addon-first', 'provider-ten-addon-fourteen', 'provider-ten-addon-fourteen-addon-first', 'provider-nine-addon-fourteen', 'provider-nine-addon-fourteen-addon-first' );
-$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-nine-addon-fifteen-addon-first', 'provider-ten-addon-fourteen-addon-first', 'provider-nine-addon-fourteen-addon-first' );
+$incompatibleModes                       = array( 'provider-nine-addon-sixteen', 'provider-nine-addon-sixteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first', 'provider-nine-addon-fifteen', 'provider-nine-addon-fifteen-addon-first' );
+$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-nine-addon-sixteen-addon-first', 'provider-ten-addon-fifteen-addon-first', 'provider-nine-addon-fifteen-addon-first' );
 $coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -119,10 +119,10 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
+		'provider-nine-addon-sixteen', 'provider-nine-addon-sixteen-addon-first' => array( 9, 16 ),
+		'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first' => array( 10, 15 ),
 		'provider-nine-addon-fifteen', 'provider-nine-addon-fifteen-addon-first' => array( 9, 15 ),
-		'provider-ten-addon-fourteen', 'provider-ten-addon-fourteen-addon-first' => array( 10, 14 ),
-		'provider-nine-addon-fourteen', 'provider-nine-addon-fourteen-addon-first' => array( 9, 14 ),
-		default => array( 10, 15 ),
+		default => array( 10, 16 ),
 	};
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );

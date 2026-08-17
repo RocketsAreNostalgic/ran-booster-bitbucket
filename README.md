@@ -3,13 +3,13 @@
 RAN Booster Bitbucket Cloud is the free official Bitbucket add-on for RAN Booster
 and a production-shaped reference for maintained provider extensions. It restores
 the Bitbucket Cloud provider and its settings tab through the exact RAN Booster
-Provider API 10 contract. It requires the coordinated Add-on API 15 generation
+Provider API 10 contract. It requires the coordinated Add-on API 16 generation
 and contributes its complete operational guide directly after
 Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
-- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 10 and Add-on API 15.
+- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 10 and Add-on API 16.
 - `Requires Plugins: ran-booster` tells WordPress that Core is a package dependency; it does not prove API compatibility. The exact runtime markers remain authoritative, and a mismatch keeps provider registration and remote calls inert.
 - Provider API 10 supplies no logging capability. Provider diagnostics return bounded typed results to Core and never send exceptions or vendor text through a logging facade.
 - Without compatible Booster, it makes no remote calls or provider registrations and shows administrators a safe compatibility notice.

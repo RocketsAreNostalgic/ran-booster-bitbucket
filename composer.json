@@ -9,8 +9,8 @@
     },
     "extra": {
         "ran-booster-core-certification": {
-            "tag": "v1.0.0-beta.19",
-            "commit": "ff1021d6cdb227e7c2896e1bf6304502ef5f4cfd"
+            "tag": "v1.0.0-beta.22",
+            "commit": "cd328286d8b00557f8400ffdcfb0549888ec76ca"
         },
         "ran-booster-extension": {
             "schema": 1,
@@ -25,7 +25,7 @@
             "booster-apis": {
                 "required": {
                     "provider": 10,
-                    "addon": 15
+                    "addon": 16
                 },
                 "optional": {}
             },

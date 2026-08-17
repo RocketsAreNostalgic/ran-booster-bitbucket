@@ -41,7 +41,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'availability'      => 'free',
 				'requires-wordpress' => '7.0',
 				'requires-php'      => '8.2',
-				'booster-apis'      => array( 'required' => array( 'provider' => 10, 'addon' => 15 ), 'optional' => array() ),
+				'booster-apis'      => array( 'required' => array( 'provider' => 10, 'addon' => 16 ), 'optional' => array() ),
 				'maturity'          => 'beta',
 				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
 				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
@@ -53,7 +53,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Plugin Name: RAN Booster Bitbucket Cloud', $entrypoint );
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
 		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
-		self::assertStringContainsString( '15 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
+		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 	}
 
 	public function testEntrypointBootsOneFinalStatelessCompositionRoot(): void {
@@ -128,15 +128,15 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-fifteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-sixteen' );
 	}
 
 	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-fourteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-fifteen' );
 	}
 
 	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-fourteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-fifteen' );
 	}
 
 	public function testItRegistersOnlyAgainstProviderApiTenWithoutClaimingOptionalCapabilities(): void {
