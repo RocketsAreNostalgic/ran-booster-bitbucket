@@ -57,10 +57,16 @@
         "lint:php": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
         "lint:php:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
         "lint:syntax": "find . -path ./vendor -prune -o -path ./.phpstan -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "test:release-candidate": "bash tests/Workflow/validate-release-candidate.sh",
+        "test:release-marker": "bash tests/Workflow/reconcile-release-candidate-marker.sh",
+        "test:release-state": "bash tests/Workflow/release-state-contracts.sh",
         "build:release": "bash scripts/build-release.sh",
         "verify:release": "bash scripts/verify-release.sh",
         "check": [
             "@test:unit",
+            "@test:release-candidate",
+            "@test:release-marker",
+            "@test:release-state",
             "@lint:php",
             "@lint:syntax"
         ]
