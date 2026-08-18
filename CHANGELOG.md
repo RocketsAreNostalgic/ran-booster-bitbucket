@@ -3,6 +3,28 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.11](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.10...v0.1.0-beta.11) (2026-08-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* require Core Add-on API 16
+
+### Features
+
+* require Core Add-on API 16 ([efec8d3](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/efec8d3fccb5401d7730ec4523349d89293c2062))
+
+
+### Bug Fixes
+
+* **ci:** authenticate candidate fetches ([39a0a70](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/39a0a701863234b192bc633fd5bd85f982488890))
+* **ci:** authenticate candidate fetches ([3c1abf7](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/3c1abf795f9a95b2fe1ad2525557d31ba30c4970))
+
+
+### Miscellaneous Chores
+
+* **main:** release 0.1.0-beta.10 ([e9eae14](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/e9eae147d81087e72eb224c20c9c111a49305c5d))
+
 ## [0.1.0-beta.10](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.9...v0.1.0-beta.10) (2026-08-17)
 
 
