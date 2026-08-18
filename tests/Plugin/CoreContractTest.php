@@ -104,7 +104,9 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'RAN_RELEASE_PRS: ${{ steps.release-please.outputs.prs }}', $workflow );
 		self::assertStringContainsString( 'RAN_RELEASE_PRS_CREATED: ${{ steps.release-please.outputs.prs_created }}', $workflow );
 		self::assertStringContainsString( 'Expected exactly one Release Please action output pull request.', $workflow );
-		self::assertStringContainsString( 'test "$head_sha" = "$action_head_sha"', $workflow );
+		self::assertStringNotContainsString( '.sha | type == "string" and test("^[0-9a-f]{40}$")', $workflow );
+		self::assertStringContainsString( '(.files | type) == "array"', $workflow );
+		self::assertStringContainsString( '(.files | length) == 0', $workflow );
 		self::assertStringContainsString( '-f "release_sha=${head_sha}"', $workflow );
 		self::assertStringContainsString( '.actor.login == $bot', $workflow );
 		self::assertStringContainsString( '.triggering_actor.login == $bot', $workflow );
