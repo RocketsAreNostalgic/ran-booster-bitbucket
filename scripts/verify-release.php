@@ -244,8 +244,9 @@ foreach ( $expectedFiles as $name => $content ) {
 	}
 }
 
-$plugin = $actualFiles[ PACKAGE_ROOT . 'ran-booster-bitbucket.php' ];
-$guide  = $actualFiles[ PACKAGE_ROOT . 'views/documentation.php' ];
+$plugin      = $actualFiles[ PACKAGE_ROOT . 'ran-booster-bitbucket.php' ];
+$guide       = $actualFiles[ PACKAGE_ROOT . 'views/documentation.php' ];
+$security    = $actualFiles[ PACKAGE_ROOT . 'SECURITY.md' ];
 $composition = $actualFiles[ PACKAGE_ROOT . 'src/Bitbucket/Plugin.php' ];
 if ( ! str_contains( $plugin, '\\RAN\\Booster\\Bitbucket\\Plugin::boot();' )
 	|| ! str_contains( $composition, 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -257,6 +258,9 @@ if ( ! str_contains( $plugin, '\\RAN\\Booster\\Bitbucket\\Plugin::boot();' )
 	|| str_contains( $plugin . $composition, 'RAN_BOOSTER_LOGGING_API_VERSION' )
 ) {
 	fail( 'Archive does not preserve the Bitbucket composition and API contract.' );
+}
+if ( ! str_contains( $security, '/security/advisories/new' ) ) {
+	fail( 'Archive security policy does not name the private reporting route.' );
 }
 
 foreach ( array(

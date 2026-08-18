@@ -21,9 +21,12 @@ Core's Bitbucket provider documentation.
 ## Install and operate
 
 1. Install and activate compatible RAN Booster.
-2. Install and activate the verified Bitbucket release ZIP.
-3. Open RAN Booster; the Bitbucket tab follows GitHub.
-4. Open RAN Booster's Documentation tab for the add-on-owned guide to API-token
+2. Download `ran-booster-bitbucket-<version>.zip` and its `.sha256` file from
+   the same GitHub release. Do not use GitHub's generated source archives.
+3. Verify the checksum, then upload and activate the ZIP through WordPress's
+   Plugins screen.
+4. Open RAN Booster; the Bitbucket tab follows GitHub.
+5. Open RAN Booster's Documentation tab for the add-on-owned guide to API-token
    permissions, package connection, manual webhook setup, Transporter recovery,
    deactivation and support.
 
@@ -56,13 +59,18 @@ raising its level, adding suppressions or adopting it elsewhere.
 
 ## Releases and support
 
-Releases are verified GitHub artifacts, not WordPress.org/SVN publications. See
-[RELEASE.md](RELEASE.md) and use Conventional Commits as described in
-[CONTRIBUTING.md](CONTRIBUTING.md). Report issues through the repository's
-GitHub issue tracker, but never include credentials, webhook secrets, signed
-URLs, release assets or customer data. Request a confidential contact route
-without disclosing details before submitting a sensitive security report.
+Releases are verified GitHub artifacts, not WordPress.org/SVN publications.
+Install upgrades from the repository's Releases page using the ZIP and checksum
+attached to the same release. The plugin's `Update URI` prevents WordPress.org
+from claiming its update channel; this add-on does not currently register an
+automatic update service.
 
-## Licence
+See [RELEASE.md](RELEASE.md) and use Conventional Commits as described in
+[CONTRIBUTING.md](CONTRIBUTING.md). Report ordinary issues through the
+repository's GitHub issue tracker. Report vulnerabilities through the
+[security policy](SECURITY.md), and never put credentials, webhook secrets,
+signed URLs, release assets or customer data in a public issue.
+
+## License
 
 GPL-2.0-or-later. See [license.txt](license.txt) and [NOTICE.md](NOTICE.md).
