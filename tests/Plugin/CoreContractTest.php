@@ -268,7 +268,7 @@ final class CoreContractTest extends TestCase {
 		self::assertIsInt( $upload );
 		self::assertIsInt( $proof );
 		self::assertTrue( $upload < $proof );
-		self::assertStringContainsString( 'draft_release_json="$(gh api', $draft );
+		self::assertStringContainsString( 'draft_release_json="$(jq -cer', $draft );
 
 		$start    = strpos( $workflow, '- name: Read back immutable release and reconcile exact PR' );
 		self::assertIsInt( $start );
@@ -297,10 +297,10 @@ final class CoreContractTest extends TestCase {
 		$workflow = $this->workflow( 'release-please.yml' );
 
 		self::assertStringContainsString( 'gh release create "$RAN_RELEASE_TAG" --draft --target "$RAN_RELEASE_COMMIT" --title "$RAN_RELEASE_TAG" --generate-notes "${prerelease[@]}" --repo "$GITHUB_REPOSITORY"', $workflow );
-		self::assertSame( 2, substr_count( $workflow, '--pattern "$archive_name"' ) );
-		self::assertSame( 2, substr_count( $workflow, '--pattern "$checksum_name"' ) );
+		self::assertSame( 1, substr_count( $workflow, '--pattern "$archive_name"' ) );
+		self::assertSame( 1, substr_count( $workflow, '--pattern "$checksum_name"' ) );
 		self::assertStringContainsString( 'gh release edit "$RAN_RELEASE_TAG" --draft=false "${latest[@]}" --repo "$GITHUB_REPOSITORY"', $workflow );
-		self::assertSame( 7, substr_count( $workflow, '--repo "$GITHUB_REPOSITORY"' ) );
+		self::assertSame( 5, substr_count( $workflow, '--repo "$GITHUB_REPOSITORY"' ) );
 	}
 
 	public function testWorkflowActionsArePinnedToImmutableCommits(): void {
