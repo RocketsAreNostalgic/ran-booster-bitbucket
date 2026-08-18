@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       release_sha:
-        description: Exact Release Please head SHA returned by the trusted release action.
+        description: Exact live Release Please pull-request head SHA; reserved for the trusted release workflow.
         required: false
         type: string
   pull_request:
