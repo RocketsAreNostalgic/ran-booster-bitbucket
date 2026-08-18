@@ -31,15 +31,28 @@ included manual Bitbucket webhook guidance.
 == Installation ==
 
 1. Install and activate a compatible RAN Booster release.
-2. Install and activate this add-on.
-3. Open RAN Booster. The Bitbucket tab appears directly after GitHub.
-4. Open RAN Booster Documentation for the complete Bitbucket operational guide.
+2. Download this add-on's ZIP and checksum from the same GitHub release. Do not
+   use GitHub's generated source archives.
+3. Verify the checksum, then upload and activate the ZIP through WordPress.
+4. Open RAN Booster. The Bitbucket tab appears directly after GitHub.
+5. Open RAN Booster Documentation for the complete Bitbucket operational guide.
 
 Transporter copies only explicitly selected eligible file-stored credentials.
 Each carried credential requires an explicit import, saved-target or leave
 choice on a target where this compatible add-on is active; there is no fallback
 and no token permission assurance. Copying does not revoke or rotate the source
 API token.
+
+== Releases, updates, and support ==
+
+Install updates from the repository's GitHub Releases page using the ZIP and
+checksum attached to the same release. This add-on is not distributed through
+WordPress.org and does not currently register an automatic update service.
+
+Use the GitHub issue tracker for ordinary support. Follow the repository's
+security policy for vulnerabilities. Never post credentials, webhook secrets,
+signed URLs, release assets, customer data or vulnerability details in a
+public issue.
 
 == Changelog ==
 

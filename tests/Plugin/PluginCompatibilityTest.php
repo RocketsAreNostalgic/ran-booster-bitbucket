@@ -45,7 +45,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'maturity'          => 'beta',
 				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
 				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
-				'security-uri'      => null,
+				'security-uri'      => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/security/policy',
 				'readiness'         => 'public-release-required',
 			),
 			$composer['extra']['ran-booster-extension'] ?? null
@@ -54,6 +54,9 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
 		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
+		$security = file_get_contents( $root . '/SECURITY.md' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local public-support contract.
+		self::assertIsString( $security );
+		self::assertStringContainsString( 'security/advisories/new', $security );
 	}
 
 	public function testEntrypointBootsOneFinalStatelessCompositionRoot(): void {

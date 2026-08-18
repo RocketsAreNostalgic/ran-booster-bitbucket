@@ -6,6 +6,10 @@ Before proposing a change, run `composer check` with a compatible sibling RAN Bo
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 
+Use ordinary issues for support and non-sensitive defects. Follow
+[SECURITY.md](SECURITY.md) for vulnerabilities; do not submit security details
+in an issue or pull request.
+
 ## Static analysis pilot
 
 PHPStan is adopted as a reproducible, non-blocking Bitbucket-only command. It

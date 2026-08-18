@@ -32,7 +32,7 @@
             "maturity": "beta",
             "documentation-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme",
             "support-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues",
-            "security-uri": null,
+            "security-uri": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/security/policy",
             "readiness": "public-release-required"
         }
     },
