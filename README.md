@@ -14,7 +14,8 @@ Core's Bitbucket provider documentation.
 - Provider API 10 supplies no logging capability. Provider diagnostics return bounded typed results to Core and never send exceptions or vendor text through a logging facade.
 - Without compatible Booster, it makes no remote calls or provider registrations and shows administrators a safe compatibility notice.
 - It receives credential data only through Booster's provider-scoped reader. It neither stores credentials nor reads Booster's sidecar paths, Core container, or Core storage.
-- The provider intentionally does not implement the optional `ReleaseCatalog` capability.
+- The provider intentionally implements none of the optional release metadata,
+  candidate-listing, inspection, acquisition, or native-target capabilities.
 - The provider intentionally does not yet implement the optional webhook fitness or management capabilities; manual Bitbucket webhook guidance remains the supported path.
 - Its documentation callback is non-interactive. It receives no Core object or facade and performs no remote work.
 

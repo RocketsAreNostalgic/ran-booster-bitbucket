@@ -177,7 +177,7 @@ $result    = array(
 	'owner_requires_managed_target' => false,
 	'navigation_slot'              => 0,
 	'credential_store_reads'       => 0,
-	'implements_release_catalog'   => false,
+	'implements_release_capabilities' => array(),
 	'implements_webhook_fitness'   => false,
 	'implements_webhook_management' => false,
 	'remote_calls'                 => 0,
@@ -233,7 +233,13 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		$result['provider_code']              = $metadata->code->value;
 		$result['owner_requires_managed_target'] = $metadata->admin?->getWebhookScope( 'owner' )?->requiresManagedTarget ?? false;
 		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
-		$result['implements_release_catalog'] = $provider instanceof \RAN\RepositoryProvider\ReleaseCatalog;
+		$result['implements_release_capabilities'] = array(
+			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseMetadata,
+			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseCandidateListing,
+			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseInspector,
+			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseAcquirer,
+			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseNativeTargets,
+		);
 		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
 		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
 		$repository = $provider->resolveRepository(
