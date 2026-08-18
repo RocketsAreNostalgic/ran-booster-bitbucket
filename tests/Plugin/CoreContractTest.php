@@ -73,6 +73,18 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( "composer.json \\\n              composer.lock \\\n              .github/workflows/quality.yml", $workflow );
 	}
 
+	public function testQualityFetchesCandidateCommitsWithEphemeralTokenCredentials(): void {
+		$workflow         = $this->workflow( 'quality.yml' );
+		$credentialHelper = 'credential.helper=!f() { printf "%s\\n" "username=x-access-token" "password=$GH_TOKEN"; }; f';
+
+		self::assertStringContainsString( 'persist-credentials: false', $workflow );
+		self::assertSame( 1, substr_count( $workflow, 'test -n "$GH_TOKEN"' ) );
+		self::assertSame( 1, substr_count( $workflow, $credentialHelper ) );
+		self::assertSame( 2, substr_count( $workflow, 'git "${git_auth[@]}" fetch --no-tags origin' ) );
+		self::assertStringNotContainsString( 'git fetch --no-tags origin', $workflow );
+		self::assertStringNotContainsString( 'password=${GH_TOKEN}', $workflow );
+	}
+
 	public function testReleaseCandidateIsExactBotDispatchedAndMinimallyInstalled(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
@@ -144,6 +156,18 @@ final class CoreContractTest extends TestCase {
 		self::assertTrue( $verify < $draft );
 		self::assertTrue( $draft < $publish );
 		self::assertTrue( $publish < $readback );
+	}
+
+	public function testReleaseFetchesCandidatesWithEphemeralTokenCredentials(): void {
+		$workflow         = $this->workflow( 'release-please.yml' );
+		$credentialHelper = 'credential.helper=!f() { printf "%s\\n" "username=x-access-token" "password=$GH_TOKEN"; }; f';
+
+		self::assertStringContainsString( 'persist-credentials: false', $workflow );
+		self::assertSame( 2, substr_count( $workflow, 'test -n "$GH_TOKEN"' ) );
+		self::assertSame( 2, substr_count( $workflow, $credentialHelper ) );
+		self::assertSame( 4, substr_count( $workflow, 'git "${git_auth[@]}" fetch --no-tags origin' ) );
+		self::assertStringNotContainsString( 'git fetch --no-tags origin', $workflow );
+		self::assertStringNotContainsString( 'password=${GH_TOKEN}', $workflow );
 	}
 
 	public function testReleaseCandidateMarkerSupportsSafeUnchangedPullRequestRetry(): void {
