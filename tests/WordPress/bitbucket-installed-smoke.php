@@ -66,7 +66,11 @@ if ( 1 !== count( array_filter( $providers, static fn( string $code ): bool => '
 }
 $provider = $registry->get( 'bb' );
 if ( 'bb' !== $provider->getMetadata()->code->value
-	|| $provider instanceof RAN\RepositoryProvider\ReleaseCatalog
+	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseMetadata
+	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseCandidateListing
+	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseInspector
+	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseAcquirer
+	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseNativeTargets
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryWebhookFitness
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryWebhookManagement
 ) {

@@ -157,7 +157,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['owner_requires_managed_target'] );
 		self::assertSame( 200, $result['navigation_slot'] );
 		self::assertSame( 0, $result['credential_store_reads'] );
-		self::assertFalse( $result['implements_release_catalog'] );
+		self::assertSame( array_fill( 0, 5, false ), $result['implements_release_capabilities'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );
 		self::assertFalse( $result['implements_webhook_management'] );
 		self::assertSame( 1, $result['remote_calls'] );
@@ -180,7 +180,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertTrue( $result['owner_requires_managed_target'] );
 		self::assertSame( 200, $result['navigation_slot'] );
 		self::assertSame( 0, $result['credential_store_reads'] );
-		self::assertFalse( $result['implements_release_catalog'] );
+		self::assertSame( array_fill( 0, 5, false ), $result['implements_release_capabilities'] );
 		self::assertFalse( $result['implements_webhook_fitness'] );
 		self::assertFalse( $result['implements_webhook_management'] );
 		self::assertSame( 1, $result['remote_calls'] );
@@ -257,7 +257,7 @@ final class PluginCompatibilityTest extends TestCase {
 		}
 	}
 
-	/** @return array<string, bool|int|string|null> */
+	/** @return array<string, bool|int|string|null|list<bool>> */
 	private function runFixture( string $mode ): array {
 		$fixture = dirname( __DIR__ ) . '/fixtures/plugin-lifecycle.php';
 		$command = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $fixture ) . ' ' . escapeshellarg( $mode );

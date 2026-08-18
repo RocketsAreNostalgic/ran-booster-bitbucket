@@ -1,4 +1,4 @@
-# Private release procedure
+# Release process
 
 RAN Booster Bitbucket is released as a verified GitHub artifact, never through WordPress.org or SVN.
 
@@ -7,7 +7,7 @@ secret named `RAN_BOOSTER_CORE_READ_SSH_KEY`. Store the private half of a
 dedicated SSH deploy-key pair in that secret, then add its public half to the
 private `RocketsAreNostalgic/ran-booster` repository as a read-only deploy key.
 Do not enable write access. The add-on repository's `GITHUB_TOKEN` cannot read
-that sibling private repository and is intentionally not used as a fallback.
+that sibling Core repository and is intentionally not used as a fallback.
 
 1. Review the Release Please pull request, including the header, `readme.txt`, manifest and changelog versions.
 2. On the resulting release commit, run `composer install --no-dev --no-interaction` only if production Composer dependencies are introduced. The current add-on intentionally ships none.
