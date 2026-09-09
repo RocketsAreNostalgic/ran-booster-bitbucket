@@ -579,14 +579,6 @@ jobs:
           path: ran-booster-bitbucket
           fetch-depth: 0
           persist-credentials: false
-      - name: Require private Core read deploy key
-        env:
-          CORE_READ_SSH_KEY: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
-        run: |
-          if [[ -z "$CORE_READ_SSH_KEY" ]]; then
-            echo "::error::RAN_BOOSTER_CORE_READ_SSH_KEY must contain the private half of a read-only deploy key for RocketsAreNostalgic/ran-booster."
-            exit 1
-          fi
       - name: Read canonical Core certification
         working-directory: ran-booster-bitbucket
         run: |
@@ -600,7 +592,6 @@ jobs:
           path: ran-booster
           ref: ${{ env.RAN_BOOSTER_CORE_REF }}
           fetch-depth: 0
-          ssh-key: ${{ secrets.RAN_BOOSTER_CORE_READ_SSH_KEY }}
           persist-credentials: false
       - name: Confirm exact tag-backed Core commit
         working-directory: ran-booster

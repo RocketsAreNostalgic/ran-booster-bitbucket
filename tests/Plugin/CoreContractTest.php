@@ -100,7 +100,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'wp plugin install "$GITHUB_WORKSPACE/build/ran-booster-bitbucket-', $workflow );
 		self::assertStringContainsString( '! wp plugin is-active ran-booster-bitbucket', $workflow );
 		self::assertStringContainsString( 'diff -qr "$expected_root/ran-booster-bitbucket" "$plugin_root"', $workflow );
-		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_READ_SSH_KEY', substr( $workflow, (int) strpos( $workflow, 'release-candidate-install:' ) ) );
+		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_READ_SSH_KEY', $workflow );
 	}
 
 	public function testReleaseUsesMainAdmissionArtifactWithoutParentTopology(): void {
