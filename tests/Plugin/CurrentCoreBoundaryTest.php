@@ -31,12 +31,42 @@ final class CurrentCoreBoundaryTest extends TestCase {
 			self::assertStringNotContainsString( '/vendor/autoload.php', $fixture, $path );
 		}
 
+		foreach ( array( 'tests/bootstrap.php', 'tests/phpstan-bootstrap.php' ) as $path ) {
+			$bootstrap = file_get_contents( $root . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture-boundary contract.
+			self::assertIsString( $bootstrap );
+			self::assertStringContainsString( 'certified-core-checkout.php', $bootstrap, $path );
+			self::assertStringContainsString( 'ran_booster_bitbucket_certified_core_root()', $bootstrap, $path );
+		}
+
+		$certifiedCore = file_get_contents( $root . '/tests/fixtures/certified-core-checkout.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
+		self::assertIsString( $certifiedCore );
+		self::assertStringContainsString( 'ran-booster-core-certification', $certifiedCore );
+		self::assertStringContainsString( 'rev-parse HEAD', $certifiedCore );
+
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
 		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install", $workflow );
 		self::assertStringContainsString( 'Run static analysis pilot', $workflow );
 		self::assertStringContainsString( 'run: composer analyse', $workflow );
+	}
+
+	public function testCertifiedCoreResolverRejectsDifferentGitCheckout(): void {
+		$root     = dirname( __DIR__, 2 );
+		$previous = getenv( 'RAN_BOOSTER_CORE_PATH' );
+		putenv( 'RAN_BOOSTER_CORE_PATH=' . $root );
+
+		try {
+			$this->expectException( \RuntimeException::class );
+			$this->expectExceptionMessage( 'requires the exact certified Core checkout' );
+			\ran_booster_bitbucket_certified_core_root();
+		} finally {
+			if ( false === $previous ) {
+				putenv( 'RAN_BOOSTER_CORE_PATH' );
+			} else {
+				putenv( 'RAN_BOOSTER_CORE_PATH=' . $previous );
+			}
+		}
 	}
 
 	public function testNoRepositoryTestImportsCoreOwnedTestFixtures(): void {
