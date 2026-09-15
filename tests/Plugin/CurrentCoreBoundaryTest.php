@@ -40,8 +40,10 @@ final class CurrentCoreBoundaryTest extends TestCase {
 	}
 
 	public function testNoRepositoryTestImportsCoreOwnedTestFixtures(): void {
-		$root = dirname( __DIR__, 2 );
-		$files = new RecursiveIteratorIterator(
+		$root                 = dirname( __DIR__, 2 );
+		$coreContainerFixture = 'core-container-' . 'fixture.php';
+		$archiveFixture       = '/tests/RepositoryProvider/AuthenticatedPreparedArchive' . 'WordPressFunctions.php';
+		$files                = new RecursiveIteratorIterator(
 			new RecursiveDirectoryIterator( $root . '/tests', FilesystemIterator::SKIP_DOTS )
 		);
 
@@ -53,12 +55,8 @@ final class CurrentCoreBoundaryTest extends TestCase {
 
 			$content = file_get_contents( $file->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture-boundary contract.
 			self::assertIsString( $content );
-			self::assertStringNotContainsString( 'core-container-fixture.php', $content, $file->getPathname() );
-			self::assertStringNotContainsString(
-				'/tests/RepositoryProvider/AuthenticatedPreparedArchiveWordPressFunctions.php',
-				$content,
-				$file->getPathname()
-			);
+			self::assertStringNotContainsString( $coreContainerFixture, $content, $file->getPathname() );
+			self::assertStringNotContainsString( $archiveFixture, $content, $file->getPathname() );
 		}
 	}
 
