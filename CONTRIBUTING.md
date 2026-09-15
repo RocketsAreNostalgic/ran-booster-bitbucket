@@ -2,7 +2,7 @@
 
 Use Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so Release Please can prepare the changelog and version proposal.
 
-Before proposing a change, run `composer check` with a compatible sibling RAN Booster checkout, then run `composer build:release`. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
+Before proposing a change, run `composer check` with the exact Core release recorded in `extra.ran-booster-core-certification`, then run `composer build:release`. The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 
@@ -14,7 +14,8 @@ in an issue or pull request.
 
 PHPStan is adopted as a reproducible, non-blocking Bitbucket-only command. It
 is intentionally separate from `composer check` while the pilot gathers useful
-signal. Run it against a compatible Core checkout:
+signal. Run it against the exact certified Core production source; Core's own
+Composer dependencies are not required:
 
 ```sh
 RAN_BOOSTER_CORE_PATH=../ran-booster composer analyse
