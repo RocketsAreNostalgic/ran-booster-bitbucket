@@ -15,8 +15,8 @@ core_archive=${RAN_BOOSTER_CORE_ARCHIVE:?RAN_BOOSTER_CORE_ARCHIVE is required}
 addon_archive=${RAN_BOOSTER_BITBUCKET_ARCHIVE:?RAN_BOOSTER_BITBUCKET_ARCHIVE is required}
 addon_commit=${RAN_BOOSTER_BITBUCKET_COMMIT:?RAN_BOOSTER_BITBUCKET_COMMIT is required}
 expected_addon_version=${RAN_BOOSTER_BITBUCKET_VERSION:?RAN_BOOSTER_BITBUCKET_VERSION is required}
-expected_core_tag=${RAN_BOOSTER_CORE_TAG:?RAN_BOOSTER_CORE_TAG is required}
-expected_core_commit=${RAN_BOOSTER_CORE_COMMIT:?RAN_BOOSTER_CORE_COMMIT is required}
+provided_core_tag=${RAN_BOOSTER_CORE_TAG:-}
+provided_core_commit=${RAN_BOOSTER_CORE_COMMIT:-}
 expected_core_sha=${RAN_BOOSTER_CORE_SHA256:?RAN_BOOSTER_CORE_SHA256 is required}
 expected_addon_sha=${RAN_BOOSTER_BITBUCKET_SHA256:?RAN_BOOSTER_BITBUCKET_SHA256 is required}
 php_binary=${RAN_BOOSTER_WP_CLI_PHP:-php}
@@ -24,6 +24,36 @@ wp_binary=${RAN_BOOSTER_WP_CLI_BIN:-wp}
 wp_require=${RAN_BOOSTER_WP_CLI_REQUIRE:-}
 php_ini=${RAN_BOOSTER_WP_CLI_PHP_INI:-}
 temporary_parent=${RAN_BOOSTER_BITBUCKET_TEST_TMPDIR:-${RUNNER_TEMP:-/private/tmp}}
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
+
+if ! certification=$(
+	"$php_binary" -r '
+		$document = json_decode( file_get_contents( $argv[1] ), true, 512, JSON_THROW_ON_ERROR );
+		$certification = $document["extra"]["ran-booster-core-certification"] ?? null;
+		$tag = is_array( $certification ) ? ( $certification["tag"] ?? null ) : null;
+		$commit = is_array( $certification ) ? ( $certification["commit"] ?? null ) : null;
+		if ( ! is_string( $tag ) || ! is_string( $commit ) ) {
+			exit( 1 );
+		}
+		echo $tag, "|", $commit;
+	' "$repo_root/composer.json"
+); then
+	fail 'The canonical Core certification record is unavailable.'
+fi
+IFS='|' read -r expected_core_tag expected_core_commit <<< "$certification"
+
+[[ "$expected_addon_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
+	|| fail 'The expected Bitbucket version is invalid.'
+[[ "$expected_core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
+	|| fail 'The canonical Core tag is invalid.'
+[[ "$expected_core_commit" =~ ^[0-9a-f]{40}$ ]] \
+	|| fail 'The canonical Core commit must be full.'
+[[ -z "$provided_core_tag" || "$provided_core_tag" == "$expected_core_tag" ]] \
+	|| fail 'The supplied Core tag does not match the canonical certification.'
+[[ -z "$provided_core_commit" || "$provided_core_commit" == "$expected_core_commit" ]] \
+	|| fail 'The supplied Core commit does not match the canonical certification.'
+[[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 marker="$wordpress/.ran-booster-disposable-test-site"
 [[ -f "$marker" && ! -L "$marker" ]] \
@@ -33,13 +63,6 @@ marker="$wordpress/.ran-booster-disposable-test-site"
 [[ -f "$core_archive" && ! -L "$core_archive" ]] || fail 'The exact Core archive is unavailable.'
 [[ -f "$addon_archive" && ! -L "$addon_archive" ]] || fail 'The exact Bitbucket archive is unavailable.'
 [[ -d "$temporary_parent" && ! -L "$temporary_parent" ]] || fail 'The disposable temporary parent is unavailable or unsafe.'
-[[ "$expected_addon_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
-	|| fail 'The expected Bitbucket version is invalid.'
-[[ "$expected_core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
-	|| fail 'The certified Core tag is invalid.'
-[[ "$expected_core_commit" =~ ^[0-9a-f]{40}$ ]] \
-	|| fail 'The certified Core commit must be full.'
-[[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 sha256_file() {
 	if command -v sha256sum >/dev/null 2>&1; then
@@ -69,11 +92,9 @@ if ! unzip -p "$core_archive" ran-booster/ran-booster-release.json \
 			exit( 1 );
 		}
 	' "$expected_core_tag" "$expected_core_commit"; then
-	fail 'The Core archive does not match the certified release provenance.'
+	fail 'The Core archive does not match the canonical certified release provenance.'
 fi
 
-script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 bash "$repo_root/scripts/verify-release.sh" "$addon_archive" "$addon_commit"
 
 wp_cli() {
@@ -165,4 +186,5 @@ export RAN_BOOSTER_BITBUCKET_INERT_MODE=incompatible
 wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
 unset RAN_BOOSTER_BITBUCKET_INERT_MODE
 
-printf 'Bitbucket installed proof passed for %s (%s).\n' "$addon_commit" "$expected_addon_sha"
+printf 'Bitbucket installed proof passed for %s (%s) against certified Core %s (%s).\n' \
+	"$addon_commit" "$expected_addon_sha" "$expected_core_tag" "$expected_core_commit"
