@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "79754e7171b04ebd48a25764f85d3d45",
+    "content-hash": "3aa37ecbf82146326fc28156f2bff933",
     "packages": [],
     "packages-dev": [
         {
@@ -333,7 +333,7 @@
             ],
             "description": "Library for handling version information and constraints",
             "support": {
-                "issues": "https://github.com/phar-io/version/issues",
+                "issues": "https://github.com/phar-io/manifest/issues",
                 "source": "https://github.com/phar-io/version/tree/3.2.1"
             },
             "time": "2022-02-21T01:04:05+00:00"
@@ -649,6 +649,11 @@
                 "branch-alias": {
                     "dev-stable": "1.x-dev",
                     "dev-develop": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PHPCompatibility\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
