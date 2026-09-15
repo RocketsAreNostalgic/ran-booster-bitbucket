@@ -27,7 +27,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 
 	public function __construct(
 		private ProviderWebhookProfileReader $webhookProfiles,
-		private AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence
+		private ?AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence = null
 	) {
 		$this->policy = new BitbucketWebhookPolicy();
 	}
@@ -55,6 +55,10 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 			);
 		}
 
+		if ( null === $this->deliveryEvidence ) {
+			return $this->unverifiedDeliveryResult();
+		}
+
 		try {
 			$delivery = $this->deliveryEvidence->latestAuthenticatedDelivery();
 		} catch ( \Throwable ) {
@@ -67,12 +71,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		}
 
 		if ( null === $delivery ) {
-			return new ProviderDiagnosticResult(
-				ProviderDiagnosticResult::WARNING,
-				'bb.webhook.delivery_unverified',
-				'A Bitbucket webhook secret is configured, but no authenticated delivery has been observed.',
-				'Send a Bitbucket test delivery, then compare Request History with the Provider request ID in Booster Activity.'
-			);
+			return $this->unverifiedDeliveryResult();
 		}
 
 		if ( ! $delivery->matchedManagedPackage ) {
@@ -124,6 +123,15 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		return array() === $events
 			? WebhookEnvelope::ignored()
 			: WebhookEnvelope::events( ...$events );
+	}
+
+	private function unverifiedDeliveryResult(): ProviderDiagnosticResult {
+		return new ProviderDiagnosticResult(
+			ProviderDiagnosticResult::WARNING,
+			'bb.webhook.delivery_unverified',
+			'A Bitbucket webhook secret is configured, but that does not prove the remote hook or a matching delivery.',
+			'Send a Bitbucket test delivery, then compare Request History with the Provider request ID in Booster Activity.'
+		);
 	}
 
 	private function eventKey( WebhookRequest $request ): string {
