@@ -11,14 +11,14 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 final class CurrentCoreBoundaryTest extends TestCase {
-	public function testRuntimeRequiresTheCurrentProviderSurfaceInAdditionToTheApiTuple(): void {
+	public function testRuntimeUsesThePublishedApiTupleAndProviderRegistrationContract(): void {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
 		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
-		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader', $plugin );
-		self::assertStringContainsString( 'interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class )', $plugin );
+		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence', $plugin );
+		self::assertStringNotContainsString( 'interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class )', $plugin );
 	}
 
 	public function testRepositoryTestsUseOnlyTheCertifiedCoreProductionAutoloader(): void {
@@ -70,6 +70,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_SOURCE_PATH', $smoke . $proof );
 		self::assertStringContainsString( 'ProviderRegistry(', $smoke );
 		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader', $smoke );
+		self::assertStringContainsString( 'bb.webhook.delivery_verified', $smoke );
 		self::assertStringContainsString( 'ran-booster/ran-booster-release.json', $proof );
 		self::assertStringContainsString( 'ran-booster-core-certification', $proof );
 		self::assertStringContainsString( 'composer.json', $proof );
