@@ -23,9 +23,7 @@ php_binary=${RAN_BOOSTER_WP_CLI_PHP:-php}
 wp_binary=${RAN_BOOSTER_WP_CLI_BIN:-wp}
 wp_require=${RAN_BOOSTER_WP_CLI_REQUIRE:-}
 php_ini=${RAN_BOOSTER_WP_CLI_PHP_INI:-}
-
-temporary_parent=${TMPDIR:-/tmp}
-temporary_parent=${temporary_parent%/}
+temporary_parent=${RAN_BOOSTER_BITBUCKET_TEST_TMPDIR:-${RUNNER_TEMP:-/private/tmp}}
 
 marker="$wordpress/.ran-booster-disposable-test-site"
 [[ -f "$marker" && ! -L "$marker" ]] \
@@ -34,6 +32,7 @@ marker="$wordpress/.ran-booster-disposable-test-site"
 	|| fail 'The disposable-site marker is invalid.'
 [[ -f "$core_archive" && ! -L "$core_archive" ]] || fail 'The exact Core archive is unavailable.'
 [[ -f "$addon_archive" && ! -L "$addon_archive" ]] || fail 'The exact Bitbucket archive is unavailable.'
+[[ -d "$temporary_parent" && ! -L "$temporary_parent" ]] || fail 'The disposable temporary parent is unavailable or unsafe.'
 [[ "$expected_addon_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
 	|| fail 'The expected Bitbucket version is invalid.'
 [[ "$expected_core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
@@ -43,6 +42,11 @@ marker="$wordpress/.ran-booster-disposable-test-site"
 [[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 sha256_file() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{ print $1 }'
+		return
+	fi
+
 	shasum -a 256 "$1" | awk '{ print $1 }'
 }
 
@@ -73,9 +77,16 @@ repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 bash "$repo_root/scripts/verify-release.sh" "$addon_archive" "$addon_commit"
 
 wp_cli() {
+	local wp_entry=$wp_binary
 	local command=( "$php_binary" )
+
+	if [[ "$wp_entry" != */* ]]; then
+		wp_entry=$(command -v "$wp_entry") \
+			|| fail 'The WP-CLI launcher is unavailable.'
+	fi
+
 	[[ -z "$php_ini" ]] || command+=( -c "$php_ini" )
-	command+=( "$wp_binary" )
+	command+=( "$wp_entry" )
 	[[ -z "$wp_require" ]] || command+=( "--require=$wp_require" )
 	command+=( "--path=$wordpress" )
 	"${command[@]}" "$@"
