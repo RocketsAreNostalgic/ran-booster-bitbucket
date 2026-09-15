@@ -12,10 +12,11 @@ fail() {
 
 wordpress=${RAN_BOOSTER_WORDPRESS_PATH:?RAN_BOOSTER_WORDPRESS_PATH is required}
 core_archive=${RAN_BOOSTER_CORE_ARCHIVE:?RAN_BOOSTER_CORE_ARCHIVE is required}
-core_source=${RAN_BOOSTER_CORE_SOURCE_PATH:?RAN_BOOSTER_CORE_SOURCE_PATH is required}
 addon_archive=${RAN_BOOSTER_BITBUCKET_ARCHIVE:?RAN_BOOSTER_BITBUCKET_ARCHIVE is required}
 addon_commit=${RAN_BOOSTER_BITBUCKET_COMMIT:?RAN_BOOSTER_BITBUCKET_COMMIT is required}
 expected_addon_version=${RAN_BOOSTER_BITBUCKET_VERSION:?RAN_BOOSTER_BITBUCKET_VERSION is required}
+expected_core_tag=${RAN_BOOSTER_CORE_TAG:?RAN_BOOSTER_CORE_TAG is required}
+expected_core_commit=${RAN_BOOSTER_CORE_COMMIT:?RAN_BOOSTER_CORE_COMMIT is required}
 expected_core_sha=${RAN_BOOSTER_CORE_SHA256:?RAN_BOOSTER_CORE_SHA256 is required}
 expected_addon_sha=${RAN_BOOSTER_BITBUCKET_SHA256:?RAN_BOOSTER_BITBUCKET_SHA256 is required}
 php_binary=${RAN_BOOSTER_WP_CLI_PHP:-php}
@@ -30,11 +31,12 @@ marker="$wordpress/.ran-booster-disposable-test-site"
 	|| fail 'The disposable-site marker is invalid.'
 [[ -f "$core_archive" && ! -L "$core_archive" ]] || fail 'The exact Core archive is unavailable.'
 [[ -f "$addon_archive" && ! -L "$addon_archive" ]] || fail 'The exact Bitbucket archive is unavailable.'
-[[ -d "$core_source/.git" ]] || fail 'The exact Core source checkout is unavailable.'
 [[ "$expected_addon_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
 	|| fail 'The expected Bitbucket version is invalid.'
-[[ "$(git -C "$core_source" rev-parse HEAD)" == c992d612a827bef2bc6dea6993e25045087b6d52 ]] \
-	|| fail 'The Core source checkout is not the certified commit.'
+[[ "$expected_core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
+	|| fail 'The certified Core tag is invalid.'
+[[ "$expected_core_commit" =~ ^[0-9a-f]{40}$ ]] \
+	|| fail 'The certified Core commit must be full.'
 [[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 sha256_file() {
@@ -45,6 +47,23 @@ sha256_file() {
 [[ "$(sha256_file "$addon_archive")" == "$expected_addon_sha" ]] || fail 'The Bitbucket archive digest is wrong.'
 unzip -tqq "$core_archive"
 unzip -tqq "$addon_archive"
+
+if ! unzip -p "$core_archive" ran-booster/ran-booster-release.json \
+	| "$php_binary" -r '
+		$document = json_decode( stream_get_contents( STDIN ), true, 512, JSON_THROW_ON_ERROR );
+		$tag = $argv[1];
+		$commit = $argv[2];
+		if ( ! is_array( $document )
+			|| "ran-booster-core-release" !== ( $document["schema"] ?? null )
+			|| 1 !== ( $document["schema_version"] ?? null )
+			|| substr( $tag, 1 ) !== ( $document["version"] ?? null )
+			|| $commit !== ( $document["commit"] ?? null )
+		) {
+			exit( 1 );
+		}
+	' "$expected_core_tag" "$expected_core_commit"; then
+	fail 'The Core archive does not match the certified release provenance.'
+fi
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
@@ -119,7 +138,6 @@ diff -qr "$extracted/ran-booster-bitbucket" "$addon_dir"
 wp_cli option update active_plugins '["ran-booster/ran-booster.php","ran-booster-bitbucket/ran-booster-bitbucket.php"]' --format=json >/dev/null
 export RAN_BOOSTER_BITBUCKET_LOAD_ORDER=core-first
 export RAN_BOOSTER_BITBUCKET_VERSION="$expected_addon_version"
-export RAN_BOOSTER_CORE_SOURCE_PATH="$core_source"
 wp_cli eval-file "$script_dir/bitbucket-installed-smoke.php" --user=admin
 
 wp_cli option update active_plugins '["ran-booster-bitbucket/ran-booster-bitbucket.php","ran-booster/ran-booster.php"]' --format=json >/dev/null
