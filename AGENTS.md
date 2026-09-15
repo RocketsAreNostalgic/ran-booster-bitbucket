@@ -5,11 +5,12 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 ## Runtime contract
 
 - RAN Booster is required. This add-on supports exactly Provider API `10` and the official-suite Add-on API `16` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
+- The current certified Core boundary is the exact tag/commit recorded in `extra.ran-booster-core-certification`. Because older Core releases may publish the same numeric API tuple, runtime compatibility must also prove the current provider surface used by this add-on.
 - Provider API `10` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
-- Bitbucket does not yet claim the optional webhook fitness or management capabilities. Keep its existing provider behavior unchanged until a separately reviewed provider implementation proves those operations.
+- Bitbucket does not claim the optional webhook fitness or management capabilities. Keep its existing provider behavior unchanged until a separately reviewed provider implementation proves those operations.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
-- The add-on may intentionally use public RAN Booster runtime classes and the installed Core vendor autoloader after that exact guard. Do not vendor, copy, or ship RAN Booster code.
-- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`.
+- The add-on may intentionally use public RAN Booster runtime classes through Core's shipped production autoloader after the exact compatibility guard. Do not vendor, copy, or ship RAN Booster production or test code.
+- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`; authenticated delivery diagnostics use only the provider-bound `AuthenticatedWebhookDeliveryEvidenceReader`.
 - The add-on owns one non-interactive guide at
   `ran_booster_documentation_sections_after_provider_bb`. It receives only the
   canonical documentation URL and administration scope, imports no Core
@@ -18,9 +19,10 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 ## Development and release
 
-- Tests require a compatible sibling `../ran-booster` checkout with its Composer dependencies. Set `RAN_BOOSTER_CORE_PATH` only when it lives elsewhere.
-- Run `composer install`, `composer check`, and `composer build:release`. The add-on owns PHP tooling in its own `vendor/`; the sibling Core is a contract fixture, not a packaged dependency.
-- Releases are private GitHub artifacts. Do not add WordPress.org/SVN publishing or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files. The verified archive must contain the add-on-owned Bitbucket guide and exact native documentation hook.
+- Tests require the exact sibling Core checkout recorded in `extra.ran-booster-core-certification`. Set `RAN_BOOSTER_CORE_PATH` only when that checkout lives elsewhere.
+- Bitbucket tests consume only Core's shipped `autoload.php` and public production contracts. Do not install Core's Composer development dependencies for this repository and do not import Core-owned test fixtures.
+- Run `composer install`, `composer check`, `composer analyse`, and `composer build:release` from this add-on repository. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
+- Releases are GitHub artifacts. Do not add WordPress.org/SVN publishing or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files. The verified archive must contain the add-on-owned Bitbucket guide and exact native documentation hook.
 - Keep the entry header, `readme.txt` stable tag, Release Please manifest, and changelog aligned.
 - Follow `RELEASE.md` for the authoritative release procedure, package
   automation and required evidence.
