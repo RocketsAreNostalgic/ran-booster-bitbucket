@@ -6,21 +6,21 @@ $coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
 $coreRoot = false === $coreRoot || '' === $coreRoot
 	? dirname( __DIR__ ) . '/../ran-booster'
 	: rtrim( $coreRoot, '/\\' );
-$coreAutoload = $coreRoot . '/vendor/autoload.php';
+$coreAutoload = $coreRoot . '/autoload.php';
 
 if ( ! is_file( $coreAutoload ) ) {
 	throw new RuntimeException(
-		'RAN Booster Bitbucket tests require a compatible sibling RAN Booster checkout with Composer dependencies. '
-		. 'Set RAN_BOOSTER_CORE_PATH or run composer install in ' . $coreRoot . '.'
+		'RAN Booster Bitbucket tests require the certified RAN Booster production source. '
+		. 'Set RAN_BOOSTER_CORE_PATH to the exact certified Core checkout.'
 	);
 }
-
-require $coreAutoload;
-require dirname( __DIR__ ) . '/autoload.php';
 
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
+
+require $coreAutoload;
+require dirname( __DIR__ ) . '/autoload.php';
 
 if ( ! function_exists( 'add_action' ) ) {
 	/** @param callable $callback */
