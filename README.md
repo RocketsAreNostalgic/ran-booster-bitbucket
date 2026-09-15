@@ -8,11 +8,11 @@ after Core's Bitbucket provider documentation.
 ## Compatibility and safety
 
 - Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 10 and Add-on API 16.
-- The current certified Core boundary is RAN Booster `v1.0.0-beta.28` at `b634c431951ac75bd7022946ead26cbac949940b`. Because earlier Core releases used the same numeric API tuple, the add-on also requires the current provider-bound authenticated webhook-delivery evidence contract before it registers.
-- `Requires Plugins: ran-booster` declares Core as a package dependency, but WordPress does not check Booster's APIs. The add-on checks `RAN_BOOSTER_PROVIDER_API_VERSION`, `RAN_BOOSTER_ADDON_API_VERSION`, the supported runtime mode and the current provider surface; a missing or incompatible boundary disables provider registration and remote calls.
+- The current certification target for repository tests and release evidence is RAN Booster `v1.0.0-beta.28` at `b634c431951ac75bd7022946ead26cbac949940b`. Beta.28 did not introduce a new Provider or Add-on API generation, so this certification pin is not an additional runtime minimum-version gate.
+- `Requires Plugins: ran-booster` declares Core as a package dependency, but WordPress does not check Booster's APIs. The add-on checks `RAN_BOOSTER_PROVIDER_API_VERSION`, `RAN_BOOSTER_ADDON_API_VERSION` and the supported runtime mode; a missing or incompatible API boundary disables provider registration and remote calls.
 - Provider API 10 has no logging capability. Diagnostics return bounded `ProviderDiagnosticResult` values to Core and never send exceptions or vendor text through a logging facade.
 - If Core is missing or incompatible, the add-on displays a compatibility notice only to administrators who can activate plugins.
-- Credentials come only from Core's provider-bound `ProviderCredentialStore`. Authenticated webhook-delivery diagnostics use Core's provider-bound `AuthenticatedWebhookDeliveryEvidenceReader`. The add-on neither stores credentials nor reads Core's sidecar paths, service container, database repositories or test fixtures.
+- Credentials come only from Core's provider-bound `ProviderCredentialStore`. Authenticated webhook-delivery diagnostics use Core's provider-bound `AuthenticatedWebhookDeliveryEvidenceReader`, supplied by Provider API 10 registration. The add-on neither stores credentials nor reads Core's sidecar paths, service container, database repositories or test fixtures.
 - The provider intentionally implements none of the optional release metadata,
   candidate-listing, inspection, acquisition, native-target or release-workflow capabilities.
 - The provider does not implement the optional webhook fitness or management capabilities; use the included instructions to configure Bitbucket webhooks manually. Its webhook diagnostics can still report whether Core has authenticated a delivery and whether that delivery matched a managed package.
@@ -20,7 +20,7 @@ after Core's Bitbucket provider documentation.
 
 ## Install and operate
 
-1. Install and activate the certified or a deliberately recertified RAN Booster release that provides the required current Provider API 10 / Add-on API 16 surface.
+1. Install and activate a RAN Booster release that provides Provider API 10 and Add-on API 16.
 2. Download `ran-booster-bitbucket-<version>.zip` and its `.sha256` file from
    the same GitHub release. Do not use GitHub's generated source archives.
 3. Verify the checksum, then upload and activate the ZIP through WordPress's
