@@ -231,8 +231,8 @@ done
 
 grep -F 'test "$(git rev-parse HEAD)" = "$RAN_QUALITY_COMMIT"' "$release_workflow" >/dev/null
 grep -F 'and .merge_commit_sha == $merge' "$release_workflow" >/dev/null
-grep -F 'merged_pr_number="$(jq -er '\'' .number '\'' <<< "$merged_pr")"' "$release_workflow" >/dev/null 2>&1 \
-	|| grep -F 'merged_pr_number="$(jq -er '\''.number'\'' <<< "$merged_pr")"' "$release_workflow" >/dev/null
+grep -F 'merged_pr_number=' "$release_workflow" >/dev/null
+grep -F "jq -er '.number' <<< \"\$merged_pr\"" "$release_workflow" >/dev/null
 current_main_guards=$(grep -F -c '[[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true' "$release_workflow")
 [[ "$current_main_guards" -eq 2 ]] \
 	|| { printf 'Expected two stale-main reconciliation guards, found %s\n' "$current_main_guards" >&2; exit 1; }
