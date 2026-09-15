@@ -78,7 +78,6 @@ final class Plugin {
 			&& defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 			&& 10 === RAN_BOOSTER_PROVIDER_API_VERSION
 			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			&& 16 === RAN_BOOSTER_ADDON_API_VERSION
-			&& interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class );
+			&& 16 === RAN_BOOSTER_ADDON_API_VERSION;
 	}
 }
