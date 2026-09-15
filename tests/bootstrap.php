@@ -2,18 +2,10 @@
 
 declare(strict_types=1);
 
-$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
-$coreRoot = false === $coreRoot || '' === $coreRoot
-	? dirname( __DIR__ ) . '/../ran-booster'
-	: rtrim( $coreRoot, '/\\' );
-$coreAutoload = $coreRoot . '/autoload.php';
+require_once __DIR__ . '/fixtures/certified-core-checkout.php';
 
-if ( ! is_file( $coreAutoload ) ) {
-	throw new RuntimeException(
-		'RAN Booster Bitbucket tests require the certified RAN Booster production source. '
-		. 'Set RAN_BOOSTER_CORE_PATH to the exact certified Core checkout.'
-	);
-}
+$coreRoot     = ran_booster_bitbucket_certified_core_root();
+$coreAutoload = $coreRoot . '/autoload.php';
 
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
