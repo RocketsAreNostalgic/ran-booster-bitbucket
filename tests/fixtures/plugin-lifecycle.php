@@ -106,10 +106,10 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$coreRoot = false === $coreRoot || '' === $coreRoot
 		? dirname( __DIR__, 3 ) . '/ran-booster'
 		: rtrim( $coreRoot, '/\\' );
-	$coreAutoload = $coreRoot . '/vendor/autoload.php';
+	$coreAutoload = $coreRoot . '/autoload.php';
 
 	if ( ! is_file( $coreAutoload ) ) {
-		fwrite( STDERR, "A compatible RAN Booster sibling checkout is required.\n" );
+		fwrite( STDERR, "The exact certified RAN Booster production source is required.\n" );
 		exit( 3 );
 	}
 
