@@ -24,6 +24,9 @@ wp_binary=${RAN_BOOSTER_WP_CLI_BIN:-wp}
 wp_require=${RAN_BOOSTER_WP_CLI_REQUIRE:-}
 php_ini=${RAN_BOOSTER_WP_CLI_PHP_INI:-}
 
+temporary_parent=${TMPDIR:-/tmp}
+temporary_parent=${temporary_parent%/}
+
 marker="$wordpress/.ran-booster-disposable-test-site"
 [[ -f "$marker" && ! -L "$marker" ]] \
 	|| fail 'The disposable-site marker is missing or unsafe.'
@@ -87,7 +90,7 @@ addon_dir="$plugins/ran-booster-bitbucket"
 [[ -d "$core_dir" && ! -L "$core_dir" ]] || fail 'The baseline Core directory is unavailable or unsafe.'
 [[ ! -e "$addon_dir" && ! -L "$addon_dir" ]] || fail 'Bitbucket is already present; refusing to overwrite an unowned installation.'
 
-temporary=$(mktemp -d /private/tmp/ran-booster-bitbucket-installed.XXXXXX)
+temporary=$(mktemp -d "$temporary_parent/ran-booster-bitbucket-installed.XXXXXX")
 baseline_active=$(wp_cli option get active_plugins --format=json | tail -n 1)
 cp -R "$core_dir" "$temporary/original-core"
 
@@ -114,7 +117,7 @@ cleanup() {
 	[[ ! -e "$addon_dir" && ! -L "$addon_dir" && -d "$core_dir" && ! -L "$core_dir" ]] || cleanup_failed=1
 	if (( 0 == cleanup_failed )); then
 		case "$temporary" in
-			/private/tmp/ran-booster-bitbucket-installed.*) rm -rf -- "$temporary" ;;
+			"$temporary_parent"/ran-booster-bitbucket-installed.*) rm -rf -- "$temporary" ;;
 		esac
 	elif (( 0 == status )); then
 		printf 'bitbucket-installed-proof: cleanup failed; retained recovery data at %s\n' "$temporary" >&2
