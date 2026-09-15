@@ -48,7 +48,7 @@ if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 10 !== RAN_BOOSTER_PROVI
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION
 	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
 ) {
-	throw new RuntimeException( 'The exact certified Core provider surface is unavailable.' );
+	throw new RuntimeException( 'The required Core provider contract is unavailable.' );
 }
 
 $registrationHook      = $GLOBALS['wp_filter']['ran_booster_register_providers'] ?? null;
@@ -80,7 +80,7 @@ $store = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
 	}
 
 	public function hasWebhookProfile(): bool {
-		return false;
+		return true;
 	}
 };
 $registry = new RAN\RepositoryProvider\ProviderRegistry(
@@ -96,7 +96,11 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 
 		return new class() implements RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
 			public function latestAuthenticatedDelivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
-				return null;
+				return new RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence(
+					RAN\RepositoryProvider\ProviderCode::parse( 'bb' ),
+					gmdate( 'Y-m-d H:i:s' ),
+					true
+				);
 			}
 		};
 	}
@@ -124,6 +128,14 @@ if ( 'bb' !== $provider->getMetadata()->code->value
 	throw new RuntimeException( 'The installed Bitbucket provider capability contract is invalid.' );
 }
 
+$webhooks   = $registry->requireCapability( 'bb', RAN\RepositoryProvider\WebhookNormalizer::class );
+$diagnostic = $webhooks->diagnoseWebhookReadiness();
+if ( RAN\RepositoryProvider\ProviderDiagnosticResult::PASSED !== $diagnostic->status
+	|| 'bb.webhook.delivery_verified' !== $diagnostic->code
+) {
+	throw new RuntimeException( 'The installed Bitbucket authenticated-delivery diagnostic is unavailable.' );
+}
+
 $allowedHooks = array(
 	'ran_booster_register_providers',
 	'ran_booster_documentation_sections_after_provider_bb',
@@ -137,7 +149,6 @@ foreach ( $GLOBALS['wp_filter'] as $hookName => $hook ) {
 			if ( is_array( $callback ) && ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin ) {
 				$ownedHooks[] = (string) $hookName;
 			}
-		}
 	}
 }
 sort( $ownedHooks );
@@ -210,4 +221,4 @@ if ( 1 !== count( $sections ) || 'ran-booster-documentation-bitbucket-cloud' !==
 	throw new RuntimeException( 'The installed Bitbucket documentation contribution is unavailable.' );
 }
 
-WP_CLI::success( 'Installed Bitbucket identity, load order, provider contract and controlled operation passed.' );
+WP_CLI::success( 'Installed Bitbucket identity, load order, provider contract, authenticated-delivery diagnostic and controlled operation passed.' );
