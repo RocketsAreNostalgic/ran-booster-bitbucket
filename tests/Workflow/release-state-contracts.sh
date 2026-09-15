@@ -164,4 +164,122 @@ if assert_action_payload_accepted "$missing_files" >/dev/null 2>&1; then
 	exit 1
 fi
 
-printf 'Release tag, immutable asset, and retry actor fixtures passed.\n'
+quality_workflow="$repo_root/.github/workflows/quality.yml"
+release_doc="$repo_root/RELEASE.md"
+quality_trust_paths=$(awk '
+	/for trust_path in \\/ { capture = 1 }
+	capture {
+		print
+		if ( $0 ~ /; do$/ ) {
+			exit
+		}
+	}
+' "$quality_workflow")
+
+for path in \
+	composer.json \
+	composer.lock \
+	.github/workflows/quality.yml \
+	.github/workflows/release-please.yml \
+	scripts/build-release.sh \
+	scripts/verify-release.sh \
+	scripts/verify-release.php \
+	scripts/validate-release-candidate.sh \
+	scripts/reconcile-release-candidate-marker.sh \
+	scripts/verify-release-tag-target.sh \
+	scripts/has-trusted-release-candidate-run.sh \
+	scripts/verify-immutable-release-assets.sh; do
+	grep -F "$path" <<< "$quality_trust_paths" >/dev/null \
+		|| { printf 'Quality freshness classifier is missing %s\n' "$path" >&2; exit 1; }
+	grep -F "\`$path\`" "$release_doc" >/dev/null \
+		|| { printf 'RELEASE.md inventory is missing %s\n' "$path" >&2; exit 1; }
+done
+
+if grep -F 'for trust_path in \' "$release_workflow" >/dev/null; then
+	printf 'Release Please still owns a duplicated release-control path catalogue\n' >&2
+	exit 1
+fi
+if grep -F 'privileged reconciliation is intentionally deferred' "$release_workflow" >/dev/null; then
+	printf 'Release Please still contains the mandatory second-merge self-deferral\n' >&2
+	exit 1
+fi
+
+release_on=$(sed -n '/^on:/,/^permissions:/p' "$release_workflow")
+if grep -F 'pull_request:' <<< "$release_on" >/dev/null \
+	|| grep -F 'pull_request_target:' <<< "$release_on" >/dev/null; then
+	printf 'Release Please can be entered directly from pull-request code\n' >&2
+	exit 1
+fi
+
+release_job_gate=$(awk '
+	/^    if: >-$/ { capture = 1 }
+	capture {
+		print
+		if ( $0 ~ /^    runs-on:/ ) {
+			exit
+		}
+	}
+' "$release_workflow")
+for predicate in \
+	"github.event.workflow_run.event == 'push'" \
+	"github.event.workflow_run.conclusion == 'success'" \
+	"github.event.workflow_run.head_branch == 'main'" \
+	'github.event.workflow_run.head_repository.full_name == github.repository'; do
+	grep -F "$predicate" <<< "$release_job_gate" >/dev/null \
+		|| { printf 'Release Please admission gate is missing: %s\n' "$predicate" >&2; exit 1; }
+done
+
+grep -F 'test "$(git rev-parse HEAD)" = "$RAN_QUALITY_COMMIT"' "$release_workflow" >/dev/null
+grep -F 'and .merge_commit_sha == $merge' "$release_workflow" >/dev/null
+grep -F 'merged_pr_number="$(jq -er '\'' .number '\'' <<< "$merged_pr")"' "$release_workflow" >/dev/null 2>&1 \
+	|| grep -F 'merged_pr_number="$(jq -er '\''.number'\'' <<< "$merged_pr")"' "$release_workflow" >/dev/null
+current_main_guards=$(grep -F -c '[[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true' "$release_workflow")
+[[ "$current_main_guards" -eq 2 ]] \
+	|| { printf 'Expected two stale-main reconciliation guards, found %s\n' "$current_main_guards" >&2; exit 1; }
+
+assert_step_gate() {
+	local step_name=$1 expected_gate=$2 step
+	step=$(awk -v marker="      - name: $step_name" '
+		$0 == marker { capture = 1; seen = 0 }
+		capture {
+			if ( seen && $0 ~ /^      - name:/ ) {
+				exit
+			}
+			print
+			seen = 1
+		}
+	' "$release_workflow")
+	[[ -n "$step" ]] || { printf 'Release step is missing: %s\n' "$step_name" >&2; exit 1; }
+	grep -F "$expected_gate" <<< "$step" >/dev/null \
+		|| { printf 'Release step is not bound to admission: %s\n' "$step_name" >&2; exit 1; }
+}
+
+assert_step_gate 'Open or update release pull request' "if: steps.release-state.outputs.release-please-required == 'true'"
+assert_step_gate 'Validate and dispatch exact Release Please candidate' "if: steps.release-state.outputs.release-please-required == 'true'"
+assert_step_gate 'Download exact archive admitted by main Quality' "if: steps.release-state.outputs.release-required == 'true'"
+assert_step_gate 'Verify release identity and exact artifact provenance' "if: steps.release-state.outputs.release-required == 'true'"
+assert_step_gate 'Create or reuse draft and attach verified assets' "if: steps.release-state.outputs.release-required == 'true' && env.RAN_RELEASE_PENDING == 'true'"
+assert_step_gate 'Publish only under immutable-release contract' "if: steps.release-state.outputs.release-required == 'true' && env.RAN_RELEASE_PENDING == 'true'"
+assert_step_gate 'Read back immutable release and reconcile exact PR' "if: steps.release-state.outputs.release-required == 'true'"
+
+workflow_run_qualifies() {
+	[[ "$1" == push \
+		&& "$2" == success \
+		&& "$3" == main \
+		&& "$4" == RocketsAreNostalgic/ran-booster-bitbucket ]]
+}
+for invalid in \
+	'pull_request success main RocketsAreNostalgic/ran-booster-bitbucket' \
+	'push failure main RocketsAreNostalgic/ran-booster-bitbucket' \
+	'push success feature RocketsAreNostalgic/ran-booster-bitbucket' \
+	'push success main someone/else'; do
+	read -r event conclusion branch_name head_repository <<< "$invalid"
+	if workflow_run_qualifies "$event" "$conclusion" "$branch_name" "$head_repository"; then
+		printf 'Unqualified workflow_run was accepted: %s\n' "$invalid" >&2
+		exit 1
+	fi
+done
+workflow_run_qualifies push success main RocketsAreNostalgic/ran-booster-bitbucket \
+	|| { printf 'Qualified exact-main workflow_run was rejected\n' >&2; exit 1; }
+
+printf 'Release tag, immutable asset, retry actor, and trusted-main promotion fixtures passed.\n'
