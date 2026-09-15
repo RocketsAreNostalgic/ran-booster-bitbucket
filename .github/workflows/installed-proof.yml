@@ -1,0 +1,136 @@
+name: Certified Core installed proof
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: installed-proof-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  installed-proof:
+    name: Certified Core installed proof
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: wordpress_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Check out exact add-on source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up PHP and WP-CLI
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: "8.2"
+          coverage: none
+          extensions: mysqli, zip
+          tools: composer:v2, wp-cli
+
+      - name: Build and verify exact Bitbucket archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_commit="$(git rev-parse HEAD)"
+          expected_source='${{ github.event.pull_request.head.sha || github.sha }}'
+          test "$source_commit" = "$expected_source"
+          version="$(sed -nE 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*([^[:space:]]+).*/\1/p' ran-booster-bitbucket.php)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          composer build:release -- "$source_commit"
+          archive="$GITHUB_WORKSPACE/build/ran-booster-bitbucket-${version}.zip"
+          composer verify:release -- "$archive" "$source_commit"
+          addon_sha="$(sha256sum "$archive" | awk '{ print $1 }')"
+          {
+            printf 'RAN_BOOSTER_BITBUCKET_ARCHIVE=%s\n' "$archive"
+            printf 'RAN_BOOSTER_BITBUCKET_COMMIT=%s\n' "$source_commit"
+            printf 'RAN_BOOSTER_BITBUCKET_SHA256=%s\n' "$addon_sha"
+            printf 'RAN_BOOSTER_BITBUCKET_VERSION=%s\n' "$version"
+          } >> "$GITHUB_ENV"
+
+      - name: Download exact immutable Core release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          core_tag="$(jq -er '.extra["ran-booster-core-certification"].tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' composer.json)"
+          core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          release="$(gh api "repos/RocketsAreNostalgic/ran-booster/releases/tags/${core_tag}")"
+          jq -e \
+            --arg tag "$core_tag" \
+            --arg commit "$core_commit" \
+            '.tag_name == $tag and .target_commitish == $commit and .immutable == true and .draft == false' \
+            <<< "$release" >/dev/null
+
+          archive_name="ran-booster-${core_tag#v}.zip"
+          checksum_name="${archive_name}.sha256"
+          archive_asset="$(jq -cer --arg name "$archive_name" '[.assets[] | select(.name == $name)] | if length == 1 then .[0] else error("Expected one Core archive asset.") end' <<< "$release")"
+          checksum_asset="$(jq -cer --arg name "$checksum_name" '[.assets[] | select(.name == $name)] | if length == 1 then .[0] else error("Expected one Core checksum asset.") end' <<< "$release")"
+          archive_id="$(jq -er '.id' <<< "$archive_asset")"
+          checksum_id="$(jq -er '.id' <<< "$checksum_asset")"
+          digest="$(jq -er '.digest | select(type == "string" and startswith("sha256:"))' <<< "$archive_asset")"
+          core_sha="${digest#sha256:}"
+          [[ "$core_sha" =~ ^[0-9a-f]{64}$ ]]
+
+          core_archive="$GITHUB_WORKSPACE/build/$archive_name"
+          core_checksum="$GITHUB_WORKSPACE/build/$checksum_name"
+          gh api -H 'Accept: application/octet-stream' "repos/RocketsAreNostalgic/ran-booster/releases/assets/${archive_id}" > "$core_archive"
+          gh api -H 'Accept: application/octet-stream' "repos/RocketsAreNostalgic/ran-booster/releases/assets/${checksum_id}" > "$core_checksum"
+          test "$(sha256sum "$core_archive" | awk '{ print $1 }')" = "$core_sha"
+          test "$(< "$core_checksum")" = "$(printf '%s  %s' "$core_sha" "$archive_name")"
+          unzip -tqq "$core_archive"
+
+          {
+            printf 'RAN_BOOSTER_CORE_ARCHIVE=%s\n' "$core_archive"
+            printf 'RAN_BOOSTER_CORE_COMMIT=%s\n' "$core_commit"
+            printf 'RAN_BOOSTER_CORE_SHA256=%s\n' "$core_sha"
+            printf 'RAN_BOOSTER_CORE_TAG=%s\n' "$core_tag"
+          } >> "$GITHUB_ENV"
+
+      - name: Install disposable WordPress 7.0.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          wordpress="$GITHUB_WORKSPACE/build/wordpress"
+          wp core download --path="$wordpress" --version=7.0.3
+          test "$(wp core version --path="$wordpress")" = '7.0.3'
+          wp config create --path="$wordpress" --dbname=wordpress_test --dbuser=root --dbpass=root --dbhost=127.0.0.1:3306
+          wp core install \
+            --path="$wordpress" \
+            --url=http://localhost:10028 \
+            --title='RAN Booster Bitbucket installed proof' \
+            --admin_user=admin \
+            --admin_password=admin \
+            --admin_email=admin@example.com \
+            --skip-email
+          printf '%s' 'RAN Booster disposable test site' > "$wordpress/.ran-booster-disposable-test-site"
+          wp plugin install "$RAN_BOOSTER_CORE_ARCHIVE" --path="$wordpress"
+          wp plugin is-installed ran-booster --path="$wordpress"
+          printf 'RAN_BOOSTER_WORDPRESS_PATH=%s\n' "$wordpress" >> "$GITHUB_ENV"
+
+      - name: Run certified Core installed proof
+        shell: bash
+        env:
+          RAN_BOOSTER_BITBUCKET_TEST_DISPOSABLE: "1"
+        run: bash tests/WordPress/bitbucket-installed-proof.sh
