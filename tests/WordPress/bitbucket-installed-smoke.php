@@ -149,6 +149,7 @@ foreach ( $GLOBALS['wp_filter'] as $hookName => $hook ) {
 			if ( is_array( $callback ) && ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin ) {
 				$ownedHooks[] = (string) $hookName;
 			}
+		}
 	}
 }
 sort( $ownedHooks );
