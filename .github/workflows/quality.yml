@@ -600,15 +600,13 @@ jobs:
           core_tag="$(git describe --tags --exact-match HEAD)"
           test "$core_tag" = "$RAN_BOOSTER_CORE_TAG"
           [[ "$core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
+          test -f autoload.php
       - name: Set up PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: "8.2"
           coverage: none
           tools: composer:v2
-      - name: Install Core development dependencies
-        working-directory: ran-booster
-        run: composer install --no-interaction --prefer-dist --no-progress
       - name: Install add-on development dependencies
         working-directory: ran-booster-bitbucket
         run: |
@@ -617,6 +615,10 @@ jobs:
       - name: Run add-on quality checks
         working-directory: ran-booster-bitbucket
         run: composer check
+      - name: Run static analysis pilot
+        continue-on-error: true
+        working-directory: ran-booster-bitbucket
+        run: composer analyse
       - name: Download verified runtime archive
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:

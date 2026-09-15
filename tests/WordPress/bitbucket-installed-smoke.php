@@ -12,10 +12,6 @@ if ( ! in_array( $expectedOrder, array( 'addon-first', 'core-first' ), true ) ) 
 	throw new RuntimeException( 'A supported installed load order is required.' );
 }
 
-$coreSource = getenv( 'RAN_BOOSTER_CORE_SOURCE_PATH' );
-if ( false === $coreSource || '' === $coreSource ) {
-	throw new RuntimeException( 'The exact certified Core source path is required.' );
-}
 $expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
 if ( false === $expectedVersion || '' === $expectedVersion ) {
 	throw new RuntimeException( 'The expected installed Bitbucket version is required.' );
@@ -50,14 +46,69 @@ if ( false === $addon || false === $core
 
 if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 10 !== RAN_BOOSTER_PROVIDER_API_VERSION
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION
+	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
 ) {
-	throw new RuntimeException( 'The exact certified Core API generation is unavailable.' );
+	throw new RuntimeException( 'The required Core provider contract is unavailable.' );
 }
 
-$container = require rtrim( $coreSource, '/\\' ) . '/tests/WordPress/core-container-fixture.php';
-$registry  = $container->make( RAN\RepositoryProvider\ProviderRegistry::class );
-if ( ! $registry->isSealed() ) {
-	throw new RuntimeException( 'The installed provider registry is not sealed.' );
+$registrationHook      = $GLOBALS['wp_filter']['ran_booster_register_providers'] ?? null;
+$registrationCallbacks = array();
+foreach ( is_object( $registrationHook ) && is_array( $registrationHook->callbacks ?? null ) ? $registrationHook->callbacks : array() as $callbacks ) {
+	foreach ( is_array( $callbacks ) ? $callbacks : array() as $registered ) {
+		$callback = is_array( $registered ) ? ( $registered['function'] ?? null ) : null;
+		if ( is_array( $callback )
+			&& ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin
+			&& 'registerProvider' === ( $callback[1] ?? null )
+		) {
+			$registrationCallbacks[] = $callback;
+		}
+	}
+}
+if ( 1 !== count( $registrationCallbacks ) ) {
+	throw new RuntimeException( 'The installed Bitbucket provider callback did not register exactly once.' );
+}
+
+$credentialStoreScoped = false;
+$deliveryEvidenceScoped = false;
+$store = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
+	public function credentialProfiles(): array {
+		return array();
+	}
+
+	public function credentialMaterial( ?string $id = null ): ?array {
+		return null;
+	}
+
+	public function hasWebhookProfile(): bool {
+		return true;
+	}
+};
+$registry = new RAN\RepositoryProvider\ProviderRegistry(
+	array(),
+	new RAN\RepositoryProvider\ProviderSecretPolicyCatalog(),
+	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( $store, &$credentialStoreScoped ): RAN\RepositoryProvider\ProviderCredentialStore {
+		$credentialStoreScoped = 'bb' === $code->value;
+
+		return $store;
+	},
+	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( &$deliveryEvidenceScoped ): RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
+		$deliveryEvidenceScoped = 'bb' === $code->value;
+
+		return new class() implements RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
+			public function latestAuthenticatedDelivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+				return new RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence(
+					RAN\RepositoryProvider\ProviderCode::parse( 'bb' ),
+					gmdate( 'Y-m-d H:i:s' ),
+					true
+				);
+			}
+		};
+	}
+);
+$registrationCallbacks[0]( $registry );
+$registry->seal();
+if ( ! $credentialStoreScoped || ! $deliveryEvidenceScoped || ! $registry->isSealed() ) {
+	throw new RuntimeException( 'The installed provider registration did not receive provider-bound Core readers.' );
 }
 
 $providers = array_keys( $registry->all() );
@@ -75,6 +126,14 @@ if ( 'bb' !== $provider->getMetadata()->code->value
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryWebhookManagement
 ) {
 	throw new RuntimeException( 'The installed Bitbucket provider capability contract is invalid.' );
+}
+
+$webhooks   = $registry->requireCapability( 'bb', RAN\RepositoryProvider\WebhookNormalizer::class );
+$diagnostic = $webhooks->diagnoseWebhookReadiness();
+if ( RAN\RepositoryProvider\ProviderDiagnosticResult::PASSED !== $diagnostic->status
+	|| 'bb.webhook.delivery_verified' !== $diagnostic->code
+) {
+	throw new RuntimeException( 'The installed Bitbucket authenticated-delivery diagnostic is unavailable.' );
 }
 
 $allowedHooks = array(
@@ -163,4 +222,4 @@ if ( 1 !== count( $sections ) || 'ran-booster-documentation-bitbucket-cloud' !==
 	throw new RuntimeException( 'The installed Bitbucket documentation contribution is unavailable.' );
 }
 
-WP_CLI::success( 'Installed Bitbucket identity, load order, provider contract and controlled operation passed.' );
+WP_CLI::success( 'Installed Bitbucket identity, load order, provider contract, authenticated-delivery diagnostic and controlled operation passed.' );

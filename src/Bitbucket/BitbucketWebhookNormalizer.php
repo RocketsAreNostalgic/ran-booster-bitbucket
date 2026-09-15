@@ -6,6 +6,7 @@ namespace RAN\Booster\Bitbucket;
 
 use InvalidArgumentException;
 use JsonException;
+use RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader;
 use RAN\RepositoryProvider\GitReferenceSyntax;
 use RAN\RepositoryProvider\ProviderCode;
 use RAN\RepositoryProvider\ProviderDiagnosticResult;
@@ -24,7 +25,10 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 
 	private BitbucketWebhookPolicy $policy;
 
-	public function __construct( private ProviderWebhookProfileReader $webhookProfiles ) {
+	public function __construct(
+		private ProviderWebhookProfileReader $webhookProfiles,
+		private ?AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence = null
+	) {
 		$this->policy = new BitbucketWebhookPolicy();
 	}
 
@@ -51,11 +55,39 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 			);
 		}
 
+		if ( null === $this->deliveryEvidence ) {
+			return $this->unverifiedDeliveryResult();
+		}
+
+		try {
+			$delivery = $this->deliveryEvidence->latestAuthenticatedDelivery();
+		} catch ( \Throwable ) {
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::FAILED,
+				'bb.webhook.delivery_evidence_unavailable',
+				'Bitbucket authenticated delivery evidence could not be read.',
+				'Check Booster Activity and send another Bitbucket test delivery.'
+			);
+		}
+
+		if ( null === $delivery ) {
+			return $this->unverifiedDeliveryResult();
+		}
+
+		if ( ! $delivery->matchedManagedPackage ) {
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::WARNING,
+				'bb.webhook.delivery_unmatched',
+				'Booster authenticated a Bitbucket delivery, but it did not match a managed package.',
+				'Confirm the repository identity and managed package configuration, then send another Bitbucket delivery.'
+			);
+		}
+
 		return new ProviderDiagnosticResult(
-			ProviderDiagnosticResult::WARNING,
-			'bb.webhook.delivery_unverified',
-			'A Bitbucket webhook secret is configured, but that does not prove the remote hook or a matching delivery.',
-			'Send a Bitbucket test delivery, then compare Request History with the Provider request ID in Booster Activity.'
+			ProviderDiagnosticResult::PASSED,
+			'bb.webhook.delivery_verified',
+			'Booster authenticated a Bitbucket delivery that matched a managed package.',
+			'No remediation is required.'
 		);
 	}
 
@@ -91,6 +123,15 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		return array() === $events
 			? WebhookEnvelope::ignored()
 			: WebhookEnvelope::events( ...$events );
+	}
+
+	private function unverifiedDeliveryResult(): ProviderDiagnosticResult {
+		return new ProviderDiagnosticResult(
+			ProviderDiagnosticResult::WARNING,
+			'bb.webhook.delivery_unverified',
+			'A Bitbucket webhook secret is configured, but that does not prove the remote hook or a matching delivery.',
+			'Send a Bitbucket test delivery, then compare Request History with the Provider request ID in Booster Activity.'
+		);
 	}
 
 	private function eventKey( WebhookRequest $request ): string {

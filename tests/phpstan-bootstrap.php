@@ -2,17 +2,13 @@
 
 declare(strict_types=1);
 
-$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
-$coreRoot = false === $coreRoot || '' === $coreRoot
-	? dirname( __DIR__ ) . '/../ran-booster'
-	: rtrim( $coreRoot, '/\\' );
-$coreAutoload = $coreRoot . '/vendor/autoload.php';
+require_once __DIR__ . '/fixtures/certified-core-checkout.php';
 
-if ( ! is_file( $coreAutoload ) ) {
-	throw new RuntimeException(
-		'PHPStan requires a compatible RAN Booster checkout with Composer dependencies. '
-		. 'Set RAN_BOOSTER_CORE_PATH or run composer install in ' . $coreRoot . '.'
-	);
+$coreRoot     = ran_booster_bitbucket_certified_core_root();
+$coreAutoload = $coreRoot . '/autoload.php';
+
+if ( ! defined( 'ABSPATH' ) ) {
+	define( 'ABSPATH', __DIR__ . '/' );
 }
 
 require $coreAutoload;
