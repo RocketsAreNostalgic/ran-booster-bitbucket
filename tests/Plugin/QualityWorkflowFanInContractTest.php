@@ -21,7 +21,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertStringContainsString( "node-version: ''", $workflow );
 	}
 
-	public function testSourceOnlyComposerCheckExcludesRepositoryOnlyEvidence(): void {
+	public function testComposerQualityAggregatesPreserveSourceAndRepositoryEvidence(): void {
 		$composer = json_decode(
 			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 			true,
@@ -30,12 +30,23 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		);
 		self::assertIsArray( $composer );
 
-		$sourceCheck = $composer['scripts']['check'] ?? array();
-		self::assertIsArray( $sourceCheck );
-		self::assertNotContains( '@test:release-candidate', $sourceCheck );
-		self::assertNotContains( '@test:release-marker', $sourceCheck );
-		self::assertNotContains( '@test:release-state', $sourceCheck );
-		self::assertNotContains( '@test:unit', $sourceCheck );
+		self::assertSame(
+			array(
+				'@lint:php',
+				'@lint:syntax',
+			),
+			$composer['scripts']['check'] ?? null
+		);
+		self::assertSame(
+			array(
+				'@test:unit',
+				'@test:release-candidate',
+				'@test:release-marker',
+				'@test:release-state',
+				'@check',
+			),
+			$composer['scripts']['check:repository'] ?? null
+		);
 	}
 
 	public function testRepositoryQualityLaneRunsTheRepositoryAggregate(): void {
