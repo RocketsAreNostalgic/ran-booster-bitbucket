@@ -51,6 +51,10 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertStringContainsString( '- baseline', $terminal );
 		self::assertStringContainsString( '- repository-quality', $terminal );
 		self::assertStringContainsString( '- release-candidate-install', $terminal );
+		self::assertStringContainsString( 'RUNTIME_ARCHIVE_RESULT: ${{ needs.runtime-archive.result }}', $terminal );
+		self::assertStringContainsString( 'BASELINE_RESULT: ${{ needs.baseline.result }}', $terminal );
+		self::assertStringContainsString( 'REPOSITORY_QUALITY_RESULT: ${{ needs.repository-quality.result }}', $terminal );
+		self::assertStringContainsString( 'RELEASE_CANDIDATE_INSTALL_RESULT: ${{ needs.release-candidate-install.result }}', $terminal );
 		self::assertStringContainsString( 'set -euo pipefail', $terminal );
 		self::assertStringContainsString( 'test "$RUNTIME_ARCHIVE_RESULT" = success', $terminal );
 		self::assertStringContainsString( 'test "$BASELINE_RESULT" = success', $terminal );
