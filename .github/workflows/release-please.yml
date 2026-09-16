@@ -24,6 +24,7 @@ jobs:
         && github.event.workflow_run.conclusion == 'success'
         && github.event.workflow_run.head_branch == 'main'
         && github.event.workflow_run.head_repository.full_name == github.repository
+        && github.event.workflow_run.path == '.github/workflows/quality.yml'
       }}
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 10
@@ -55,6 +56,11 @@ jobs:
           git_auth=( -c 'credential.helper=!f() { printf "%s\n" "username=x-access-token" "password=$GH_TOKEN"; }; f' )
           test "$(git rev-parse HEAD)" = "$RAN_QUALITY_COMMIT"
           current_main="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [[ "$current_main" != "$RAN_QUALITY_COMMIT" ]]; then
+            printf 'release-required=false\nrelease-please-required=false\n' >> "$GITHUB_OUTPUT"
+            echo 'A newer main commit already has its own Quality lifecycle; skipping stale reconciliation.'
+            exit 0
+          fi
 
           pr_pages="$(gh api --paginate --slurp \
             -H 'Accept: application/vnd.github+json' \
@@ -72,11 +78,7 @@ jobs:
             )]
             | if length == 1 then .[0] else error("No unique merged pull request owns the Quality commit.") end' \
             <<< "$pr_pages")"; then
-            release_please_required=false
-            [[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true
-            printf 'release-required=false\nrelease-please-required=%s\n' "$release_please_required" >> "$GITHUB_OUTPUT"
-            [[ "$release_please_required" == true ]] \
-              || echo 'A newer main commit already has its own Quality lifecycle; skipping stale reconciliation.'
+            printf 'release-required=false\nrelease-please-required=true\n' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -88,11 +90,7 @@ jobs:
             --arg repository "$GITHUB_REPOSITORY" \
             '.user.login == $bot and .head.ref == $head and .head.repo.full_name == $repository' \
             <<< "$merged_pr" >/dev/null; then
-            release_please_required=false
-            [[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true
-            printf 'release-required=false\nrelease-please-required=%s\n' "$release_please_required" >> "$GITHUB_OUTPUT"
-            [[ "$release_please_required" == true ]] \
-              || echo 'A newer main commit already has its own Quality lifecycle; skipping stale reconciliation.'
+            printf 'release-required=false\nrelease-please-required=true\n' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
