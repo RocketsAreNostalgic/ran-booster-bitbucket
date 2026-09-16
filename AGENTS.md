@@ -21,7 +21,7 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 - Tests require the exact sibling Core checkout recorded in `extra.ran-booster-core-certification`. Set `RAN_BOOSTER_CORE_PATH` only when that checkout lives elsewhere.
 - Bitbucket tests consume only Core's shipped `autoload.php` and public production contracts. Do not install Core's Composer development dependencies for this repository and do not import Core-owned test fixtures.
-- Run `composer install`, `composer check`, `composer analyse`, and `composer build:release` from this add-on repository. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
+- Run `composer install` and `composer check` for the Core-independent source-quality contract. With the exact certified Core checkout available through `RAN_BOOSTER_CORE_PATH`, run `composer check:repository` for the Core/release-state suite; `composer analyse` remains the PHPStan pilot and `composer build:release` remains the release-archive command. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
 - Releases are GitHub artifacts. Do not add WordPress.org/SVN publishing or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files. The verified archive must contain the add-on-owned Bitbucket guide and exact native documentation hook.
 - Keep the entry header, `readme.txt` stable tag, Release Please manifest, and changelog aligned.
 - Follow `RELEASE.md` for the authoritative release procedure, package
