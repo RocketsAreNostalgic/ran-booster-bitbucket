@@ -64,9 +64,15 @@ Release Please admits only a successful push-triggered run of the canonical
 checks out that exact Quality commit and proves the merged pull-request
 lifecycle before deciding what kind of reconciliation is permitted.
 
-For an ordinary merged change, only the Quality lifecycle for the current
-`main` tip may open or update the Release Please proposal; an older ordinary
-run is stale and performs no privileged reconciliation once `main` has moved.
+For an ordinary merged change, a Quality lifecycle that observes it is already
+stale during release-state classification does not open or update the Release
+Please proposal. This is best-effort stale suppression, not an atomic ownership
+lease on `main`: if `main` advances after classification but before the Release
+Please action mutates the proposal, the older run may still reconcile that
+proposal. Such proposal mutation is not publication evidence and cannot by
+itself publish a release; the newer `main` lifecycle will subsequently reconcile
+the proposal from its own qualified state.
+
 A merged Release Please candidate is different: after its exact candidate,
 artifact, tag target and publication identity have been qualified, a later
 ordinary `main` commit does not invalidate that candidate. It may complete
