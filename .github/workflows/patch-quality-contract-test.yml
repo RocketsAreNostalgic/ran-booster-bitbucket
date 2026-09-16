@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   patch:
+    # Temporary migration helper; removed after it updates the contract test.
     if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -43,10 +44,10 @@ jobs:
 \t}
 '''
           new = '''\tpublic function testReleaseCandidateValidatorBehaviorIsPartOfRepositoryComposerCheck(): void {
-\t\t$root             = dirname( __DIR__, 2 );
-\t\t$composer         = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
-\t\t$sourceCheck       = $composer['scripts']['check'] ?? array();
-\t\t$repositoryCheck   = $composer['scripts']['check:repository'] ?? array();
+\t\t$root            = dirname( __DIR__, 2 );
+\t\t$composer        = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+\t\t$sourceCheck     = $composer['scripts']['check'] ?? array();
+\t\t$repositoryCheck = $composer['scripts']['check:repository'] ?? array();
 \t\tself::assertIsArray( $composer );
 \t\tself::assertIsArray( $sourceCheck );
 \t\tself::assertIsArray( $repositoryCheck );
