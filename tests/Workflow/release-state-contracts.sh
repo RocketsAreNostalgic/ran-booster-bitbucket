@@ -240,23 +240,28 @@ grep -F 'and .merge_commit_sha == $merge' "$release_workflow" >/dev/null
 grep -F 'merged_pr_number=' "$release_workflow" >/dev/null
 grep -F "jq -er '.number' <<< \"\$merged_pr\"" "$release_workflow" >/dev/null
 
-ordinary_guard="$work_root/ordinary-main-guard.sh"
-{
-	printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail'
-	awk '
-		/^            release_please_required=false$/ { capture = 1 }
-		capture {
-			sub(/^            /, "")
-			print
-			if ($0 == "exit 0") exit
-		}
-	' "$release_workflow"
-} > "$ordinary_guard"
-chmod +x "$ordinary_guard"
+extract_ordinary_guard() {
+	local target=$1 output=$2
+	{
+		printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail'
+		awk -v target="$target" '
+			/^            release_please_required=false$/ {
+				++seen
+				if ( seen == target ) capture = 1
+			}
+			capture {
+				sub(/^            /, "")
+				print
+				if ($0 == "exit 0") exit
+			}
+		' "$release_workflow"
+	} > "$output"
+	chmod +x "$output"
+}
 
 current_guard_count=$(grep -F -c '[[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true' "$release_workflow")
 [[ "$current_guard_count" -eq 2 ]] \
-	|| { printf 'Expected two ordinary current-main reconciliation guards, found %s\n' "$current_guard_count" >&2; exit 1; }
+	|| { printf 'Expected two ordinary current-main classification guards, found %s\n' "$current_guard_count" >&2; exit 1; }
 if grep -F 'if [[ "$current_main" != "$RAN_QUALITY_COMMIT" ]]' "$release_workflow" >/dev/null; then
 	printf 'Release workflow incorrectly claims a global atomic main-tip lease\n' >&2
 	exit 1
@@ -264,23 +269,30 @@ fi
 
 quality_commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 newer_main=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-stale_output="$work_root/stale-ordinary-output"
-: > "$stale_output"
-GITHUB_OUTPUT="$stale_output" \
-	current_main="$newer_main" \
-	RAN_QUALITY_COMMIT="$quality_commit" \
-	bash "$ordinary_guard"
-grep -Fx 'release-required=false' "$stale_output" >/dev/null
-grep -Fx 'release-please-required=false' "$stale_output" >/dev/null
+for guard_index in 1 2; do
+	ordinary_guard="$work_root/ordinary-main-guard-${guard_index}.sh"
+	extract_ordinary_guard "$guard_index" "$ordinary_guard"
+	[[ -s "$ordinary_guard" ]] \
+		|| { printf 'Ordinary reconciliation guard %s is missing\n' "$guard_index" >&2; exit 1; }
 
-current_output="$work_root/current-ordinary-output"
-: > "$current_output"
-GITHUB_OUTPUT="$current_output" \
-	current_main="$quality_commit" \
-	RAN_QUALITY_COMMIT="$quality_commit" \
-	bash "$ordinary_guard"
-grep -Fx 'release-required=false' "$current_output" >/dev/null
-grep -Fx 'release-please-required=true' "$current_output" >/dev/null
+	stale_output="$work_root/stale-ordinary-output-${guard_index}"
+	: > "$stale_output"
+	GITHUB_OUTPUT="$stale_output" \
+		current_main="$newer_main" \
+		RAN_QUALITY_COMMIT="$quality_commit" \
+		bash "$ordinary_guard"
+	grep -Fx 'release-required=false' "$stale_output" >/dev/null
+	grep -Fx 'release-please-required=false' "$stale_output" >/dev/null
+
+	current_output="$work_root/current-ordinary-output-${guard_index}"
+	: > "$current_output"
+	GITHUB_OUTPUT="$current_output" \
+		current_main="$quality_commit" \
+		RAN_QUALITY_COMMIT="$quality_commit" \
+		bash "$ordinary_guard"
+	grep -Fx 'release-required=false' "$current_output" >/dev/null
+	grep -Fx 'release-please-required=true' "$current_output" >/dev/null
+done
 
 candidate_block=$(sed -n \
 	'/          release_pr_number="$merged_pr_number"/,/          printf '\''release-required=true/p' \
@@ -293,6 +305,8 @@ if grep -F 'current_main' <<< "$candidate_block" >/dev/null; then
 fi
 grep -F 'bash scripts/validate-release-candidate.sh "$release_base" "$release_head"' <<< "$candidate_block" >/dev/null
 grep -F 'test "$main_tree" = "$head_tree"' <<< "$candidate_block" >/dev/null
+grep -F 'release-required=true\nrelease-please-required=false\n' <<< "$candidate_block" >/dev/null \
+	|| { printf 'Exact release-candidate output tuple drifted\n' >&2; exit 1; }
 
 assert_step_gate() {
 	local step_name=$1 expected_gate=$2 step
