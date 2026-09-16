@@ -221,86 +221,78 @@ if grep -F 'pull_request:' <<< "$release_on" >/dev/null \
 	exit 1
 fi
 
-release_job_gate=$(awk '
-	/^    if: >-$/ { capture = 1 }
+release_job_expression=$(awk '
+	/^    if: >-$/ { capture = 1; next }
+	capture && /^    runs-on:/ { exit }
 	capture {
-		print
-		if ( $0 ~ /^    runs-on:/ ) {
-			exit
-		}
+		line = $0
+		sub(/^[[:space:]]+/, "", line)
+		if (line == "${{" || line == "}}") next
+		if (length(line)) print line
 	}
-' "$release_workflow")
-for predicate in \
-	"github.event.workflow_run.event == 'push'" \
-	"github.event.workflow_run.conclusion == 'success'" \
-	"github.event.workflow_run.head_branch == 'main'" \
-	'github.event.workflow_run.head_repository.full_name == github.repository' \
-	"github.event.workflow_run.path == '.github/workflows/quality.yml'"; do
-	grep -F "$predicate" <<< "$release_job_gate" >/dev/null \
-		|| { printf 'Release Please admission gate is missing: %s\n' "$predicate" >&2; exit 1; }
-done
+' "$release_workflow" | paste -sd ' ' - | tr -s ' ')
+expected_job_expression="github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.path == '.github/workflows/quality.yml'"
+[[ "$release_job_expression" == "$expected_job_expression" ]] \
+	|| { printf 'Release Please admission expression drifted:\n%s\n' "$release_job_expression" >&2; exit 1; }
 
 grep -F 'test "$(git rev-parse HEAD)" = "$RAN_QUALITY_COMMIT"' "$release_workflow" >/dev/null
 grep -F 'and .merge_commit_sha == $merge' "$release_workflow" >/dev/null
 grep -F 'merged_pr_number=' "$release_workflow" >/dev/null
 grep -F "jq -er '.number' <<< \"\$merged_pr\"" "$release_workflow" >/dev/null
 
-stale_guard="$work_root/stale-main-guard.sh"
+ordinary_guard="$work_root/ordinary-main-guard.sh"
 {
 	printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail'
 	awk '
-		/^          current_main=/ { capture = 1 }
+		/^            release_please_required=false$/ { capture = 1 }
 		capture {
-			if ($0 ~ /^          pr_pages=/) exit
-			sub(/^          /, "")
+			sub(/^            /, "")
 			print
+			if ($0 == "exit 0") exit
 		}
 	' "$release_workflow"
-	printf '%s\n' 'printf "reached-after-stale-guard\n" >> "$STALE_SENTINEL"'
-} > "$stale_guard"
-chmod +x "$stale_guard"
+} > "$ordinary_guard"
+chmod +x "$ordinary_guard"
 
-stale_bin="$work_root/stale-bin"
-mkdir -p "$stale_bin"
-cat > "$stale_bin/gh" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-[[ "$1" == api ]]
-printf '%s\n' "$MOCK_CURRENT_MAIN"
-EOF
-chmod +x "$stale_bin/gh"
+current_guard_count=$(grep -F -c '[[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true' "$release_workflow")
+[[ "$current_guard_count" -eq 2 ]] \
+	|| { printf 'Expected two ordinary current-main reconciliation guards, found %s\n' "$current_guard_count" >&2; exit 1; }
+if grep -F 'if [[ "$current_main" != "$RAN_QUALITY_COMMIT" ]]' "$release_workflow" >/dev/null; then
+	printf 'Release workflow incorrectly claims a global atomic main-tip lease\n' >&2
+	exit 1
+fi
 
 quality_commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 newer_main=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-stale_output="$work_root/stale-output"
-stale_sentinel="$work_root/stale-sentinel"
+stale_output="$work_root/stale-ordinary-output"
 : > "$stale_output"
-PATH="$stale_bin:$PATH" \
-	GITHUB_REPOSITORY=RocketsAreNostalgic/ran-booster-bitbucket \
-	GITHUB_OUTPUT="$stale_output" \
-	MOCK_CURRENT_MAIN="$newer_main" \
+GITHUB_OUTPUT="$stale_output" \
+	current_main="$newer_main" \
 	RAN_QUALITY_COMMIT="$quality_commit" \
-	STALE_SENTINEL="$stale_sentinel" \
-	bash "$stale_guard"
+	bash "$ordinary_guard"
 grep -Fx 'release-required=false' "$stale_output" >/dev/null
 grep -Fx 'release-please-required=false' "$stale_output" >/dev/null
-[[ ! -e "$stale_sentinel" ]] \
-	|| { printf 'Stale Quality evidence fell through the current-main guard\n' >&2; exit 1; }
 
-current_output="$work_root/current-output"
-current_sentinel="$work_root/current-sentinel"
+current_output="$work_root/current-ordinary-output"
 : > "$current_output"
-PATH="$stale_bin:$PATH" \
-	GITHUB_REPOSITORY=RocketsAreNostalgic/ran-booster-bitbucket \
-	GITHUB_OUTPUT="$current_output" \
-	MOCK_CURRENT_MAIN="$quality_commit" \
+GITHUB_OUTPUT="$current_output" \
+	current_main="$quality_commit" \
 	RAN_QUALITY_COMMIT="$quality_commit" \
-	STALE_SENTINEL="$current_sentinel" \
-	bash "$stale_guard"
-[[ -e "$current_sentinel" ]] \
-	|| { printf 'Current exact-main Quality evidence was stopped by the stale guard\n' >&2; exit 1; }
-[[ ! -s "$current_output" ]] \
-	|| { printf 'Current exact-main guard unexpectedly wrote release outputs\n' >&2; exit 1; }
+	bash "$ordinary_guard"
+grep -Fx 'release-required=false' "$current_output" >/dev/null
+grep -Fx 'release-please-required=true' "$current_output" >/dev/null
+
+candidate_block=$(sed -n \
+	'/          release_pr_number="$merged_pr_number"/,/          printf '\''release-required=true/p' \
+	"$release_workflow")
+[[ -n "$candidate_block" ]] \
+	|| { printf 'Exact release-candidate admission block is missing\n' >&2; exit 1; }
+if grep -F 'current_main' <<< "$candidate_block" >/dev/null; then
+	printf 'Exact release-candidate publication was incorrectly bound to the floating main tip\n' >&2
+	exit 1
+fi
+grep -F 'bash scripts/validate-release-candidate.sh "$release_base" "$release_head"' <<< "$candidate_block" >/dev/null
+grep -F 'test "$main_tree" = "$head_tree"' <<< "$candidate_block" >/dev/null
 
 assert_step_gate() {
 	local step_name=$1 expected_gate=$2 step
@@ -326,27 +318,5 @@ assert_step_gate 'Verify release identity and exact artifact provenance' "if: st
 assert_step_gate 'Create or reuse draft and attach verified assets' "if: steps.release-state.outputs.release-required == 'true' && env.RAN_RELEASE_PENDING == 'true'"
 assert_step_gate 'Publish only under immutable-release contract' "if: steps.release-state.outputs.release-required == 'true' && env.RAN_RELEASE_PENDING == 'true'"
 assert_step_gate 'Read back immutable release and reconcile exact PR' "if: steps.release-state.outputs.release-required == 'true'"
-
-workflow_run_qualifies() {
-	[[ "$1" == push \
-		&& "$2" == success \
-		&& "$3" == main \
-		&& "$4" == RocketsAreNostalgic/ran-booster-bitbucket \
-		&& "$5" == .github/workflows/quality.yml ]]
-}
-for invalid in \
-	'pull_request success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
-	'push failure main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
-	'push success feature RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
-	'push success main someone/else .github/workflows/quality.yml' \
-	'push success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/other-quality.yml'; do
-	read -r event conclusion branch_name head_repository workflow_path <<< "$invalid"
-	if workflow_run_qualifies "$event" "$conclusion" "$branch_name" "$head_repository" "$workflow_path"; then
-		printf 'Unqualified workflow_run was accepted: %s\n' "$invalid" >&2
-		exit 1
-	fi
-done
-workflow_run_qualifies push success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml \
-	|| { printf 'Qualified canonical exact-main workflow_run was rejected\n' >&2; exit 1; }
 
 printf 'Release tag, immutable asset, retry actor, and trusted-main promotion fixtures passed.\n'
