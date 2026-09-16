@@ -28,21 +28,22 @@ jobs:
           extensions: zip
           tools: composer:v2
 
-      - name: Materialize and validate shared standards lock
+      - name: Validate locked shared baseline
         shell: bash
         run: |
           set -euo pipefail
-          composer update ran/coding-standards --with-dependencies --no-interaction --prefer-dist --no-progress --no-scripts
           composer validate --strict --no-check-publish --no-check-all
+          composer install --no-interaction --prefer-dist --no-progress
           composer check
 
-      - name: Compose shared and repository quality lanes
+      - name: Compose permanent quality workflow as a non-workflow artifact
         shell: python
         run: |
           from pathlib import Path
 
-          path = Path('.github/workflows/quality.yml')
-          text = path.read_text()
+          source = Path('.github/workflows/quality.yml')
+          destination = Path('.github/quality.generated.yml')
+          text = source.read_text()
 
           old_job = (
               "  quality:\n"
@@ -131,19 +132,15 @@ jobs:
               '            exit 1',
               '          fi',
           ]
-          path.write_text(text.rstrip() + '\n' + '\n'.join(terminal) + '\n')
+          destination.write_text(text.rstrip() + '\n' + '\n'.join(terminal) + '\n')
 
-      - name: Commit generated migration artifacts only
+      - name: Commit generated non-workflow artifact only
         shell: bash
         run: |
           set -euo pipefail
-          git add composer.lock .github/workflows/quality.yml
-          unexpected="$(git diff --cached --name-only | grep -Ev '^(composer\.lock|\.github/workflows/quality\.yml)$' || true)"
-          test -z "$unexpected"
-          if git diff --cached --quiet; then
-            exit 0
-          fi
+          git add .github/quality.generated.yml
+          test "$(git diff --cached --name-only)" = .github/quality.generated.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'ci: materialize PHP quality v2 migration'
+          git commit -m 'ci: materialize PHP quality v2 workflow artifact'
           git push origin HEAD:ci/adopt-php-quality-v2
