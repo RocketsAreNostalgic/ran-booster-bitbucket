@@ -60,15 +60,25 @@ human-readable inventory aligned with that classifier. Do not add a second
 independent path catalogue to Release Please.
 
 Release Please admits only a successful push-triggered run of the canonical
-`.github/workflows/quality.yml` on `main` for this repository. The qualified
-commit must still be the current `main` tip when reconciliation begins; if
-`main` has advanced, the newer commit's Quality lifecycle owns reconciliation
-and the older run performs no privileged mutation. The workflow checks out the
-exact admitted Quality commit and proves the unique merged pull-request
-lifecycle before opening or updating a release proposal or reconciling
-publication. There is no mandatory second ordinary pull request after a
-release-control change: successful current exact-main qualification is the
-promotion boundary.
+`.github/workflows/quality.yml` on `main` for this repository. The workflow
+checks out that exact Quality commit and proves the merged pull-request
+lifecycle before deciding what kind of reconciliation is permitted.
+
+For an ordinary merged change, only the Quality lifecycle for the current
+`main` tip may open or update the Release Please proposal; an older ordinary
+run is stale and performs no privileged reconciliation once `main` has moved.
+A merged Release Please candidate is different: after its exact candidate,
+artifact, tag target and publication identity have been qualified, a later
+ordinary `main` commit does not invalidate that candidate. It may complete
+publication against its exact accepted commit while all provenance and immutable
+readback checks remain bound to that candidate. This is deliberate exact-candidate
+semantics, not a claim that a one-time branch read provides an atomic lease on
+`main`.
+
+There is no mandatory second ordinary pull request after a release-control
+change. Fresh exact-main qualification admits release reconciliation, while an
+already-qualified exact release candidate remains publishable under its own
+identity contract.
 
 Exact candidate identity, Core certification, artifact provenance, immutable
 publication, and post-publication readback remain unchanged.
