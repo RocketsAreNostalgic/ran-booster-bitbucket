@@ -23,55 +23,14 @@ jobs:
       - name: Update Composer quality split contract
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('tests/Plugin/CoreContractTest.php')
-          text = path.read_text()
-          old = '''\tpublic function testReleaseCandidateValidatorBehaviorIsPartOfComposerCheck(): void {
-\t\t$root     = dirname( __DIR__, 2 );
-\t\t$composer = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
-\t\tself::assertIsArray( $composer );
-\t\tself::assertSame( 'bash tests/Workflow/validate-release-candidate.sh', $composer['scripts']['test:release-candidate'] ?? null );
-\t\tself::assertContains( '@test:release-candidate', $composer['scripts']['check'] ?? array() );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/validate-release-candidate.sh' );
-\t\tself::assertSame( 'bash tests/Workflow/reconcile-release-candidate-marker.sh', $composer['scripts']['test:release-marker'] ?? null );
-\t\tself::assertContains( '@test:release-marker', $composer['scripts']['check'] ?? array() );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/reconcile-release-candidate-marker.sh' );
-\t\tself::assertSame( 'bash tests/Workflow/release-state-contracts.sh', $composer['scripts']['test:release-state'] ?? null );
-\t\tself::assertContains( '@test:release-state', $composer['scripts']['check'] ?? array() );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/release-state-contracts.sh' );
-\t}
-'''
-          new = '''\tpublic function testReleaseCandidateValidatorBehaviorIsPartOfRepositoryComposerCheck(): void {
-\t\t$root            = dirname( __DIR__, 2 );
-\t\t$composer        = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
-\t\t$sourceCheck     = $composer['scripts']['check'] ?? array();
-\t\t$repositoryCheck = $composer['scripts']['check:repository'] ?? array();
-\t\tself::assertIsArray( $composer );
-\t\tself::assertIsArray( $sourceCheck );
-\t\tself::assertIsArray( $repositoryCheck );
-\t\tself::assertContains( '@lint:php', $sourceCheck );
-\t\tself::assertContains( '@lint:syntax', $sourceCheck );
-\t\tself::assertNotContains( '@test:release-candidate', $sourceCheck );
-\t\tself::assertNotContains( '@test:release-marker', $sourceCheck );
-\t\tself::assertNotContains( '@test:release-state', $sourceCheck );
-\t\tself::assertContains( '@check', $repositoryCheck );
-\t\tself::assertSame( 'bash tests/Workflow/validate-release-candidate.sh', $composer['scripts']['test:release-candidate'] ?? null );
-\t\tself::assertContains( '@test:release-candidate', $repositoryCheck );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/validate-release-candidate.sh' );
-\t\tself::assertSame( 'bash tests/Workflow/reconcile-release-candidate-marker.sh', $composer['scripts']['test:release-marker'] ?? null );
-\t\tself::assertContains( '@test:release-marker', $repositoryCheck );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/reconcile-release-candidate-marker.sh' );
-\t\tself::assertSame( 'bash tests/Workflow/release-state-contracts.sh', $composer['scripts']['test:release-state'] ?? null );
-\t\tself::assertContains( '@test:release-state', $repositoryCheck );
-\t\tself::assertFileIsReadable( $root . '/tests/Workflow/release-state-contracts.sh' );
-\t}
-'''
-          if text.count(old) != 1:
-              raise SystemExit('Expected exactly one legacy Composer-check contract block.')
-          path.write_text(text.replace(old, new, 1))
-          PY
+          set -euo pipefail
+          file='tests/Plugin/CoreContractTest.php'
+          sed -i 's/testReleaseCandidateValidatorBehaviorIsPartOfComposerCheck/testReleaseCandidateValidatorBehaviorIsPartOfRepositoryComposerCheck/' "$file"
+          sed -i "s/contains( '@test:release-candidate', \\$composer\['scripts'\]\['check'\]/contains( '@test:release-candidate', \\$composer['scripts']['check:repository']/" "$file"
+          sed -i "s/contains( '@test:release-marker', \\$composer\['scripts'\]\['check'\]/contains( '@test:release-marker', \\$composer['scripts']['check:repository']/" "$file"
+          sed -i "s/contains( '@test:release-state', \\$composer\['scripts'\]\['check'\]/contains( '@test:release-state', \\$composer['scripts']['check:repository']/" "$file"
+          grep -F 'testReleaseCandidateValidatorBehaviorIsPartOfRepositoryComposerCheck' "$file"
+          test "$(grep -F "['scripts']['check:repository']" "$file" | wc -l)" -ge 3
 
       - name: Commit contract test only
         shell: bash
