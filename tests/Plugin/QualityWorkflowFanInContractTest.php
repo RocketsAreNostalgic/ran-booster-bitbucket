@@ -38,6 +38,21 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertNotContains( '@test:unit', $sourceCheck );
 	}
 
+	public function testRepositoryQualityLaneRunsTheRepositoryAggregate(): void {
+		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		self::assertIsString( $workflow );
+
+		$repositoryStart = strpos( $workflow, "  repository-quality:\n" );
+		$releaseStart    = strpos( $workflow, "  release-candidate-install:\n" );
+		self::assertIsInt( $repositoryStart );
+		self::assertIsInt( $releaseStart );
+		self::assertTrue( $repositoryStart < $releaseStart );
+
+		$repository = substr( $workflow, $repositoryStart, $releaseStart - $repositoryStart );
+		self::assertStringContainsString( 'run: composer check:repository', $repository );
+		self::assertStringNotContainsString( "run: composer check\n", $repository );
+	}
+
 	public function testTerminalQualityGateRequiresApplicableEvidenceForEveryLane(): void {
 		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
