@@ -17,6 +17,78 @@ Composer development graph or import Core-owned test fixtures.
 7. Install the ZIP beside the exact certified Core release artifact in a clean WordPress instance. Verify the Core archive digest and its `ran-booster-release.json` provenance marker against the certification tuple. Confirm the Bitbucket provider callback conforms to Core's public provider registry, its tab appears after GitHub, its complete guide appears after Core's Bitbucket provider guide, provider-bound authenticated delivery evidence produces `bb.webhook.delivery_verified`, and deactivation removes the add-on contributions by stopping add-on loading.
 8. Merge the Release Please pull request. Main Quality proves the exact merged pull request and tested tree, admits the successful bot candidate, and re-uploads its ZIP, checksum, and provenance without depending on merge-commit parents. Missing or unverifiable evidence runs the complete Core-backed fallback. The release workflow still requires the successful bot candidate, never rebuilds, and targets the accepted main commit. Before publication, it selects the unique draft for that tag and commit, downloads the expected assets by their exact IDs, and compares their bytes with the admitted Quality artifact. Do not distribute GitHub's generated source archives as the plugin package.
 
+## Release promotion boundary
+
+RAN Booster Bitbucket uses successful exact-main qualification as its release
+promotion boundary. Pull requests remain mandatory on `main`; the live ruleset
+requires strict `Runtime archive`, `Quality`, and `Release candidate install
+readback` checks, requires review-thread resolution, and has no bypass actors.
+
+The current single-maintainer model does not claim a separate human authorization
+principal. Exact-head automated review such as Copilot or Codex may be used as a
+pre-merge review gate/process, but it is not release evidence and is not treated
+as an independent human authorization boundary.
+
+A merge does not itself authorize privileged release mutation. Quality must
+successfully qualify that exact merged `main` revision. Changes to release
+control and ordinary evidence inputs force a fresh main Runtime archive and
+Quality run rather than reusing pull-request evidence.
+
+The ordinary evidence inputs currently covered by Quality's fresh-evidence
+classifier are:
+
+- `composer.json`; and
+- `composer.lock`.
+
+The release-control/release-execution paths currently covered by that classifier
+are:
+
+- `.github/workflows/quality.yml`;
+- `.github/workflows/release-please.yml`;
+- `scripts/build-release.sh`;
+- `scripts/verify-release.sh`;
+- `scripts/verify-release.php`;
+- `scripts/validate-release-candidate.sh`;
+- `scripts/reconcile-release-candidate-marker.sh`;
+- `scripts/verify-release-tag-target.sh`;
+- `scripts/has-trusted-release-candidate-run.sh`; and
+- `scripts/verify-immutable-release-assets.sh`.
+
+`Quality` is the executable authority for whether a changed path invalidates
+pull-request evidence. `tests/Workflow/release-state-contracts.sh` keeps this
+human-readable inventory aligned with that classifier. Do not add a second
+independent path catalogue to Release Please.
+
+Release Please admits only a successful push-triggered run of the canonical
+`.github/workflows/quality.yml` on `main` for this repository. The workflow
+checks out that exact Quality commit and proves the merged pull-request
+lifecycle before deciding what kind of reconciliation is permitted.
+
+For an ordinary merged change, a Quality lifecycle that observes it is already
+stale during release-state classification does not open or update the Release
+Please proposal. This is best-effort stale suppression, not an atomic ownership
+lease on `main`: if `main` advances after classification but before the Release
+Please action mutates the proposal, the older run may still reconcile that
+proposal. Such proposal mutation is not publication evidence and cannot by
+itself publish a release; the newer `main` lifecycle will subsequently reconcile
+the proposal from its own qualified state.
+
+A merged Release Please candidate is different: after its exact candidate,
+artifact, tag target and publication identity have been qualified, a later
+ordinary `main` commit does not invalidate that candidate. It may complete
+publication against its exact accepted commit while all provenance and immutable
+readback checks remain bound to that candidate. This is deliberate exact-candidate
+semantics, not a claim that a one-time branch read provides an atomic lease on
+`main`.
+
+There is no mandatory second ordinary pull request after a release-control
+change. Fresh exact-main qualification admits release reconciliation, while an
+already-qualified exact release candidate remains publishable under its own
+identity contract.
+
+Exact candidate identity, Core certification, artifact provenance, immutable
+publication, and post-publication readback remain unchanged.
+
 ## Disposable installed proof
 
 `tests/WordPress/bitbucket-installed-proof.sh` is the repeatable installed boundary for step 7. Point it only at an explicitly marked disposable WordPress site and provide the exact Core and Bitbucket archives, their SHA-256 digests, the full Bitbucket source commit, and the Bitbucket version. The driver reads the required Core tag/commit directly from this repository's `extra.ran-booster-core-certification`; optional `RAN_BOOSTER_CORE_TAG` / `RAN_BOOSTER_CORE_COMMIT` inputs are accepted only when they exactly match that canonical tuple. It verifies both archives before installation and verifies the Core archive's own release-provenance marker; no Core source checkout or Core-owned test fixture is accepted as proof. It confirms the installed Bitbucket tree exactly matches the retained ZIP, activates the dependency pair normally, exercises both stored plugin load orders, validates the public provider-registration contract and authenticated-delivery diagnostic, and runs missing/incompatible-Core inertness probes.
@@ -28,5 +100,4 @@ The controlled provider operation uses the durable public fixture identity
 request with a deterministic WordPress transport response. It needs no live
 Bitbucket credential and does not read the site's saved credential store. The
 driver backs up and restores the original Core directory and `active_plugins`
-option, removes the installed Bitbucket candidate, and fails if cleanup cannot
-be proved.
+option, removes the installed Bitbucket candidate, and fails if cleanup cannot be proved.
