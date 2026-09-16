@@ -59,12 +59,16 @@ pull-request evidence. `tests/Workflow/release-state-contracts.sh` keeps this
 human-readable inventory aligned with that classifier. Do not add a second
 independent path catalogue to Release Please.
 
-Release Please runs only after a successful push-triggered `main` Quality run
-for this repository. It checks out that exact Quality commit and proves the
-unique merged pull-request lifecycle before opening or updating a release
-proposal or reconciling publication. There is no mandatory second ordinary pull
-request after a release-control change: successful exact-main qualification is
-the promotion boundary.
+Release Please admits only a successful push-triggered run of the canonical
+`.github/workflows/quality.yml` on `main` for this repository. The qualified
+commit must still be the current `main` tip when reconciliation begins; if
+`main` has advanced, the newer commit's Quality lifecycle owns reconciliation
+and the older run performs no privileged mutation. The workflow checks out the
+exact admitted Quality commit and proves the unique merged pull-request
+lifecycle before opening or updating a release proposal or reconciling
+publication. There is no mandatory second ordinary pull request after a
+release-control change: successful current exact-main qualification is the
+promotion boundary.
 
 Exact candidate identity, Core certification, artifact provenance, immutable
 publication, and post-publication readback remain unchanged.
@@ -80,5 +84,4 @@ The controlled provider operation uses the durable public fixture identity
 request with a deterministic WordPress transport response. It needs no live
 Bitbucket credential and does not read the site's saved credential store. The
 driver backs up and restores the original Core directory and `active_plugins`
-option, removes the installed Bitbucket candidate, and fails if cleanup cannot
-be proved.
+option, removes the installed Bitbucket candidate, and fails if cleanup cannot be proved.
