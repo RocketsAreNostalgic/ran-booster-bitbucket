@@ -28,7 +28,7 @@ jobs:
           extensions: zip
           tools: composer:v2
 
-      - name: Materialize shared standards lock
+      - name: Materialize and validate shared standards lock
         shell: bash
         run: |
           set -euo pipefail
@@ -36,86 +36,16 @@ jobs:
           composer validate --strict --no-check-publish --no-check-all
           composer check
 
-      - name: Compose shared and repository quality lanes
-        shell: python
-        run: |
-          from pathlib import Path
-
-          path = Path('.github/workflows/quality.yml')
-          text = path.read_text()
-
-          old_job = """  quality:\n    name: Quality\n    needs: runtime-archive\n    if: ${{ needs.runtime-archive.outputs.admitted != 'true' && needs.runtime-archive.outputs.lane == 'full' }}\n"""
-          new_job = """  baseline:\n    name: Shared PHP quality\n    uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9\n    with:\n      php-floor: '8.2'\n      php-current: '8.5'\n      php-extensions: zip\n      node-version: ''\n\n  repository-quality:\n    name: Repository quality\n    needs: runtime-archive\n    if: ${{ needs.runtime-archive.outputs.admitted != 'true' && needs.runtime-archive.outputs.lane == 'full' }}\n"""
-          if text.count(old_job) != 1:
-              raise SystemExit('Expected exactly one local Quality job header.')
-          text = text.replace(old_job, new_job, 1)
-
-          old_command = """      - name: Run add-on quality checks\n        working-directory: ran-booster-bitbucket\n        run: composer check\n"""
-          new_command = """      - name: Run repository-specific quality checks\n        working-directory: ran-booster-bitbucket\n        run: composer check:repository\n"""
-          if text.count(old_command) != 1:
-              raise SystemExit('Expected exactly one local Composer quality command.')
-          text = text.replace(old_command, new_command, 1)
-
-          if '\n  quality:\n' in text:
-              raise SystemExit('Unexpected terminal quality job already exists after local-job rename.')
-
-          terminal = """
-
-  quality:
-    name: Quality
-    if: ${{ always() }}
-    needs:
-      - runtime-archive
-      - baseline
-      - repository-quality
-      - release-candidate-install
-    runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 5
-    steps:
-      - name: Require applicable shared and repository quality evidence
-        shell: bash
-        env:
-          ADMITTED: ${{ needs.runtime-archive.outputs.admitted }}
-          LANE: ${{ needs.runtime-archive.outputs.lane }}
-          RUNTIME_ARCHIVE_RESULT: ${{ needs.runtime-archive.result }}
-          BASELINE_RESULT: ${{ needs.baseline.result }}
-          REPOSITORY_QUALITY_RESULT: ${{ needs.repository-quality.result }}
-          RELEASE_CANDIDATE_INSTALL_RESULT: ${{ needs.release-candidate-install.result }}
-        run: |
-          set -euo pipefail
-          printf 'archive=%s baseline=%s repository=%s release-candidate=%s admitted=%s lane=%s\\n' \
-            "$RUNTIME_ARCHIVE_RESULT" "$BASELINE_RESULT" "$REPOSITORY_QUALITY_RESULT" \
-            "$RELEASE_CANDIDATE_INSTALL_RESULT" "$ADMITTED" "$LANE"
-          test "$RUNTIME_ARCHIVE_RESULT" = success
-          test "$BASELINE_RESULT" = success
-
-          if [[ "$ADMITTED" == true ]]; then
-            test "$REPOSITORY_QUALITY_RESULT" = skipped
-            test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped
-          elif [[ "$LANE" == full ]]; then
-            test "$REPOSITORY_QUALITY_RESULT" = success
-            test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped
-          elif [[ "$LANE" == release-candidate ]]; then
-            test "$REPOSITORY_QUALITY_RESULT" = skipped
-            test "$RELEASE_CANDIDATE_INSTALL_RESULT" = success
-          else
-            echo "Unsupported quality lane: $LANE" >&2
-            exit 1
-          fi
-"""
-          path.write_text(text.rstrip() + terminal + '\n')
-
-      - name: Commit generated migration artifacts only
+      - name: Commit generated lock only
         shell: bash
         run: |
           set -euo pipefail
-          git add composer.lock .github/workflows/quality.yml
-          expected=$'.github/workflows/quality.yml\ncomposer.lock'
-          test "$(git diff --cached --name-only)" = "$expected"
+          git add composer.lock
+          test "$(git diff --cached --name-only)" = composer.lock
           if git diff --cached --quiet; then
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'ci: materialize PHP quality v2 migration'
+          git commit -m 'chore: update shared quality dependencies'
           git push origin HEAD:ci/adopt-php-quality-v2
