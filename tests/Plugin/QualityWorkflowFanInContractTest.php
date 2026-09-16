@@ -7,6 +7,37 @@ namespace Tests\Plugin;
 use PHPUnit\Framework\TestCase;
 
 final class QualityWorkflowFanInContractTest extends TestCase {
+	public function testSharedPhpProviderContractIsPinnedToReviewedProfile(): void {
+		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		self::assertIsString( $workflow );
+
+		self::assertStringContainsString(
+			'uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9',
+			$workflow
+		);
+		self::assertStringContainsString( "php-floor: '8.2'", $workflow );
+		self::assertStringContainsString( "php-current: '8.5'", $workflow );
+		self::assertStringContainsString( 'php-extensions: zip', $workflow );
+		self::assertStringContainsString( "node-version: ''", $workflow );
+	}
+
+	public function testSourceOnlyComposerCheckExcludesRepositoryOnlyEvidence(): void {
+		$composer = json_decode(
+			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		self::assertIsArray( $composer );
+
+		$sourceCheck = $composer['scripts']['check'] ?? array();
+		self::assertIsArray( $sourceCheck );
+		self::assertNotContains( '@test:release-candidate', $sourceCheck );
+		self::assertNotContains( '@test:release-marker', $sourceCheck );
+		self::assertNotContains( '@test:release-state', $sourceCheck );
+		self::assertNotContains( '@test:unit', $sourceCheck );
+	}
+
 	public function testTerminalQualityGateRequiresApplicableEvidenceForEveryLane(): void {
 		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
