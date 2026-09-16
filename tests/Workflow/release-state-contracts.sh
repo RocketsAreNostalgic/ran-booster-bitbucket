@@ -166,34 +166,44 @@ fi
 
 quality_workflow="$repo_root/.github/workflows/quality.yml"
 release_doc="$repo_root/RELEASE.md"
-quality_trust_paths=$(awk '
-	/for trust_path in \\/ { capture = 1 }
+quality_paths_file="$work_root/quality-trust-paths.txt"
+documented_paths_file="$work_root/documented-trust-paths.txt"
+
+awk '
+	/for trust_path in \\/ { capture = 1; next }
 	capture {
-		print
-		if ( $0 ~ /; do$/ ) {
+		line = $0
+		sub(/^[[:space:]]+/, "", line)
+		if (line ~ /; do$/) {
+			sub(/[[:space:]]*; do$/, "", line)
+			if (length(line)) print line
 			exit
 		}
+		sub(/[[:space:]]*\\$/, "", line)
+		if (length(line)) print line
 	}
-' "$quality_workflow")
+' "$quality_workflow" | sort -u > "$quality_paths_file"
 
-for path in \
-	composer.json \
-	composer.lock \
-	.github/workflows/quality.yml \
-	.github/workflows/release-please.yml \
-	scripts/build-release.sh \
-	scripts/verify-release.sh \
-	scripts/verify-release.php \
-	scripts/validate-release-candidate.sh \
-	scripts/reconcile-release-candidate-marker.sh \
-	scripts/verify-release-tag-target.sh \
-	scripts/has-trusted-release-candidate-run.sh \
-	scripts/verify-immutable-release-assets.sh; do
-	grep -F "$path" <<< "$quality_trust_paths" >/dev/null \
-		|| { printf 'Quality freshness classifier is missing %s\n' "$path" >&2; exit 1; }
-	grep -F "\`$path\`" "$release_doc" >/dev/null \
-		|| { printf 'RELEASE.md inventory is missing %s\n' "$path" >&2; exit 1; }
-done
+awk '
+	/^The ordinary evidence inputs currently covered by Quality.s fresh-evidence$/ { capture = 1; next }
+	capture && /^`Quality` is the executable authority/ { exit }
+	capture {
+		line = $0
+		while (match(line, /`[^`]+`/)) {
+			print substr(line, RSTART + 1, RLENGTH - 2)
+			line = substr(line, RSTART + RLENGTH)
+		}
+	}
+' "$release_doc" | sort -u > "$documented_paths_file"
+
+[[ -s "$quality_paths_file" ]] \
+	|| { printf 'Quality freshness classifier path set is empty\n' >&2; exit 1; }
+[[ -s "$documented_paths_file" ]] \
+	|| { printf 'RELEASE.md freshness inventory path set is empty\n' >&2; exit 1; }
+if ! diff -u "$quality_paths_file" "$documented_paths_file"; then
+	printf 'Quality freshness classifier and RELEASE.md inventory differ\n' >&2
+	exit 1
+fi
 
 if grep -F 'for trust_path in \' "$release_workflow" >/dev/null; then
 	printf 'Release Please still owns a duplicated release-control path catalogue\n' >&2
@@ -224,7 +234,8 @@ for predicate in \
 	"github.event.workflow_run.event == 'push'" \
 	"github.event.workflow_run.conclusion == 'success'" \
 	"github.event.workflow_run.head_branch == 'main'" \
-	'github.event.workflow_run.head_repository.full_name == github.repository'; do
+	'github.event.workflow_run.head_repository.full_name == github.repository' \
+	"github.event.workflow_run.path == '.github/workflows/quality.yml'"; do
 	grep -F "$predicate" <<< "$release_job_gate" >/dev/null \
 		|| { printf 'Release Please admission gate is missing: %s\n' "$predicate" >&2; exit 1; }
 done
@@ -233,9 +244,63 @@ grep -F 'test "$(git rev-parse HEAD)" = "$RAN_QUALITY_COMMIT"' "$release_workflo
 grep -F 'and .merge_commit_sha == $merge' "$release_workflow" >/dev/null
 grep -F 'merged_pr_number=' "$release_workflow" >/dev/null
 grep -F "jq -er '.number' <<< \"\$merged_pr\"" "$release_workflow" >/dev/null
-current_main_guards=$(grep -F -c '[[ "$current_main" == "$RAN_QUALITY_COMMIT" ]] && release_please_required=true' "$release_workflow")
-[[ "$current_main_guards" -eq 2 ]] \
-	|| { printf 'Expected two stale-main reconciliation guards, found %s\n' "$current_main_guards" >&2; exit 1; }
+
+stale_guard="$work_root/stale-main-guard.sh"
+{
+	printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail'
+	awk '
+		/^          current_main=/ { capture = 1 }
+		capture {
+			if ($0 ~ /^          pr_pages=/) exit
+			sub(/^          /, "")
+			print
+		}
+	' "$release_workflow"
+	printf '%s\n' 'printf "reached-after-stale-guard\n" >> "$STALE_SENTINEL"'
+} > "$stale_guard"
+chmod +x "$stale_guard"
+
+stale_bin="$work_root/stale-bin"
+mkdir -p "$stale_bin"
+cat > "$stale_bin/gh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == api ]]
+printf '%s\n' "$MOCK_CURRENT_MAIN"
+EOF
+chmod +x "$stale_bin/gh"
+
+quality_commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+newer_main=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+stale_output="$work_root/stale-output"
+stale_sentinel="$work_root/stale-sentinel"
+: > "$stale_output"
+PATH="$stale_bin:$PATH" \
+	GITHUB_REPOSITORY=RocketsAreNostalgic/ran-booster-bitbucket \
+	GITHUB_OUTPUT="$stale_output" \
+	MOCK_CURRENT_MAIN="$newer_main" \
+	RAN_QUALITY_COMMIT="$quality_commit" \
+	STALE_SENTINEL="$stale_sentinel" \
+	bash "$stale_guard"
+grep -Fx 'release-required=false' "$stale_output" >/dev/null
+grep -Fx 'release-please-required=false' "$stale_output" >/dev/null
+[[ ! -e "$stale_sentinel" ]] \
+	|| { printf 'Stale Quality evidence fell through the current-main guard\n' >&2; exit 1; }
+
+current_output="$work_root/current-output"
+current_sentinel="$work_root/current-sentinel"
+: > "$current_output"
+PATH="$stale_bin:$PATH" \
+	GITHUB_REPOSITORY=RocketsAreNostalgic/ran-booster-bitbucket \
+	GITHUB_OUTPUT="$current_output" \
+	MOCK_CURRENT_MAIN="$quality_commit" \
+	RAN_QUALITY_COMMIT="$quality_commit" \
+	STALE_SENTINEL="$current_sentinel" \
+	bash "$stale_guard"
+[[ -e "$current_sentinel" ]] \
+	|| { printf 'Current exact-main Quality evidence was stopped by the stale guard\n' >&2; exit 1; }
+[[ ! -s "$current_output" ]] \
+	|| { printf 'Current exact-main guard unexpectedly wrote release outputs\n' >&2; exit 1; }
 
 assert_step_gate() {
 	local step_name=$1 expected_gate=$2 step
@@ -266,20 +331,22 @@ workflow_run_qualifies() {
 	[[ "$1" == push \
 		&& "$2" == success \
 		&& "$3" == main \
-		&& "$4" == RocketsAreNostalgic/ran-booster-bitbucket ]]
+		&& "$4" == RocketsAreNostalgic/ran-booster-bitbucket \
+		&& "$5" == .github/workflows/quality.yml ]]
 }
 for invalid in \
-	'pull_request success main RocketsAreNostalgic/ran-booster-bitbucket' \
-	'push failure main RocketsAreNostalgic/ran-booster-bitbucket' \
-	'push success feature RocketsAreNostalgic/ran-booster-bitbucket' \
-	'push success main someone/else'; do
-	read -r event conclusion branch_name head_repository <<< "$invalid"
-	if workflow_run_qualifies "$event" "$conclusion" "$branch_name" "$head_repository"; then
+	'pull_request success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
+	'push failure main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
+	'push success feature RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml' \
+	'push success main someone/else .github/workflows/quality.yml' \
+	'push success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/other-quality.yml'; do
+	read -r event conclusion branch_name head_repository workflow_path <<< "$invalid"
+	if workflow_run_qualifies "$event" "$conclusion" "$branch_name" "$head_repository" "$workflow_path"; then
 		printf 'Unqualified workflow_run was accepted: %s\n' "$invalid" >&2
 		exit 1
 	fi
 done
-workflow_run_qualifies push success main RocketsAreNostalgic/ran-booster-bitbucket \
-	|| { printf 'Qualified exact-main workflow_run was rejected\n' >&2; exit 1; }
+workflow_run_qualifies push success main RocketsAreNostalgic/ran-booster-bitbucket .github/workflows/quality.yml \
+	|| { printf 'Qualified canonical exact-main workflow_run was rejected\n' >&2; exit 1; }
 
 printf 'Release tag, immutable asset, retry actor, and trusted-main promotion fixtures passed.\n'
