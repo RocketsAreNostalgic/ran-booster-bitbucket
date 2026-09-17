@@ -8,17 +8,42 @@ use PHPUnit\Framework\TestCase;
 
 final class QualityWorkflowFanInContractTest extends TestCase {
 	public function testSharedPhpProviderContractIsPinnedToReviewedProfile(): void {
-		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		$root     = dirname( __DIR__, 2 );
+		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
+
+		$baselineStart   = strpos( $workflow, "  baseline:\n" );
+		$repositoryStart = strpos( $workflow, "  repository-quality:\n" );
+		self::assertIsInt( $baselineStart );
+		self::assertIsInt( $repositoryStart );
+		self::assertTrue( $baselineStart < $repositoryStart );
+		$baseline = substr( $workflow, $baselineStart, $repositoryStart - $baselineStart );
 
 		self::assertStringContainsString(
 			'uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9',
-			$workflow
+			$baseline
 		);
-		self::assertStringContainsString( "php-floor: '8.2'", $workflow );
-		self::assertStringContainsString( "php-current: '8.5'", $workflow );
-		self::assertStringContainsString( 'php-extensions: zip', $workflow );
-		self::assertStringContainsString( "node-version: ''", $workflow );
+		self::assertStringContainsString( "php-current: '8.5'", $baseline );
+		self::assertStringContainsString( 'php-extensions: zip', $baseline );
+		self::assertStringContainsString( "node-version: ''", $baseline );
+
+		$composer = json_decode(
+			(string) file_get_contents( $root . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+			true,
+			512,
+			JSON_THROW_ON_ERROR
+		);
+		self::assertIsArray( $composer );
+		$extensionFloor = $composer['extra']['ran-booster-extension']['requires-php'] ?? null;
+		self::assertIsString( $extensionFloor );
+		self::assertSame( '^' . $extensionFloor, $composer['require']['php'] ?? null );
+
+		$plugin = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		self::assertIsString( $plugin );
+		$matched = preg_match( '/^[ \t]*\*[ \t]+Requires PHP:[ \t]*([^\r\n]+)/m', $plugin, $matches );
+		self::assertSame( 1, $matched );
+		self::assertSame( $extensionFloor, trim( $matches[1] ) );
+		self::assertStringContainsString( "php-floor: '{$extensionFloor}'", $baseline );
 	}
 
 	public function testComposerQualityAggregatesPreserveSourceAndRepositoryEvidence(): void {
