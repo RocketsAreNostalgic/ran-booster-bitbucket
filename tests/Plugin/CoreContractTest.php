@@ -216,18 +216,18 @@ final class CoreContractTest extends TestCase {
 		self::assertStringNotContainsString( '.conclusion == "cancelled"', $run_selector );
 	}
 
-	public function testReleaseCandidateValidatorBehaviorIsPartOfComposerCheck(): void {
+	public function testReleaseCandidateValidatorBehaviorIsPartOfRepositoryComposerCheck(): void {
 		$root     = dirname( __DIR__, 2 );
 		$composer = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsArray( $composer );
 		self::assertSame( 'bash tests/Workflow/validate-release-candidate.sh', $composer['scripts']['test:release-candidate'] ?? null );
-		self::assertContains( '@test:release-candidate', $composer['scripts']['check'] ?? array() );
+		self::assertContains( '@test:release-candidate', $composer['scripts']['check:repository'] ?? array() );
 		self::assertFileIsReadable( $root . '/tests/Workflow/validate-release-candidate.sh' );
 		self::assertSame( 'bash tests/Workflow/reconcile-release-candidate-marker.sh', $composer['scripts']['test:release-marker'] ?? null );
-		self::assertContains( '@test:release-marker', $composer['scripts']['check'] ?? array() );
+		self::assertContains( '@test:release-marker', $composer['scripts']['check:repository'] ?? array() );
 		self::assertFileIsReadable( $root . '/tests/Workflow/reconcile-release-candidate-marker.sh' );
 		self::assertSame( 'bash tests/Workflow/release-state-contracts.sh', $composer['scripts']['test:release-state'] ?? null );
-		self::assertContains( '@test:release-state', $composer['scripts']['check'] ?? array() );
+		self::assertContains( '@test:release-state', $composer['scripts']['check:repository'] ?? array() );
 		self::assertFileIsReadable( $root . '/tests/Workflow/release-state-contracts.sh' );
 	}
 

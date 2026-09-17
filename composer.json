@@ -7,6 +7,12 @@
         "issues": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues",
         "source": "https://github.com/RocketsAreNostalgic/ran-booster-bitbucket"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/RocketsAreNostalgic/ran-coding-standards.git"
+        }
+    ],
     "extra": {
         "ran-booster-core-certification": {
             "tag": "v1.0.0-beta.28",
@@ -43,6 +49,7 @@
         "phpunit/phpunit": "^11.0",
         "phpstan/phpstan": "^2.2.8",
         "szepeviktor/phpstan-wordpress": "^2.0.3",
+        "ran/coding-standards": "dev-main",
         "squizlabs/php_codesniffer": "^3.13.5",
         "wp-coding-standards/wpcs": "^3.4",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
@@ -63,12 +70,15 @@
         "build:release": "bash scripts/build-release.sh",
         "verify:release": "bash scripts/verify-release.sh",
         "check": [
+            "@lint:php",
+            "@lint:syntax"
+        ],
+        "check:repository": [
             "@test:unit",
             "@test:release-candidate",
             "@test:release-marker",
             "@test:release-state",
-            "@lint:php",
-            "@lint:syntax"
+            "@check"
         ]
     },
     "config": {

@@ -51,9 +51,15 @@ at `../ran-booster`:
 ```sh
 composer install
 composer check
-composer analyse
+RAN_BOOSTER_CORE_PATH=../ran-booster composer check:repository
+RAN_BOOSTER_CORE_PATH=../ran-booster composer analyse
 composer build:release -- "$(git rev-parse HEAD)"
 ```
+
+`composer check` is the Core-independent source-quality contract used by the
+shared PHP provider. `composer check:repository` adds the Core-backed unit,
+release-candidate, marker and release-state contracts and is required for the
+full repository handoff when the certified Core is available.
 
 Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere.
 Do not import Core-owned test fixtures into this repository. The add-on owns its
