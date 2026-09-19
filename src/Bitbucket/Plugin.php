@@ -6,6 +6,7 @@ namespace RAN\Booster\Bitbucket;
 
 use RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader;
 use RAN\RepositoryProvider\ProviderCredentialStore;
+use RAN\RepositoryProvider\ProviderRegistrationContext;
 use RAN\RepositoryProvider\ProviderRegistry;
 use RAN\RepositoryProvider\RepositoryProvider;
 
@@ -27,8 +28,10 @@ final class Plugin {
 			'bb',
 			static function (
 				ProviderCredentialStore $credentials,
-				AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence
+				AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence,
+				ProviderRegistrationContext $registrationContext
 			): RepositoryProvider {
+				unset( $registrationContext );
 				$api      = new BitbucketApiClient();
 				$loader   = new BitbucketCredentialLoader( $credentials );
 				$browser  = new BitbucketRepositoryBrowser( $loader, $api );
