@@ -222,7 +222,8 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 					return null;
 				}
 			};
-		}
+		},
+		new \RAN\RepositoryProvider\ProviderRegistrationContext( static fn (): int => 52_428_800 )
 	);
 
 	$callbacks[0]( $registry );
