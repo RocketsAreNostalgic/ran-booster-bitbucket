@@ -320,7 +320,7 @@ final class CoreContractTest extends TestCase {
 		return $workflow;
 	}
 
-	/** @return array{tag: string, commit: string} */
+	/** @return array{tag: string, commit: string, archive_source_commit: string} */
 	private function certification(): array {
 		$composer = json_decode(
 			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
@@ -333,10 +333,12 @@ final class CoreContractTest extends TestCase {
 		self::assertIsArray( $certification );
 		self::assertMatchesRegularExpression( '/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/', $certification['tag'] ?? '' );
 		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $certification['commit'] ?? '' );
+		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $certification['archive-source-commit'] ?? '' );
 
 		return array(
 			'tag'    => (string) $certification['tag'],
 			'commit' => (string) $certification['commit'],
+			'archive_source_commit' => (string) $certification['archive-source-commit'],
 		);
 	}
 }
