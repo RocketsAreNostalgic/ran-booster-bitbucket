@@ -41,7 +41,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'availability'      => 'free',
 				'requires-wordpress' => '7.0',
 				'requires-php'      => '8.2',
-				'booster-apis'      => array( 'required' => array( 'provider' => 10, 'addon' => 16 ), 'optional' => array() ),
+				'booster-apis'      => array( 'required' => array( 'provider' => 11, 'addon' => 16 ), 'optional' => array() ),
 				'maturity'          => 'beta',
 				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
 				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
@@ -52,7 +52,7 @@ final class PluginCompatibilityTest extends TestCase {
 		);
 		self::assertStringContainsString( 'Plugin Name: RAN Booster Bitbucket Cloud', $entrypoint );
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
-		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		$security = file_get_contents( $root . '/SECURITY.md' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local public-support contract.
 		self::assertIsString( $security );
@@ -131,18 +131,18 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-sixteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-sixteen' );
 	}
 
 	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-fifteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eleven-addon-fifteen' );
 	}
 
 	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-nine-addon-fifteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-fifteen' );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiTenWithoutClaimingOptionalCapabilities(): void {
+	public function testItRegistersOnlyAgainstProviderApiElevenWithoutClaimingOptionalCapabilities(): void {
 		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
