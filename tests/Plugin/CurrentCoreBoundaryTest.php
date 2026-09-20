@@ -48,7 +48,9 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
-		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install", $workflow );
+		self::assertStringContainsString( 'Install certified Core production dependencies', $workflow );
+		self::assertStringContainsString( "working-directory: ran-booster\n        run: composer install --no-dev --no-interaction --prefer-dist --no-progress", $workflow );
+		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install\n", $workflow );
 		self::assertStringContainsString( 'Run static analysis pilot', $workflow );
 		self::assertStringContainsString( 'run: composer analyse', $workflow );
 	}
