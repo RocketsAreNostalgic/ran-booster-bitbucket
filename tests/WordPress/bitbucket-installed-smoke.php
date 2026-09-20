@@ -104,7 +104,8 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 				);
 			}
 		};
-	}
+	},
+	new RAN\RepositoryProvider\ProviderRegistrationContext( static fn (): int => 52_428_800 )
 );
 $registrationCallbacks[0]( $registry );
 $registry->seal();
