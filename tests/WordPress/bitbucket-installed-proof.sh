@@ -17,6 +17,7 @@ addon_commit=${RAN_BOOSTER_BITBUCKET_COMMIT:?RAN_BOOSTER_BITBUCKET_COMMIT is req
 expected_addon_version=${RAN_BOOSTER_BITBUCKET_VERSION:?RAN_BOOSTER_BITBUCKET_VERSION is required}
 provided_core_tag=${RAN_BOOSTER_CORE_TAG:-}
 provided_core_commit=${RAN_BOOSTER_CORE_COMMIT:-}
+provided_core_archive_source_commit=${RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT:-}
 expected_core_sha=${RAN_BOOSTER_CORE_SHA256:?RAN_BOOSTER_CORE_SHA256 is required}
 expected_addon_sha=${RAN_BOOSTER_BITBUCKET_SHA256:?RAN_BOOSTER_BITBUCKET_SHA256 is required}
 php_binary=${RAN_BOOSTER_WP_CLI_PHP:-php}
@@ -33,15 +34,16 @@ if ! certification=$(
 		$certification = $document["extra"]["ran-booster-core-certification"] ?? null;
 		$tag = is_array( $certification ) ? ( $certification["tag"] ?? null ) : null;
 		$commit = is_array( $certification ) ? ( $certification["commit"] ?? null ) : null;
-		if ( ! is_string( $tag ) || ! is_string( $commit ) ) {
+		$archiveSourceCommit = is_array( $certification ) ? ( $certification["archive-source-commit"] ?? null ) : null;
+		if ( ! is_string( $tag ) || ! is_string( $commit ) || ! is_string( $archiveSourceCommit ) ) {
 			exit( 1 );
 		}
-		echo $tag, "|", $commit;
+		echo $tag, "|", $commit, "|", $archiveSourceCommit;
 	' "$repo_root/composer.json"
 ); then
 	fail 'The canonical Core certification record is unavailable.'
 fi
-IFS='|' read -r expected_core_tag expected_core_commit <<< "$certification"
+IFS='|' read -r expected_core_tag expected_core_commit expected_core_archive_source_commit <<< "$certification"
 
 [[ "$expected_addon_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
 	|| fail 'The expected Bitbucket version is invalid.'
@@ -49,10 +51,14 @@ IFS='|' read -r expected_core_tag expected_core_commit <<< "$certification"
 	|| fail 'The canonical Core tag is invalid.'
 [[ "$expected_core_commit" =~ ^[0-9a-f]{40}$ ]] \
 	|| fail 'The canonical Core commit must be full.'
+[[ "$expected_core_archive_source_commit" =~ ^[0-9a-f]{40}$ ]] \
+	|| fail 'The canonical Core archive source commit must be full.'
 [[ -z "$provided_core_tag" || "$provided_core_tag" == "$expected_core_tag" ]] \
 	|| fail 'The supplied Core tag does not match the canonical certification.'
 [[ -z "$provided_core_commit" || "$provided_core_commit" == "$expected_core_commit" ]] \
 	|| fail 'The supplied Core commit does not match the canonical certification.'
+[[ -z "$provided_core_archive_source_commit" || "$provided_core_archive_source_commit" == "$expected_core_archive_source_commit" ]] \
+	|| fail 'The supplied Core archive source commit does not match the canonical certification.'
 [[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 marker="$wordpress/.ran-booster-disposable-test-site"
@@ -91,7 +97,7 @@ if ! unzip -p "$core_archive" ran-booster/ran-booster-release.json \
 		) {
 			exit( 1 );
 		}
-	' "$expected_core_tag" "$expected_core_commit"; then
+	' "$expected_core_tag" "$expected_core_archive_source_commit"; then
 	fail 'The Core archive does not match the canonical certified release provenance.'
 fi
 
@@ -186,5 +192,5 @@ export RAN_BOOSTER_BITBUCKET_INERT_MODE=incompatible
 wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
 unset RAN_BOOSTER_BITBUCKET_INERT_MODE
 
-printf 'Bitbucket installed proof passed for %s (%s) against certified Core %s (%s).\n' \
-	"$addon_commit" "$expected_addon_sha" "$expected_core_tag" "$expected_core_commit"
+printf 'Bitbucket installed proof passed for %s (%s) against certified Core %s (tag %s, archive %s).\n' \
+	"$addon_commit" "$expected_addon_sha" "$expected_core_tag" "$expected_core_commit" "$expected_core_archive_source_commit"
