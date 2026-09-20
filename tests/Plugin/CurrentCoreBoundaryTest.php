@@ -15,10 +15,12 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
-		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence', $plugin );
+		self::assertStringContainsString( 'ProviderRegistrationContext $registrationContext', $plugin );
 		self::assertStringNotContainsString( 'interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class )', $plugin );
+		self::assertStringNotContainsString( 'class_exists( ProviderRegistrationContext::class )', $plugin );
 	}
 
 	public function testRepositoryTestsUseOnlyTheCertifiedCoreProductionAutoloader(): void {
