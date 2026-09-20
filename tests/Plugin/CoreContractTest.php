@@ -43,6 +43,20 @@ final class CoreContractTest extends TestCase {
 		self::assertSame( $certification['tag'], trim( $tag ) );
 	}
 
+	public function testInstalledProofSeparatesTagTargetFromArchiveSource(): void {
+		$workflow = $this->workflow( 'installed-proof.yml' );
+
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"]["archive-source-commit"]', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_COMMIT', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT', $workflow );
+		self::assertStringContainsString( '.target_commitish == $commit', $workflow );
+		self::assertNotSame(
+			$this->certification()['commit'],
+			$this->certification()['archive_source_commit']
+		);
+	}
+
 	public function testQualityPinsTheExactReleasedCoreAndCurrentSetupPhpAction(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
