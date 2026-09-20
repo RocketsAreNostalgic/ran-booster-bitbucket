@@ -108,5 +108,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringContainsString( 'composer.json', $proof );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TAG', $proof );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_COMMIT', $proof );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT', $proof );
+		self::assertStringContainsString( 'archive-source-commit', $proof );
 	}
 }
