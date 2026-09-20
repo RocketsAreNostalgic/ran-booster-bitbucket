@@ -616,6 +616,9 @@ jobs:
           php-version: "8.2"
           coverage: none
           tools: composer:v2
+      - name: Install certified Core production dependencies
+        working-directory: ran-booster
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress
       - name: Install add-on development dependencies
         working-directory: ran-booster-bitbucket
         run: |
