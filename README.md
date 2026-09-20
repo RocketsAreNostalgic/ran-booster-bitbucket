@@ -44,13 +44,15 @@ installation records or credential storage to remove.
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
 use the exact certified RAN Booster production source as their contract fixture.
-A Core Composer install is not required: the suite loads only Core's shipped
-`autoload.php` and public production contracts. With the certified Core checkout
-at `../ran-booster`:
+The suite loads Core's shipped `autoload.php` and public production contracts,
+which require the exact certified Core checkout's locked production Composer
+dependencies. Do not install Core development dependencies. With the certified
+Core checkout at `../ran-booster`:
 
 ```sh
 composer install
 composer check
+(cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
 RAN_BOOSTER_CORE_PATH=../ran-booster composer check:repository
 RAN_BOOSTER_CORE_PATH=../ran-booster composer analyse
 composer build:release -- "$(git rev-parse HEAD)"
