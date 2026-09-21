@@ -53,8 +53,8 @@ Core checkout at `../ran-booster`:
 composer install
 composer check
 (cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
-RAN_BOOSTER_CORE_PATH=../ran-booster composer check:repository
-RAN_BOOSTER_CORE_PATH=../ran-booster composer analyse
+RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer check:repository
+RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer analyse
 composer build:release -- "$(git rev-parse HEAD)"
 ```
 
@@ -63,7 +63,7 @@ shared PHP provider. `composer check:repository` adds the Core-backed unit,
 release-candidate, marker and release-state contracts and is required for the
 full repository handoff when the certified Core is available.
 
-Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere.
+Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
 Do not import Core-owned test fixtures into this repository. The add-on owns its
 PHP tools in its local `vendor/`, but never packages a vendor tree or Core code
 in the release artifact. PHPStan is a non-blocking, Bitbucket-only pilot; read
