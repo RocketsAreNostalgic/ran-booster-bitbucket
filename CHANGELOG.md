@@ -3,6 +3,14 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.13](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.12...v0.1.0-beta.13) (2026-09-21)
+
+
+### Bug Fixes
+
+* **provider:** recertify Bitbucket for Provider API 11 ([#61](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/61)) ([b123ee9](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/b123ee990b5f92a6b950a71785adce96cfabc6fd))
+* recertify against current Booster contracts ([#53](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/53)) ([be5ca8a](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/be5ca8a9432960e4e90942f474ea6ea6c8a8c7d4))
+
 ## [0.1.0-beta.12](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.11...v0.1.0-beta.12) (2026-08-21)
 
 
