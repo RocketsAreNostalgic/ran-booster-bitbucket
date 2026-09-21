@@ -20,7 +20,7 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entryFile );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentationFile );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*10\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*11\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
@@ -41,6 +41,20 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $tag );
 		self::assertSame( $certification['commit'], trim( $commit ) );
 		self::assertSame( $certification['tag'], trim( $tag ) );
+	}
+
+	public function testInstalledProofSeparatesTagTargetFromArchiveSource(): void {
+		$workflow = $this->workflow( 'installed-proof.yml' );
+
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"]["archive-source-commit"]', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_COMMIT', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT', $workflow );
+		self::assertStringContainsString( '.target_commitish == $commit', $workflow );
+		self::assertNotSame(
+			$this->certification()['commit'],
+			$this->certification()['archive_source_commit']
+		);
 	}
 
 	public function testQualityPinsTheExactReleasedCoreAndCurrentSetupPhpAction(): void {
@@ -320,7 +334,7 @@ final class CoreContractTest extends TestCase {
 		return $workflow;
 	}
 
-	/** @return array{tag: string, commit: string} */
+	/** @return array{tag: string, commit: string, archive_source_commit: string} */
 	private function certification(): array {
 		$composer = json_decode(
 			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
@@ -333,10 +347,12 @@ final class CoreContractTest extends TestCase {
 		self::assertIsArray( $certification );
 		self::assertMatchesRegularExpression( '/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/', $certification['tag'] ?? '' );
 		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $certification['commit'] ?? '' );
+		self::assertMatchesRegularExpression( '/^[0-9a-f]{40}$/', $certification['archive-source-commit'] ?? '' );
 
 		return array(
 			'tag'    => (string) $certification['tag'],
 			'commit' => (string) $certification['commit'],
+			'archive_source_commit' => (string) $certification['archive-source-commit'],
 		);
 	}
 }

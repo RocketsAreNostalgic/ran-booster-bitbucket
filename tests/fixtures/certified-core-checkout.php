@@ -15,11 +15,14 @@ function ran_booster_bitbucket_certified_core_root(): string {
 	$certification = $composer['extra']['ran-booster-core-certification'] ?? null;
 	$expectedTag   = is_array( $certification ) ? ( $certification['tag'] ?? null ) : null;
 	$expectedCommit = is_array( $certification ) ? ( $certification['commit'] ?? null ) : null;
+	$expectedArchiveSourceCommit = is_array( $certification ) ? ( $certification['archive-source-commit'] ?? null ) : null;
 
 	if ( ! is_string( $expectedTag )
 		|| 1 !== preg_match( '/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/', $expectedTag )
 		|| ! is_string( $expectedCommit )
 		|| 1 !== preg_match( '/^[0-9a-f]{40}$/', $expectedCommit )
+		|| ! is_string( $expectedArchiveSourceCommit )
+		|| 1 !== preg_match( '/^[0-9a-f]{40}$/', $expectedArchiveSourceCommit )
 	) {
 		throw new RuntimeException( 'The Bitbucket Core certification record is invalid.' );
 	}

@@ -76,6 +76,7 @@ jobs:
           set -euo pipefail
           core_tag="$(jq -er '.extra["ran-booster-core-certification"].tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' composer.json)"
           core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          core_archive_source_commit="$(jq -er '.extra["ran-booster-core-certification"]["archive-source-commit"] | select(test("^[0-9a-f]{40}$"))' composer.json)"
           release="$(gh api "repos/RocketsAreNostalgic/ran-booster/releases/tags/${core_tag}")"
           jq -e \
             --arg tag "$core_tag" \
@@ -104,6 +105,7 @@ jobs:
           {
             printf 'RAN_BOOSTER_CORE_ARCHIVE=%s\n' "$core_archive"
             printf 'RAN_BOOSTER_CORE_COMMIT=%s\n' "$core_commit"
+            printf 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT=%s\n' "$core_archive_source_commit"
             printf 'RAN_BOOSTER_CORE_SHA256=%s\n' "$core_sha"
             printf 'RAN_BOOSTER_CORE_TAG=%s\n' "$core_tag"
           } >> "$GITHUB_ENV"

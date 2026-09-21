@@ -15,10 +15,12 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
-		self::assertStringContainsString( '10 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence', $plugin );
+		self::assertStringContainsString( 'ProviderRegistrationContext $registrationContext', $plugin );
 		self::assertStringNotContainsString( 'interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class )', $plugin );
+		self::assertStringNotContainsString( 'class_exists( ProviderRegistrationContext::class )', $plugin );
 	}
 
 	public function testRepositoryTestsUseOnlyTheCertifiedCoreProductionAutoloader(): void {
@@ -46,7 +48,16 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
-		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install", $workflow );
+		self::assertStringContainsString( 'Install certified Core production dependencies', $workflow );
+		self::assertStringContainsString( 'composer install --no-dev --no-interaction --prefer-dist --no-progress', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $workflow );
+		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install\n", $workflow );
+
+		foreach ( array( 'tests/bootstrap.php', 'tests/phpstan-bootstrap.php', 'tests/fixtures/plugin-lifecycle.php' ) as $path ) {
+			$fixture = file_get_contents( $root . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture-boundary contract.
+			self::assertIsString( $fixture );
+			self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $fixture, $path );
+		}
 		self::assertStringContainsString( 'Run static analysis pilot', $workflow );
 		self::assertStringContainsString( 'run: composer analyse', $workflow );
 	}
@@ -106,5 +117,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringContainsString( 'composer.json', $proof );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TAG', $proof );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_COMMIT', $proof );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT', $proof );
+		self::assertStringContainsString( 'archive-source-commit', $proof );
 	}
 }

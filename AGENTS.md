@@ -4,13 +4,13 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 ## Runtime contract
 
-- RAN Booster is required. This add-on supports exactly Provider API `10` and the official-suite Add-on API `16` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
-- The exact tag/commit in `extra.ran-booster-core-certification` is the Core release against which this repository's tests and release evidence are certified. It is not a second runtime version gate: if Core keeps the same published Provider API 10 / Add-on API 16 generation, the add-on must rely on that public compatibility contract rather than infer a private minimum version from unchanged interfaces.
-- Provider API `10` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
+- RAN Booster is required. This add-on supports exactly Provider API `11` and the official-suite Add-on API `16` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
+- The exact tag, tag-target commit, and archive-source commit in `extra.ran-booster-core-certification` identify the Core release against which this repository's tests and release evidence are certified. It is not a second runtime version gate: if Core keeps the same published Provider API 11 / Add-on API 16 generation, the add-on must rely on that public compatibility contract rather than infer a private minimum version from unchanged interfaces.
+- Provider API `11` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
 - Bitbucket does not claim the optional webhook fitness or management capabilities. Keep its existing provider behavior unchanged until a separately reviewed provider implementation proves those operations.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
 - The add-on may intentionally use public RAN Booster runtime classes through Core's shipped production autoloader after the runtime API guard. Do not vendor, copy, or ship RAN Booster production or test code.
-- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`; authenticated delivery diagnostics use only the provider-bound `AuthenticatedWebhookDeliveryEvidenceReader` supplied by Provider API 10 registration.
+- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`; authenticated delivery diagnostics use only the provider-bound `AuthenticatedWebhookDeliveryEvidenceReader` supplied by Provider API 11 registration.
 - The add-on owns one non-interactive guide at
   `ran_booster_documentation_sections_after_provider_bb`. It receives only the
   canonical documentation URL and administration scope, imports no Core
@@ -20,8 +20,8 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 ## Development and release
 
 - Tests require the exact sibling Core checkout recorded in `extra.ran-booster-core-certification`. Set `RAN_BOOSTER_CORE_PATH` only when that checkout lives elsewhere.
-- Bitbucket tests consume only Core's shipped `autoload.php` and public production contracts. Do not install Core's Composer development dependencies for this repository and do not import Core-owned test fixtures.
-- Run `composer install` and `composer check` for the Core-independent source-quality contract. With the exact certified Core checkout available through `RAN_BOOSTER_CORE_PATH`, run `composer check:repository` for the Core/release-state suite; `composer analyse` remains the PHPStan pilot and `composer build:release` remains the release-archive command. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
+- Bitbucket tests consume Core's shipped `autoload.php` and public production contracts. Install only the exact certified Core checkout's locked production Composer dependencies with `composer install --no-dev`; do not install Core development dependencies or import Core-owned test fixtures.
+- Run `composer install` and `composer check` for the Core-independent source-quality contract. With the exact certified Core checkout available through `RAN_BOOSTER_CORE_PATH` and its generated production dependency autoloader identified by `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, run `composer check:repository` for the Core/release-state suite; `composer analyse` remains the PHPStan pilot and `composer build:release` remains the release-archive command. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
 - Releases are GitHub artifacts. Do not add WordPress.org/SVN publishing or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files. The verified archive must contain the add-on-owned Bitbucket guide and exact native documentation hook.
 - Keep the entry header, `readme.txt` stable tag, Release Please manifest, and changelog aligned.
 - Follow `RELEASE.md` for the authoritative release procedure, package

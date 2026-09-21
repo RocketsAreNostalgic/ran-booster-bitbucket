@@ -44,9 +44,10 @@ if ( false === $addon || false === $core
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
 
-if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 10 !== RAN_BOOSTER_PROVIDER_API_VERSION
+if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 11 !== RAN_BOOSTER_PROVIDER_API_VERSION
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION
 	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
+	|| ! class_exists( RAN\RepositoryProvider\ProviderRegistrationContext::class )
 ) {
 	throw new RuntimeException( 'The required Core provider contract is unavailable.' );
 }
@@ -103,7 +104,8 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 				);
 			}
 		};
-	}
+	},
+	new RAN\RepositoryProvider\ProviderRegistrationContext( static fn (): int => 52_428_800 )
 );
 $registrationCallbacks[0]( $registry );
 $registry->seal();
