@@ -49,8 +49,15 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
 		self::assertStringContainsString( 'Install certified Core production dependencies', $workflow );
-		self::assertStringContainsString( "working-directory: ran-booster\n        run: composer install --no-dev --no-interaction --prefer-dist --no-progress", $workflow );
+		self::assertStringContainsString( 'composer install --no-dev --no-interaction --prefer-dist --no-progress', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $workflow );
 		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install\n", $workflow );
+
+		foreach ( array( 'tests/bootstrap.php', 'tests/phpstan-bootstrap.php', 'tests/fixtures/plugin-lifecycle.php' ) as $path ) {
+			$fixture = file_get_contents( $root . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture-boundary contract.
+			self::assertIsString( $fixture );
+			self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $fixture, $path );
+		}
 		self::assertStringContainsString( 'Run static analysis pilot', $workflow );
 		self::assertStringContainsString( 'run: composer analyse', $workflow );
 	}
