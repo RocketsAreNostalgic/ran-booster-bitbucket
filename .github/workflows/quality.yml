@@ -618,7 +618,11 @@ jobs:
           tools: composer:v2
       - name: Install certified Core production dependencies
         working-directory: ran-booster
-        run: composer install --no-dev --no-interaction --prefer-dist --no-progress
+        run: |
+          composer install --no-dev --no-interaction --prefer-dist --no-progress
+          core_vendor_autoload="$PWD/vendor/autoload.php"
+          test -f "$core_vendor_autoload"
+          printf 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=%s\n' "$core_vendor_autoload" >> "$GITHUB_ENV"
       - name: Install add-on development dependencies
         working-directory: ran-booster-bitbucket
         run: |
