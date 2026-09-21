@@ -117,6 +117,10 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		$loadAddOn();
 	}
 
+	$coreVendorAutoload = getenv( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD' );
+	if ( false !== $coreVendorAutoload && '' !== $coreVendorAutoload ) {
+		require $coreVendorAutoload;
+	}
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
 		'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first' => array( 10, 16 ),
