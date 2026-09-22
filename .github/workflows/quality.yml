@@ -297,11 +297,11 @@ jobs:
           composer install --no-interaction --prefer-dist --no-progress
       - name: Run repository-specific quality checks
         working-directory: ran-booster-bitbucket
-        run: composer check:repository
+        run: composer check:host
       - name: Run static analysis pilot
         continue-on-error: true
         working-directory: ran-booster-bitbucket
-        run: composer analyse
+        run: composer analyze
       - name: Download verified runtime archive
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
