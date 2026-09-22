@@ -64,21 +64,19 @@
         "standards:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
         "lint:syntax": "find . -path ./vendor -prune -o -path ./.phpstan -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
         "analyze": "vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M",
-        "test": [
-            "vendor/bin/phpunit --configuration phpunit.xml",
-            "bash tests/Workflow/validate-release-candidate.sh"
-        ],
+        "test": "vendor/bin/phpunit --configuration phpunit.xml",
         "build:release": "bash scripts/build-release.sh",
         "verify:release": "bash scripts/verify-release.sh",
         "check": [
             "@standards",
-            "@lint:syntax",
-            "@test"
+            "@lint:syntax"
         ],
         "check:host": [
             "@test",
+            "@test:release-candidate",
             "@check"
-        ]
+        ],
+        "test:release-candidate": "bash tests/Workflow/validate-release-candidate.sh"
     },
     "config": {
         "allow-plugins": {
