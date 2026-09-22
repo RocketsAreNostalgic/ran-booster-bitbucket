@@ -75,9 +75,17 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'composer verify:release -- "$archive" "$source_commit"', $workflow );
 		self::assertStringContainsString( 'schema: "ran-profile-b-promotion"', $workflow );
 		self::assertStringContainsString( 'build/ran-profile-b-promotion.json', $workflow );
-		self::assertStringContainsString( '--arg quality_commit "$GITHUB_SHA"', $workflow );
+		self::assertSame( 2, substr_count( $workflow, '--arg quality_commit "$GITHUB_SHA"' ) );
 		self::assertStringContainsString( '--arg source_commit "$source_commit"', $workflow );
 		self::assertStringContainsString( 'extensions: zip', $workflow );
+		$buildStart = strpos( $workflow, '- name: Build and verify exact runtime archive' );
+		$uploadStart = strpos( $workflow, '- name: Upload verified runtime evidence' );
+		self::assertIsInt( $buildStart );
+		self::assertIsInt( $uploadStart );
+		$build = substr( $workflow, $buildStart, $uploadStart - $buildStart );
+		self::assertStringNotContainsString( 'GH_TOKEN:', $build );
+		self::assertStringNotContainsString( 'gh api ', $build );
+		self::assertStringContainsString( 'tested_tree="$source_tree"', $build );
 		self::assertStringContainsString( 'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a', $workflow );
 	}
 
