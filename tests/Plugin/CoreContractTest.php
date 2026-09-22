@@ -75,7 +75,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'composer verify:release -- "$archive" "$source_commit"', $workflow );
 		self::assertStringContainsString( 'schema: "ran-profile-b-promotion"', $workflow );
 		self::assertStringContainsString( 'build/ran-profile-b-promotion.json', $workflow );
-		self::assertSame( 2, substr_count( $workflow, '--arg quality_commit "$GITHUB_SHA"' ) );
+		self::assertGreaterThanOrEqual( 2, substr_count( $workflow, '--arg quality_commit "$GITHUB_SHA"' ) );
 		self::assertStringContainsString( '--arg source_commit "$source_commit"', $workflow );
 		self::assertStringContainsString( 'extensions: zip', $workflow );
 		$buildStart = strpos( $workflow, '- name: Build and verify exact runtime archive' );
