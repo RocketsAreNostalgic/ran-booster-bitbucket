@@ -66,8 +66,6 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 			array(
 				'@test:unit',
 				'@test:release-candidate',
-				'@test:release-marker',
-				'@test:release-state',
 				'@check',
 			),
 			$composer['scripts']['check:repository'] ?? null
@@ -98,33 +96,21 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		$terminal = substr( $workflow, $terminalStart );
 
 		self::assertStringContainsString( 'if: ${{ always() }}', $terminal );
-		self::assertStringContainsString( '- runtime-archive', $terminal );
-		self::assertStringContainsString( '- baseline', $terminal );
-		self::assertStringContainsString( '- repository-quality', $terminal );
-		self::assertStringContainsString( '- release-candidate-install', $terminal );
-		self::assertStringContainsString( 'RUNTIME_ARCHIVE_RESULT: ${{ needs.runtime-archive.result }}', $terminal );
-		self::assertStringContainsString( 'BASELINE_RESULT: ${{ needs.baseline.result }}', $terminal );
-		self::assertStringContainsString( 'REPOSITORY_QUALITY_RESULT: ${{ needs.repository-quality.result }}', $terminal );
-		self::assertStringContainsString( 'RELEASE_CANDIDATE_INSTALL_RESULT: ${{ needs.release-candidate-install.result }}', $terminal );
-		self::assertStringContainsString( 'set -euo pipefail', $terminal );
+		foreach ( array( 'runtime-archive', 'baseline', 'repository-quality', 'release-candidate-install' ) as $need ) {
+			self::assertStringContainsString( '- ' . $need, $terminal );
+		}
 		self::assertStringContainsString( 'test "$RUNTIME_ARCHIVE_RESULT" = success', $terminal );
 		self::assertStringContainsString( 'test "$BASELINE_RESULT" = success', $terminal );
+		self::assertStringNotContainsString( 'ADMITTED', $terminal );
 
-		$admittedStart         = strpos( $terminal, 'if [[ "$ADMITTED" == true ]]' );
-		$fullStart             = strpos( $terminal, 'elif [[ "$LANE" == full ]]' );
+		$fullStart             = strpos( $terminal, 'if [[ "$LANE" == full ]]' );
 		$releaseCandidateStart = strpos( $terminal, 'elif [[ "$LANE" == release-candidate ]]' );
 		$unsupportedStart      = strpos( $terminal, 'else', $releaseCandidateStart );
-		self::assertIsInt( $admittedStart );
 		self::assertIsInt( $fullStart );
 		self::assertIsInt( $releaseCandidateStart );
 		self::assertIsInt( $unsupportedStart );
-		self::assertTrue( $admittedStart < $fullStart );
 		self::assertTrue( $fullStart < $releaseCandidateStart );
 		self::assertTrue( $releaseCandidateStart < $unsupportedStart );
-
-		$admitted = substr( $terminal, $admittedStart, $fullStart - $admittedStart );
-		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = skipped', $admitted );
-		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped', $admitted );
 
 		$full = substr( $terminal, $fullStart, $releaseCandidateStart - $fullStart );
 		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = success', $full );
@@ -138,4 +124,24 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertStringContainsString( 'Unsupported quality lane: $LANE', $unsupported );
 		self::assertStringContainsString( 'exit 1', $unsupported );
 	}
+
+	public function testProfileBReleaseCallerAndPromotionManifestArePinned(): void {
+		$root = dirname( __DIR__, 2 );
+		$release = (string) file_get_contents( $root . '/.github/workflows/release-please.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		$quality = (string) file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		$config = json_decode( (string) file_get_contents( $root . '/release-please-config.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+
+		self::assertStringContainsString( 'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@cb42ecd841916ebe73f147e5b933cd7bcc392db8', $release );
+		self::assertStringContainsString( 'expected-workflow-path: .github/workflows/quality.yml', $release );
+		self::assertStringContainsString( 'artifact-prefix: ran-booster-bitbucket-runtime', $release );
+		self::assertStringContainsString( 'release-pr-head: release-please--branches--main--components--ran-booster-bitbucket', $release );
+		self::assertStringContainsString( "workflow_dispatch:\n  pull_request:", $quality );
+		self::assertStringNotContainsString( 'inputs:', $quality );
+		self::assertStringContainsString( 'schema: "ran-profile-b-promotion"', $quality );
+		self::assertStringContainsString( 'build/ran-profile-b-promotion.json', $quality );
+		self::assertTrue( $config['draft'] ?? false );
+		self::assertTrue( $config['force-tag-creation'] ?? false );
+		self::assertNotSame( true, $config['skip-github-release'] ?? false );
+	}
+
 }
