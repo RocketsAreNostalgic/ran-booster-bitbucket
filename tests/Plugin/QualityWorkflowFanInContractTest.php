@@ -59,13 +59,13 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 			array(
 				'@standards',
 				'@lint:syntax',
-				'@test',
 			),
 			$composer['scripts']['check'] ?? null
 		);
 		self::assertSame(
 			array(
 				'@test',
+				'@test:release-candidate',
 				'@check',
 			),
 			$composer['scripts']['check:host'] ?? null
