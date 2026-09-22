@@ -53,13 +53,13 @@ Core checkout at `../ran-booster`:
 composer install
 composer check
 (cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
-RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer check:repository
-RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer analyse
+RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer check:host
+RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer analyze
 composer build:release -- "$(git rev-parse HEAD)"
 ```
 
 `composer check` is the Core-independent source-quality contract used by the
-shared PHP provider. `composer check:repository` adds the Core-backed unit,
+shared PHP provider. `composer check:host` adds the Core-backed unit,
 release-candidate, marker and release-state contracts and is required for the
 full repository handoff when the certified Core is available.
 
