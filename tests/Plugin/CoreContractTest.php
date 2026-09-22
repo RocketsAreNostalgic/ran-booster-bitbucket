@@ -141,7 +141,9 @@ final class CoreContractTest extends TestCase {
 		$composer = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsArray( $composer );
 		self::assertSame( 'bash tests/Workflow/validate-release-candidate.sh', $composer['scripts']['test:release-candidate'] ?? null );
-		self::assertContains( '@test:release-candidate', $composer['scripts']['check:repository'] ?? array() );
+		self::assertSame( 'vendor/bin/phpunit --configuration phpunit.xml', $composer['scripts']['test'] ?? null );
+		self::assertContains( '@test', $composer['scripts']['check:host'] ?? array() );
+		self::assertContains( '@test:release-candidate', $composer['scripts']['check:host'] ?? array() );
 		self::assertFileIsReadable( $root . '/tests/Workflow/validate-release-candidate.sh' );
 		self::assertArrayNotHasKey( 'test:release-marker', $composer['scripts'] );
 		self::assertArrayNotHasKey( 'test:release-state', $composer['scripts'] );
