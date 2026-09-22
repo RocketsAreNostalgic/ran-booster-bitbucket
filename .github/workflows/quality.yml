@@ -2,15 +2,6 @@ name: Quality
 
 on:
   workflow_dispatch:
-    inputs:
-      release_pr:
-        description: Exact Release Please pull-request number; reserved for the trusted release workflow.
-        required: false
-        type: string
-      release_sha:
-        description: Exact live Release Please pull-request head SHA; reserved for the trusted release workflow.
-        required: false
-        type: string
   pull_request:
   push:
     branches:
@@ -54,8 +45,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RAN_DISPATCH_RELEASE_PR: ${{ inputs.release_pr }}
-          RAN_DISPATCH_RELEASE_SHA: ${{ inputs.release_sha }}
           RAN_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           RAN_PR_BASE: ${{ github.event.pull_request.base.ref }}
           RAN_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -96,27 +85,27 @@ jobs:
           }
 
           load_dispatch_candidate() {
-            local pr_json
+            local pr_json owner
 
             [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
-            [[ "$RAN_DISPATCH_RELEASE_PR" =~ ^[1-9][0-9]*$ ]]
-            [[ "$RAN_DISPATCH_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
-            [[ "$GITHUB_ACTOR" == 'github-actions[bot]' && "$GITHUB_TRIGGERING_ACTOR" == 'github-actions[bot]' ]] \
-              || { echo '::error::Only the trusted Release Please workflow may dispatch a candidate run.'; exit 1; }
-
-            pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${RAN_DISPATCH_RELEASE_PR}")"
-            jq -e \
+            [[ "$GITHUB_REF_NAME" == "$release_branch" ]]
+            owner="${GITHUB_REPOSITORY%%/*}"
+            pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=main&head=${owner}%3A${release_branch}")"
+            pr_json="$(jq -cer \
               --arg base main \
               --arg bot 'github-actions[bot]' \
               --arg head "$release_branch" \
               --arg repository "$GITHUB_REPOSITORY" \
-              '.state == "open"
+              '[.[] | select(
+                .state == "open"
                 and .merged_at == null
                 and .base.ref == $base
                 and .head.ref == $head
                 and .head.repo.full_name == $repository
-                and .user.login == $bot' \
-              <<< "$pr_json" >/dev/null
+                and .user.login == $bot
+              )]
+              | if length == 1 then .[0] else error("Expected exactly one canonical Release Please candidate.") end' \
+              <<< "$pr_json")"
 
             pr_number="$(jq -er '.number' <<< "$pr_json")"
             pr_base_ref="$(jq -er '.base.ref' <<< "$pr_json")"
@@ -124,7 +113,6 @@ jobs:
             pr_head_ref="$(jq -er '.head.ref' <<< "$pr_json")"
             pr_head_repository="$(jq -er '.head.repo.full_name' <<< "$pr_json")"
             pr_head_sha="$(jq -er '.head.sha' <<< "$pr_json")"
-            test "$RAN_DISPATCH_RELEASE_SHA" = "$pr_head_sha"
             test "$GITHUB_SHA" = "$pr_head_sha"
             fetch_pull_request_commits
             bash scripts/validate-release-candidate.sh "$pr_base_sha" "$pr_head_sha"
@@ -135,9 +123,7 @@ jobs:
           }
 
           dispatched_candidate=false
-          if [[ -n "$RAN_DISPATCH_RELEASE_PR" || -n "$RAN_DISPATCH_RELEASE_SHA" ]]; then
-            [[ -n "$RAN_DISPATCH_RELEASE_PR" && -n "$RAN_DISPATCH_RELEASE_SHA" ]] \
-              || { echo '::error::Candidate dispatch requires both the exact pull request and head SHA.'; exit 1; }
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF_NAME" == "$release_branch" ]]; then
             load_dispatch_candidate
             dispatched_candidate=true
           fi
@@ -541,6 +527,29 @@ jobs:
           test -f "$archive"
           test -f "$checksum"
           printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum --check --strict
+          checksum_sha256="$(sha256sum "$checksum" | awk '{ print $1 }')"
+          source_commit="$(jq -er '.source_commit' "$metadata")"
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg quality_commit "$GITHUB_SHA" \
+            --arg source_commit "$source_commit" \
+            --arg tag "v${version}" \
+            --arg archive_name "$(basename "$archive")" \
+            --arg archive_sha256 "$archive_sha256" \
+            --arg checksum_name "$(basename "$checksum")" \
+            --arg checksum_sha256 "$checksum_sha256" \
+            '{
+              schema: "ran-profile-b-promotion",
+              schema_version: 1,
+              repository: $repository,
+              quality_commit: $quality_commit,
+              source_commit: $source_commit,
+              tag: $tag,
+              assets: [
+                {name: $archive_name, sha256: $archive_sha256},
+                {name: $checksum_name, sha256: $checksum_sha256}
+              ]
+            }' > build/ran-profile-b-promotion.json
           {
             printf 'admitted=%s\n' "$admitted"
             printf 'artifact-name=ran-booster-bitbucket-runtime-%s-%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
@@ -561,6 +570,7 @@ jobs:
             build/ran-booster-bitbucket-${{ steps.finalize.outputs.version }}.zip
             build/ran-booster-bitbucket-${{ steps.finalize.outputs.version }}.zip.sha256
             build/ran-booster-bitbucket-ci-runtime.json
+            build/ran-profile-b-promotion.json
           if-no-files-found: error
           retention-days: 7
 
