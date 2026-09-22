@@ -60,7 +60,7 @@ composer build:release -- "$(git rev-parse HEAD)"
 
 `composer check` is the Core-independent source-quality contract used by the
 shared PHP provider. `composer check:host` adds the Core-backed unit,
-release-candidate, marker and release-state contracts and is required for the
+release-candidate, marker and release-candidate contract and is required for the
 full repository handoff when the certified Core is available.
 
 Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
