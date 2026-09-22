@@ -39,16 +39,8 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: '8.2'
-          coverage: none
-          extensions: zip
-          tools: composer:v2
-
-      - name: Build and verify exact runtime archive
-        id: archive
+      - name: Classify exact Quality revision
+        id: identity
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,7 +78,6 @@ jobs:
             pr_base_sha="$(jq -er '.base.sha' <<< "$pr_json")"
             pr_head_sha="$(jq -er '.head.sha' <<< "$pr_json")"
             test "$source_commit" = "$pr_head_sha"
-            bash scripts/validate-release-candidate.sh "$pr_base_sha" "$pr_head_sha"
             lane=release-candidate
           elif [[ "$GITHUB_EVENT_NAME" == pull_request \
             && "${{ github.event.pull_request.user.login }}" == 'github-actions[bot]' \
@@ -97,8 +88,44 @@ jobs:
             pr_base_sha='${{ github.event.pull_request.base.sha }}'
             pr_head_sha='${{ github.event.pull_request.head.sha }}'
             test "$source_commit" = "$pr_head_sha"
-            bash scripts/validate-release-candidate.sh "$pr_base_sha" "$pr_head_sha"
             lane=release-candidate
+          fi
+
+          {
+            printf 'lane=%s\n' "$lane"
+            printf 'pr-base-sha=%s\n' "$pr_base_sha"
+            printf 'pr-head-sha=%s\n' "$pr_head_sha"
+            printf 'pr-number=%s\n' "$pr_number"
+            printf 'source-commit=%s\n' "$source_commit"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: zip
+          tools: composer:v2
+
+      - name: Build and verify exact runtime archive
+        id: archive
+        shell: bash
+        env:
+          RAN_LANE: ${{ steps.identity.outputs.lane }}
+          RAN_PR_BASE_SHA: ${{ steps.identity.outputs.pr-base-sha }}
+          RAN_PR_HEAD_SHA: ${{ steps.identity.outputs.pr-head-sha }}
+          RAN_PR_NUMBER: ${{ steps.identity.outputs.pr-number }}
+          RAN_SOURCE_SHA: ${{ steps.identity.outputs.source-commit }}
+        run: |
+          set -euo pipefail
+          source_commit="$RAN_SOURCE_SHA"
+          lane="$RAN_LANE"
+          pr_number="$RAN_PR_NUMBER"
+          pr_base_sha="$RAN_PR_BASE_SHA"
+          pr_head_sha="$RAN_PR_HEAD_SHA"
+          test "$(git rev-parse HEAD)" = "$source_commit"
+          if [[ "$lane" == release-candidate ]]; then
+            bash scripts/validate-release-candidate.sh "$pr_base_sha" "$pr_head_sha"
           fi
 
           version="$(sed -nE 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*([^[:space:]]+).*/\1/p' ran-booster-bitbucket.php)"
@@ -117,7 +144,7 @@ jobs:
 
           source_tree="$(git rev-parse "${source_commit}^{tree}")"
           tested_commit="$GITHUB_SHA"
-          tested_tree="$(git rev-parse "${GITHUB_SHA}^{tree}")"
+          tested_tree="$source_tree"
           jq -n \
             --arg lane "$lane" \
             --arg quality_commit "$GITHUB_SHA" \
@@ -154,7 +181,7 @@ jobs:
 
           jq -n \
             --arg repository "$GITHUB_REPOSITORY" \
-            --arg quality_commit "$source_commit" \
+            --arg quality_commit "$GITHUB_SHA" \
             --arg source_commit "$source_commit" \
             --arg tag "v${version}" \
             --arg archive_name "$(basename "$archive")" \
