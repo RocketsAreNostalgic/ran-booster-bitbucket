@@ -57,18 +57,18 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 
 		self::assertSame(
 			array(
-				'@lint:php',
+				'@standards',
 				'@lint:syntax',
 			),
 			$composer['scripts']['check'] ?? null
 		);
 		self::assertSame(
 			array(
-				'@test:unit',
+				'@test',
 				'@test:release-candidate',
 				'@check',
 			),
-			$composer['scripts']['check:repository'] ?? null
+			$composer['scripts']['check:host'] ?? null
 		);
 	}
 
@@ -83,7 +83,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertTrue( $repositoryStart < $releaseStart );
 
 		$repository = substr( $workflow, $repositoryStart, $releaseStart - $repositoryStart );
-		self::assertStringContainsString( 'run: composer check:repository', $repository );
+		self::assertStringContainsString( 'run: composer check:host', $repository );
 		self::assertStringNotContainsString( "run: composer check\n", $repository );
 	}
 
