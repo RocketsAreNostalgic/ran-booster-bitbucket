@@ -22,7 +22,7 @@ Do not recreate local Release Please lifecycle state, candidate markers, custom 
 2. Run `composer check` for the Core-independent source-quality contract.
 3. Check out the exact Core release recorded in `extra.ran-booster-core-certification`, install its locked production dependencies, set `RAN_BOOSTER_CORE_PATH` and `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, and run `composer check:repository`.
 4. `composer analyse` remains the separate advisory PHPStan pilot; Profile B migration does not promote it to a blocking gate.
-5. Run `composer build:release -- "$(git rev-parse HEAD)"` and `composer verify:release` for the resulting ZIP. Preserve the package allowlist and exclusion of tests, vendor, Core code, caches, credentials and development tooling.
+5. Run `composer build:release -- "$(git rev-parse HEAD)"`, then run `composer verify:release -- "build/ran-booster-bitbucket-<version>.zip" "$(git rev-parse HEAD)"` for the resulting ZIP. Preserve the package allowlist and exclusion of tests, vendor, Core code, caches, credentials and development tooling.
 6. Preserve the certified Core tuple in `composer.json`: exact immutable release tag, tag-target commit and archive-source commit.
 7. Do not manually publish, replace or clobber release assets. A bad artifact is corrected by a new qualified version.
 
