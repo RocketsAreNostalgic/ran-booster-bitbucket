@@ -44,6 +44,13 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAN_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          RAN_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          RAN_PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          RAN_PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          RAN_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RAN_PR_NUMBER: ${{ github.event.pull_request.number }}
+          RAN_PR_USER: ${{ github.event.pull_request.user.login }}
           RAN_SOURCE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
@@ -80,13 +87,13 @@ jobs:
             test "$source_commit" = "$pr_head_sha"
             lane=release-candidate
           elif [[ "$GITHUB_EVENT_NAME" == pull_request \
-            && "${{ github.event.pull_request.user.login }}" == 'github-actions[bot]' \
-            && "${{ github.event.pull_request.base.ref }}" == main \
-            && "${{ github.event.pull_request.head.ref }}" == "$release_branch" \
-            && "${{ github.event.pull_request.head.repo.full_name }}" == "$GITHUB_REPOSITORY" ]]; then
-            pr_number='${{ github.event.pull_request.number }}'
-            pr_base_sha='${{ github.event.pull_request.base.sha }}'
-            pr_head_sha='${{ github.event.pull_request.head.sha }}'
+            && "$RAN_PR_USER" == 'github-actions[bot]' \
+            && "$RAN_PR_BASE_REF" == main \
+            && "$RAN_PR_HEAD_REF" == "$release_branch" \
+            && "$RAN_PR_HEAD_REPOSITORY" == "$GITHUB_REPOSITORY" ]]; then
+            pr_number="$RAN_PR_NUMBER"
+            pr_base_sha="$RAN_PR_BASE_SHA"
+            pr_head_sha="$RAN_PR_HEAD_SHA"
             test "$source_commit" = "$pr_head_sha"
             lane=release-candidate
           fi
