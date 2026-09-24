@@ -131,7 +131,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		$quality = (string) file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		$config = json_decode( (string) file_get_contents( $root . '/release-please-config.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 
-		self::assertStringContainsString( 'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@cb42ecd841916ebe73f147e5b933cd7bcc392db8', $release );
+		self::assertStringContainsString( 'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@e2fb19244a301a62f8fae2a80536898adf21fe22', $release );
 		self::assertStringContainsString( 'expected-workflow-path: .github/workflows/quality.yml', $release );
 		self::assertStringContainsString( 'artifact-prefix: ran-booster-bitbucket-runtime', $release );
 		self::assertStringContainsString( 'release-pr-head: release-please--branches--main--components--ran-booster-bitbucket', $release );

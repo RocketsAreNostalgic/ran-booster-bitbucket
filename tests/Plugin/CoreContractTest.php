@@ -110,7 +110,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'workflow_run:', $workflow );
 		self::assertStringContainsString( 'permissions: {}', $workflow );
 		self::assertStringContainsString(
-			'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@cb42ecd841916ebe73f147e5b933cd7bcc392db8',
+			'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@e2fb19244a301a62f8fae2a80536898adf21fe22',
 			$workflow
 		);
 		self::assertStringContainsString( 'expected-workflow-path: .github/workflows/quality.yml', $workflow );
