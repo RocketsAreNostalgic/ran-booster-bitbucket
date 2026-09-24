@@ -3,6 +3,14 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.14](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.13...v0.1.0-beta.14) (2026-09-24)
+
+
+### Miscellaneous Chores
+
+* **quality:** adopt canonical PHP command contract ([#65](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/65)) ([001478d](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/001478d21098effec9219d4aae907762727b60b4))
+* **release:** repin shared Profile B workflow ([#67](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/67)) ([ed45c33](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/ed45c339a06b6d350f750f892f6ed9e8ed5a9a43))
+
 ## [0.1.0-beta.13](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.12...v0.1.0-beta.13) (2026-09-21)
 
 
