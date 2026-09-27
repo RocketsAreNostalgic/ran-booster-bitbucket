@@ -23,15 +23,21 @@ RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
 ```
 
 The lockfile currently resolves PHPStan 2.2.8, `phpstan-wordpress` 2.0.3 and
-WordPress stubs 6.9.4. The configuration analyzes only `autoload.php`, the
-plugin entrypoint and `src/` at level 3. It uses `--debug` to keep the command
-serial and reproducible in managed development environments that prohibit
-PHPStan's loopback worker socket. It uses no baseline, ignored-error rule or
-production annotation. On 27 September 2026, the unchanged level-3 roots (18
-PHP files) reported zero errors with the locked tools against certified Core
-`ffc11fc8e40618624a785b7fca5193029c6d492e` (beta.29). This promotion changes
-enforcement only; views remain outside the recorded analysis roots and require
-a separate coverage decision. No source, dependency or certified-host pin changes.
+WordPress stubs 6.9.4. Direct level-3 roots are `autoload.php`, the plugin
+entrypoint, `src/`, `views/` and `index.php`: all 20 currently shipped PHP files
+selected by `release-files.txt`. Directory roots include future PHP files under
+`src/` and `views/`. The inert index is included for complete shipped-path
+coverage. Host/bootstrap symbol availability is not additional direct coverage;
+tests, fixtures and the unshipped release verifier remain outside these roots.
+
+Analysis uses `--debug` to keep the command serial in managed environments that
+prohibit PHPStan's loopback worker socket. It uses no baseline, ignored-error
+rule or production annotation. On 27 September 2026, all 20 paths reported zero
+errors with the locked tools against certified Core
+`ffc11fc8e40618624a785b7fca5193029c6d492e` (beta.29). A temporary return-type
+violation in the documentation view failed `check:host` during analysis, before
+PHPUnit; the probe was removed. This coverage extension preserves level 3,
+production bytes, dependency locks and the certified-host tuple.
 
 The pilot measured these higher-level results on 11 August 2026:
 
