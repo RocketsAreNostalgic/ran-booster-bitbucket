@@ -7,6 +7,8 @@ parameters:
 		- autoload.php
 		- ran-booster-bitbucket.php
 		- src
+		- views
+		- index.php
 	bootstrapFiles:
 		- tests/phpstan-bootstrap.php
 	tmpDir: .phpstan
