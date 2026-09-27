@@ -64,6 +64,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		);
 		self::assertSame(
 			array(
+				'@analyze',
 				'@test',
 				'@test:release-candidate',
 				'@check',
@@ -84,6 +85,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 
 		$repository = substr( $workflow, $repositoryStart, $releaseStart - $repositoryStart );
 		self::assertStringContainsString( 'run: composer check:host', $repository );
+		self::assertStringNotContainsString( 'continue-on-error:', $repository );
 		self::assertStringNotContainsString( "run: composer check\n", $repository );
 	}
 

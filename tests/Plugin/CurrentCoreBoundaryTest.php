@@ -58,8 +58,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 			self::assertIsString( $fixture );
 			self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $fixture, $path );
 		}
-		self::assertStringContainsString( 'Run static analysis pilot', $workflow );
-		self::assertStringContainsString( 'run: composer analyze', $workflow );
+		self::assertStringContainsString( 'run: composer check:host', $workflow );
 	}
 
 	public function testCertifiedCoreResolverRejectsDifferentGitCheckout(): void {
