@@ -10,12 +10,13 @@ Use ordinary issues for support and non-sensitive defects. Follow
 [SECURITY.md](SECURITY.md) for vulnerabilities; do not submit security details
 in an issue or pull request.
 
-## Static analysis pilot
+## Blocking host analysis
 
-PHPStan is adopted as a reproducible, non-blocking Bitbucket-only command. It
-is intentionally separate from `composer check` while the pilot gathers useful
-signal. Run it against the exact certified Core production source; Core's own
-Composer dependencies are not required:
+PHPStan level 3 is required by `composer check:host` and the full repository CI
+lane, whose failure feeds terminal `Quality`. The independent `composer check`
+remains usable without Core. The focused command also fails on analysis errors.
+Run it against the exact certified Core production source; Core's own Composer
+dependencies are optional for this focused command:
 
 ```sh
 RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
@@ -25,8 +26,12 @@ The lockfile currently resolves PHPStan 2.2.8, `phpstan-wordpress` 2.0.3 and
 WordPress stubs 6.9.4. The configuration analyzes only `autoload.php`, the
 plugin entrypoint and `src/` at level 3. It uses `--debug` to keep the command
 serial and reproducible in managed development environments that prohibit
-PHPStan's loopback worker socket. The measured clean run takes approximately
-2.5 seconds and uses no baseline, ignored-error rule or production annotation.
+PHPStan's loopback worker socket. It uses no baseline, ignored-error rule or
+production annotation. On 27 September 2026, the unchanged level-3 roots (18
+PHP files) reported zero errors with the locked tools against certified Core
+`ffc11fc8e40618624a785b7fca5193029c6d492e` (beta.29). This promotion changes
+enforcement only; views remain outside the recorded analysis roots and require
+a separate coverage decision. No source, dependency or certified-host pin changes.
 
 The pilot measured these higher-level results on 11 August 2026:
 
@@ -60,6 +65,9 @@ Before raising the level, a follow-up must:
 
 Do not generate a baseline, add per-line suppressions, introduce casts, widen
 types, remove hostile-input checks or add production abstractions merely to
-raise the reported level. Promotion into `composer check`, use by a second
-component or family-wide dependency alignment requires a separate evidence-led
-decision.
+raise the reported level. Expanding analysis coverage, raising levels, use by a
+second component or family-wide dependency alignment requires a separate
+evidence-led decision.
+The full repository lane now runs the host aggregate without an advisory
+`continue-on-error` bypass. Release-candidate lanes retain their existing
+exact-successful-main admission and installed-proof requirements.
