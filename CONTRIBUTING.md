@@ -52,20 +52,27 @@ The historical pilot measured these higher-level results on 11 August 2026
 The eleven `BitbucketApiClient` findings arise because the WordPress stubs model
 `wp_remote_get()` success as a guaranteed complete response shape. The runtime
 deliberately validates malformed transport values and must not be weakened to
-match that optimistic model. Three `BitbucketArchivePreparer::resolvedNamedRef()`
-findings identify `is_array()` checks against its native `array` parameter; they
-are redundant to the signature but remain part of the defensive response
-validation sequence. The missing return-array shape on `Plugin::documentationSections()` is now
+match that optimistic model.
+
+The three historical `BitbucketArchivePreparer::resolvedNamedRef()` findings
+were redundant outer `is_array($data)` checks against its native `array`
+parameter. Those checks are now removed; nested target/repository shape checks,
+name/hash validation and repository identity checks remain. Null/scalar JSON
+is rejected before that typed method, and malformed nested values still fail
+without installing archive hooks. Regression fixtures pass before and after
+the cleanup.
+
+The missing return-array shape on `Plugin::documentationSections()` is now
 documented to match its parameter and appended section. Candidate analysis at
-level 8 reports the same 14 remaining findings in the HTTP client and archive
-preparer; the required gate remains level 3. No runtime guards were removed.
+levels 4–8 reports only the 11 remaining HTTP-client findings; the required
+gate remains level 3. HTTP-response and nested-data guards are unchanged.
 
 Before raising the level, a follow-up must:
 
 1. model intentionally malformed WordPress HTTP responses without weakening
    runtime checks or applying a broad identifier ignore;
-2. decide explicitly whether the three redundant array guards should remain or
-   be removed with their behavior tests;
+2. preserve the nested response guards and the regression coverage for the
+   removed native-array redundancies;
 3. retain the documented section return shape and verify it at the proposed
    level;
 4. confirm the stable WordPress extension provides stubs appropriate for the
