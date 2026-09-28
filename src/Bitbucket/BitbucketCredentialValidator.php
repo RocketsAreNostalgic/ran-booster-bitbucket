@@ -24,7 +24,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 			return CredentialValidationResult::invalid();
 		}
 
-		$url = self::API_BASE . rawurlencode( $credential->getWorkspace() ) . '?pagelen=1';
+		$url = self::API_BASE . rawurlencode( $credential->get_workspace() ) . '?pagelen=1';
 
 		try {
 			$response = $this->api->get( $url, $credential, $timeout, $responseSize );

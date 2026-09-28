@@ -55,7 +55,7 @@ final readonly class BitbucketRepositoryBrowser {
 		}
 
 		return $this->listRepositories(
-			$credential->getWorkspace(),
+			$credential->get_workspace(),
 			$credential,
 			$credentialId,
 			false,
@@ -88,7 +88,7 @@ final readonly class BitbucketRepositoryBrowser {
 				throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
 			}
 
-			if ( ! $publicOnly && 0 !== strcasecmp( $workspace, $credential->getWorkspace() ) ) {
+			if ( ! $publicOnly && 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
 				throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
 			}
 

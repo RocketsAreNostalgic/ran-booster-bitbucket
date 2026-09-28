@@ -12,8 +12,8 @@ final readonly class BitbucketCredential {
 	) {
 	}
 
-	public static function fromMaterial( mixed $workspace, mixed $email, mixed $token ): self {
-		if ( ! self::isWorkspace( $workspace )
+	public static function from_material( mixed $workspace, mixed $email, mixed $token ): self {
+		if ( ! self::is_workspace( $workspace )
 			|| ! is_string( $email )
 			|| false === filter_var( $email, FILTER_VALIDATE_EMAIL )
 			|| 1 === preg_match( '/[:\x00-\x1F\x7F]/', $email )
@@ -31,7 +31,7 @@ final readonly class BitbucketCredential {
 		);
 	}
 
-	public function getWorkspace(): string {
+	public function get_workspace(): string {
 		return $this->workspace;
 	}
 
@@ -52,7 +52,7 @@ final readonly class BitbucketCredential {
 		return $arguments;
 	}
 
-	private static function isWorkspace( mixed $workspace ): bool {
+	private static function is_workspace( mixed $workspace ): bool {
 		return is_string( $workspace )
 			&& 1 === preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $workspace );
 	}

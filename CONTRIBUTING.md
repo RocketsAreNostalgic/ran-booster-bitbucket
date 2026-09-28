@@ -38,25 +38,29 @@ collection-path comparison retains strict inequality and the existing parse
 failure short circuit; only operand order changed. Existing pagination tests
 pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
-Owned method/variable naming is enforced for the two completed value objects
-below; remaining source scopes stay with the owning programme.
+Owned method/variable naming is enforced for the completed value-object and
+credential scopes below; remaining source scopes stay with the owning programme.
 
 ## Scoped owned-name enforcement
 
 `RANOwnedMethods` and WordPress variable naming cover exactly
-`BitbucketApiResponse.php` and `BitbucketRepositoryCoordinates.php`. Constructors
+`BitbucketApiResponse.php`, `BitbucketRepositoryCoordinates.php`,
+`BitbucketCredential.php`, `BitbucketCredentialLoader.php` and
+`BitbucketCredentialException.php`. Constructors
 retain their required magic spelling. Other product classes still have the
 transitional naming exclusion under #63 / organisation #65; expand enforcement
 only with each audited caller migration, preserving Core-required signatures.
 Tests and purpose-built fixtures keep their existing separate scope.
 
-| Value object | Owned-name migration |
+| Owned scope | Owned-name migration |
 | --- | --- |
 | `BitbucketApiResponse` | `getStatus` / `getBody` become `get_status` / `get_body`; constructor names `status` and `body` are unchanged. |
 | `BitbucketRepositoryCoordinates` | `fromFullName`, `getWorkspace`, `getRepositorySlug`, `getFullName`, `matchesFullName` become their snake_case equivalents; owned `repositorySlug` / `fullName` become `repository_slug` / `full_name`, including factory/matcher named arguments. |
+| `BitbucketCredential` | `fromMaterial`, `getWorkspace`, `isWorkspace` become `from_material`, `get_workspace`, `is_workspace`; validation and Authorization header bytes stay unchanged. |
+| `BitbucketCredentialLoader` / `BitbucketCredentialException` | `load` takes `credential_id` (including named arguments); `unavailable` is already compliant. Core `credentialMaterial` remains unchanged. |
 
 No coexistence aliases are provided during beta. Audited callers move with these
-methods; similarly named credential, request and Core methods are unchanged.
+methods; similarly named request and Core methods are unchanged.
 Coordinate validation, case-insensitive matching, response bytes/status, wire
 keys, host API generation and the certified Core tuple remain unchanged.
 
