@@ -70,6 +70,16 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		self::assertStringNotContainsString( self::TOKEN, $requests[0]['url'] );
 	}
 
+	public function testValidatorForwardsNamedRequestBudgets(): void {
+		$result   = $this->validator( $this->secrets() )->validateCredential( credentialId: 'profile', timeout: 3.5, response_size: 12345 );
+		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
+
+		self::assertTrue( $result->isValid() );
+		self::assertCount( 1, $requests );
+		self::assertSame( 3.5, $requests[0]['arguments']['timeout'] );
+		self::assertSame( 12345, $requests[0]['arguments']['limit_response_size'] );
+	}
+
 	public function testMissingExplicitCredentialNeverFallsBackOrMakesARequest(): void {
 		$secrets   = new BitbucketCredentialValidationSecretsStub( array() );
 		$validator = $this->validator( $secrets );
@@ -188,7 +198,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $name => $fixture ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $fixture['response'] );
-			$result = $this->validator( $this->secrets() )->validateCredential( credentialId: 'profile', timeout: 15, response_size: 262144 );
+			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
 
 			self::assertFalse( $result->isValid(), (string) $name );
 			self::assertSame( $fixture['message'], $result->getDisplayMessage(), (string) $name );

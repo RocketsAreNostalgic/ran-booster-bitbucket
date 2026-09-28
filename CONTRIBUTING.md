@@ -38,9 +38,9 @@ collection-path comparison retains strict inequality and the existing parse
 failure short circuit; only operand order changed. Existing pagination tests
 pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
-Owned method/variable naming is enforced for the completed value-object and
-credential/HTTP/repository/archive scopes below; remaining source scopes stay
-with the owning programme.
+Owned method/variable naming is enforced for all sixteen current product class
+files listed below, with narrow certified Core exceptions. Future-file scope and
+final exception disposition remain with the owning programme.
 
 ## Scoped owned-name enforcement
 
