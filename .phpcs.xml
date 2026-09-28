@@ -18,7 +18,16 @@
 
 	<rule ref="RANWordPressPlugin">
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
-		<exclude name="WordPress.NamingConventions.ValidVariableName"/>
+	</rule>
+
+	<!-- Completed value-object scope; remaining owned naming is tracked in #63 / organisation #65. -->
+	<rule ref="RANOwnedMethods">
+		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
+	</rule>
+	<rule ref="WordPress.NamingConventions.ValidVariableName">
+		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">

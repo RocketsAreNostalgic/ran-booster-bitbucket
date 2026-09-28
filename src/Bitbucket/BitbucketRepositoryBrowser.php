@@ -71,13 +71,13 @@ final readonly class BitbucketRepositoryBrowser {
 		bool $publicOnly = false
 	): RepositoryDescriptor {
 		try {
-			$coordinates = BitbucketRepositoryCoordinates::fromFullName( $fullName );
+			$coordinates = BitbucketRepositoryCoordinates::from_full_name( $fullName );
 		} catch ( InvalidArgumentException ) {
 			throw new RuntimeException( 'Enter a valid Bitbucket repository in workspace/repository form.', 400 );
 		}
 
-		$workspace            = $coordinates->getWorkspace();
-		$repositorySlug       = $coordinates->getRepositorySlug();
+		$workspace            = $coordinates->get_workspace();
+		$repositorySlug       = $coordinates->get_repository_slug();
 		$credential           = null;
 		$resolvedCredentialId = null;
 
@@ -109,11 +109,11 @@ final readonly class BitbucketRepositoryBrowser {
 			$timeout,
 			$responseSize
 		);
-		$item     = json_decode( $response->getBody(), true, 512, JSON_BIGINT_AS_STRING );
+		$item     = json_decode( $response->get_body(), true, 512, JSON_BIGINT_AS_STRING );
 
 		$repository = $this->descriptorFromItem( $item, $resolvedCredentialId, $workspace, true );
 
-		if ( null === $repository || ! $coordinates->matchesFullName( $repository->locator ) ) {
+		if ( null === $repository || ! $coordinates->matches_full_name( $repository->locator ) ) {
 			throw new RuntimeException( 'Bitbucket returned an invalid repository response.', 502 );
 		}
 
@@ -179,7 +179,7 @@ final readonly class BitbucketRepositoryBrowser {
 					504,
 					422
 				);
-				$browseRequest->acceptResponseBody( $response->getBody() );
+				$browseRequest->acceptResponseBody( $response->get_body() );
 			} catch ( RuntimeException | InvalidArgumentException $exception ) {
 				if ( $publicOnly
 					&& null !== $credential
@@ -194,7 +194,7 @@ final readonly class BitbucketRepositoryBrowser {
 
 				return $this->partialBrowseResult( $repositories, (int) $exception->getCode() );
 			}
-			$data = json_decode( $response->getBody(), true, 512, JSON_BIGINT_AS_STRING );
+			$data = json_decode( $response->get_body(), true, 512, JSON_BIGINT_AS_STRING );
 
 			if ( ! is_array( $data )
 				|| ! isset( $data['values'] )
@@ -271,7 +271,7 @@ final readonly class BitbucketRepositoryBrowser {
 			throw new RuntimeException( 'Bitbucket returned an invalid API response.', $invalidStatus );
 		}
 
-		$status = $response->getStatus();
+		$status = $response->get_status();
 
 		if ( 401 === $status ) {
 			throw new RuntimeException( 'Bitbucket rejected the selected credential.', 401 );
@@ -327,8 +327,8 @@ final readonly class BitbucketRepositoryBrowser {
 		$fullName = trim( $item['full_name'] );
 
 		try {
-			$coordinates = BitbucketRepositoryCoordinates::fromFullName( $fullName );
-			$workspace   = $coordinates->getWorkspace();
+			$coordinates = BitbucketRepositoryCoordinates::from_full_name( $fullName );
+			$workspace   = $coordinates->get_workspace();
 		} catch ( InvalidArgumentException ) {
 			return null;
 		}
@@ -351,7 +351,7 @@ final readonly class BitbucketRepositoryBrowser {
 		return new RepositoryDescriptor(
 			ProviderCode::parse( 'bb' ),
 			$fullName,
-			$coordinates->getRepositorySlug(),
+			$coordinates->get_repository_slug(),
 			trim( $item['uuid'] ),
 			$item['is_private'],
 			trim( $item['mainbranch']['name'] ),

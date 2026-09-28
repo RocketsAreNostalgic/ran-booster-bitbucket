@@ -109,13 +109,13 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$payload      = $this->decodePushPayload( $body );
 		$repository   = $this->pushRepository( $payload );
 
-		if ( ! $this->policy->authorizeWebhook( $verification, $repository['id'], $repository['coordinates']->getFullName() ) ) {
+		if ( ! $this->policy->authorizeWebhook( $verification, $repository['id'], $repository['coordinates']->get_full_name() ) ) {
 			throw new WebhookRejected( 401, 'Webhook authentication failed.' );
 		}
 
 		$events = $this->pushEvents(
 			$payload['push']['changes'],
-			$repository['coordinates']->getFullName(),
+			$repository['coordinates']->get_full_name(),
 			$repository['id'],
 			$deliveryId
 		);
@@ -199,7 +199,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		}
 
 		try {
-			$coordinates = BitbucketRepositoryCoordinates::fromFullName( $payload['repository']['full_name'] );
+			$coordinates = BitbucketRepositoryCoordinates::from_full_name( $payload['repository']['full_name'] );
 		} catch ( InvalidArgumentException ) {
 			throw new WebhookRejected( 400, 'Bitbucket push payload is invalid.' );
 		}

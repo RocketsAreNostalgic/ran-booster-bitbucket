@@ -33,8 +33,8 @@ final class BitbucketApiClientTest extends TestCase {
 		);
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
-		self::assertSame( 200, $response->getStatus() );
-		self::assertSame( '{"values":[]}', $response->getBody() );
+		self::assertSame( 200, $response->get_status() );
+		self::assertSame( '{"values":[]}', $response->get_body() );
 		self::assertCount( 1, $requests );
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
 		self::assertSame( 0, $requests[0]['arguments']['redirection'] );

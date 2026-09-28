@@ -30,14 +30,14 @@ final readonly class BitbucketArchivePreparer {
 		$repository = $request->repository;
 
 		try {
-			$coordinates = BitbucketRepositoryCoordinates::fromFullName( $repository->locator );
+			$coordinates = BitbucketRepositoryCoordinates::from_full_name( $repository->locator );
 		} catch ( InvalidArgumentException ) {
 			throw new RuntimeException( 'Enter a valid Bitbucket repository in workspace/repository form.', 400 );
 		}
 
-		$workspace      = $coordinates->getWorkspace();
-		$repositorySlug = $coordinates->getRepositorySlug();
-		$fullName       = $coordinates->getFullName();
+		$workspace      = $coordinates->get_workspace();
+		$repositorySlug = $coordinates->get_repository_slug();
+		$fullName       = $coordinates->get_full_name();
 		$credential     = null;
 
 		if ( $repository->private ) {
@@ -318,7 +318,7 @@ final readonly class BitbucketArchivePreparer {
 
 		$this->assertSuccessfulResponse( $response, $kind );
 
-		$data = json_decode( $response->getBody(), true, 512, JSON_BIGINT_AS_STRING );
+		$data = json_decode( $response->get_body(), true, 512, JSON_BIGINT_AS_STRING );
 
 		if ( ! is_array( $data ) ) {
 			$this->throwInvalidResponse( $kind );
@@ -328,7 +328,7 @@ final readonly class BitbucketArchivePreparer {
 	}
 
 	private function assertSuccessfulResponse( BitbucketApiResponse $response, string $kind ): void {
-		$status = $response->getStatus();
+		$status = $response->get_status();
 		$action = 'commit' === $kind ? 'verifying' : 'resolving';
 
 		if ( 400 === $status ) {
