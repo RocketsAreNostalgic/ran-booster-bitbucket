@@ -10,6 +10,16 @@ Use ordinary issues for support and non-sensitive defects. Follow
 [SECURITY.md](SECURITY.md) for vulnerabilities; do not submit security details
 in an issue or pull request.
 
+## Syntax command integrity
+
+`composer lint:syntax` first completes NUL-delimited file discovery, then parses
+one file at a time. Discovery, empty selection and parser failures fail the
+command. Vendor and PHPStan/PHPUnit caches remain excluded. `composer test:syntax`
+exercises the canonical command in a disposable fixture, including spaces and
+newlines in filenames, excluded invalid files, invalid PHP and failed discovery
+before or after a filename is emitted. It runs in the independent `composer check`
+and therefore also in `composer check:host` and native source-quality CI.
+
 ## Blocking host analysis
 
 PHPStan level 8 is required by `composer check:host` and the full repository CI
