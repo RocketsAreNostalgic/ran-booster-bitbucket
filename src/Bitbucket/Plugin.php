@@ -48,7 +48,10 @@ final class Plugin {
 		);
 	}
 
-	/** @param array<int, array{id: string, summary: string, content: callable}> $sections */
+	/**
+	 * @param array<int, array{id: string, summary: string, content: callable}> $sections
+	 * @return array<int, array{id: string, summary: string, content: callable}>
+	 */
 	public function documentationSections( array $sections, string $documentationUrl, string $scope ): array {
 		if ( ! self::hasCompatibleCore() ) {
 			return $sections;
