@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Model the unvalidated filterable transport result at the HTTP boundary.
+ *
+ * pre_http_request returns any non-false filter value directly, including
+ * malformed values which this add-on deliberately validates at runtime.
+ * https://developer.wordpress.org/reference/hooks/pre_http_request/
+ *
+ * Request shape mirrors locked wordpress-stubs 6.9.4, with unspecified array
+ * values written explicitly as mixed for standalone stub validation.
+ * This analysis-only declaration must never be loaded at runtime.
+ *
+ * @param string $url URL to retrieve.
+ * @phpstan-param array{
+ *   method?: string,
+ *   timeout?: float,
+ *   redirection?: int,
+ *   httpversion?: string,
+ *   user-agent?: string,
+ *   reject_unsafe_urls?: bool,
+ *   blocking?: bool,
+ *   headers?: string|array<array-key, mixed>,
+ *   cookies?: array<array-key, mixed>,
+ *   body?: string|array<array-key, mixed>,
+ *   compress?: bool,
+ *   decompress?: bool,
+ *   sslverify?: bool,
+ *   sslcertificates?: string,
+ *   stream?: bool,
+ *   filename?: string,
+ *   limit_response_size?: int,
+ * } $args See WP_Http::request()
+ * @return mixed
+ */
+function wp_remote_get( $url, $args = array() ) {}

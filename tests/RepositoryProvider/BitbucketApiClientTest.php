@@ -138,6 +138,14 @@ final class BitbucketApiClientTest extends TestCase {
 			),
 		);
 
+		foreach ( array( null, false, 42, self::TOKEN, array(), array( 'response' => 42, 'body' => '' ), array( 'response' => array( 'code' => '200' ), 'body' => '' ) ) as $malformed ) {
+			$fixtures[] = array(
+				'response' => $malformed,
+				'reason'   => BitbucketApiException::INVALID_RESPONSE,
+				'message'  => 'Bitbucket returned an invalid API response.',
+			);
+		}
+
 		foreach ( $fixtures as $fixture ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $fixture['response'] );
 

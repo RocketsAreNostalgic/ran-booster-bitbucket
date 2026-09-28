@@ -3,6 +3,8 @@ includes:
 
 parameters:
 	level: 3
+	stubFiles:
+		- tests/phpstan/wordpress-http.stub
 	paths:
 		- autoload.php
 		- ran-booster-bitbucket.php

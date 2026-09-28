@@ -49,10 +49,29 @@ The historical pilot measured these higher-level results on 11 August 2026
 | 4-5 | 14 | Eleven HTTP-response certainty findings plus three defensive array checks. |
 | 6-8 | 15 | The same findings plus one missing iterable return-value annotation. |
 
-The eleven `BitbucketApiClient` findings arise because the WordPress stubs model
-`wp_remote_get()` success as a guaranteed complete response shape. The runtime
-deliberately validates malformed transport values and must not be weakened to
-match that optimistic model.
+The historical HTTP-client findings combined ten optimistic response-shape
+assumptions with one `method_exists()` check after `is_wp_error()` narrowing.
+The analysis-only `tests/phpstan/wordpress-http.stub` now models the return of
+`wp_remote_get()` as `mixed`: WordPress's
+[pre_http_request filter](https://developer.wordpress.org/reference/hooks/pre_http_request/)
+returns a non-false filter value early, including malformed values. The add-on
+must validate that boundary before using the response. This is a correction to
+the external boundary model, not a production cast or a suppressed diagnostic.
+
+The stub is registered through PHPStan `stubFiles`, never executed or shipped.
+Its request argument shape mirrors locked wordpress-stubs 6.9.4; unspecified
+array values are explicitly `mixed` for stub validation. Reconcile that copied
+shape whenever updating WordPress stubs. Only `wp_remote_get()` is overridden;
+`is_wp_error()` keeps its upstream WP_Error narrowing, and no global PHPDoc
+certainty setting changes. Negative probes still reject invalid URL/timeout
+types and calls to nonexistent methods on a narrowed WP_Error.
+
+The existing and expanded malformed-response tests retain fixed safe errors for
+null/scalar results, missing/malformed nested response data and non-string bodies.
+All production PHP and defensive guards remain unchanged in this modelling slice.
+Levels 4–8 now retain one finding: the `method_exists()` guard is statically
+redundant after WP_Error narrowing. Its runtime/test-double disposition remains a
+separate decision; the required gate stays at level 3.
 
 The three historical `BitbucketArchivePreparer::resolvedNamedRef()` findings
 were redundant outer `is_array($data)` checks against its native `array`
@@ -63,14 +82,12 @@ without installing archive hooks. Regression fixtures pass before and after
 the cleanup.
 
 The missing return-array shape on `Plugin::documentationSections()` is now
-documented to match its parameter and appended section. Candidate analysis at
-levels 4–8 reports only the 11 remaining HTTP-client findings; the required
-gate remains level 3. HTTP-response and nested-data guards are unchanged.
+documented to match its parameter and appended section. The required gate remains level 3; the residual finding is described above.
 
 Before raising the level, a follow-up must:
 
-1. model intentionally malformed WordPress HTTP responses without weakening
-   runtime checks or applying a broad identifier ignore;
+1. explicitly disposition the residual WP_Error method-existence guard with
+   runtime and test-double evidence, preserving transport error classification;
 2. preserve the nested response guards and the regression coverage for the
    removed native-array redundancies;
 3. retain the documented section return shape and verify it at the proposed
