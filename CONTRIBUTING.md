@@ -10,6 +10,16 @@ Use ordinary issues for support and non-sensitive defects. Follow
 [SECURITY.md](SECURITY.md) for vulnerabilities; do not submit security details
 in an issue or pull request.
 
+## Published coding standard
+
+Development tooling uses `ran/coding-standards` `^1.0`, locked to published
+v1.0.0 (`6af816a02b7d1108ad5c990e9d0fda0af0a13de7`). Install from the lockfile;
+upgrades require their own dependency diff and retained local/native proof.
+The shared profile makes assignment/array alignment blocking even when PHPCS
+warnings are hidden. `standards` and `standards:fix` remain the same authority.
+The separately available `RANOwnedMethods` profile is opt-in; this adoption
+alone does not activate unfinished naming scopes or change the certified host.
+
 ## Syntax command integrity
 
 `composer lint:syntax` first completes NUL-delimited file discovery, then parses
