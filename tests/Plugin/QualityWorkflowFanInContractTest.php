@@ -59,6 +59,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 			array(
 				'@standards',
 				'@lint:syntax',
+				'@test:syntax',
 			),
 			$composer['scripts']['check'] ?? null
 		);

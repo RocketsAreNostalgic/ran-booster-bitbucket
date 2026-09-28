@@ -62,14 +62,15 @@
     "scripts": {
         "standards": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
         "standards:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
-        "lint:syntax": "find . -path ./vendor -prune -o -path ./.phpstan -prune -o -path ./.phpunit.cache -prune -o -type f -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "lint:syntax": "bash scripts/lint-syntax.sh",
         "analyze": "vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M",
         "test": "vendor/bin/phpunit --configuration phpunit.xml",
         "build:release": "bash scripts/build-release.sh",
         "verify:release": "bash scripts/verify-release.sh",
         "check": [
             "@standards",
-            "@lint:syntax"
+            "@lint:syntax",
+            "@test:syntax"
         ],
         "check:host": [
             "@analyze",
@@ -77,7 +78,8 @@
             "@test:release-candidate",
             "@check"
         ],
-        "test:release-candidate": "bash tests/Workflow/validate-release-candidate.sh"
+        "test:release-candidate": "bash tests/Workflow/validate-release-candidate.sh",
+        "test:syntax": "bash tests/Workflow/lint-syntax.sh"
     },
     "config": {
         "allow-plugins": {
