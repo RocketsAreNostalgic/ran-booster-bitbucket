@@ -47,7 +47,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 		$secrets  = $this->secrets( array( 'profile' => $this->credential() ) );
-		$archive  = $this->preparer( $secrets )->prepareArchive(
+		$archive  = $this->preparer( $secrets )->prepare_archive(
 			$this->request( strtoupper( self::COMMIT ), false, 'profile' )
 		);
 		$requests = $this->requests();
@@ -80,7 +80,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 
-		$archive  = $this->preparer()->prepareArchive( $this->request( 'feature/candidate', false ) );
+		$archive  = $this->preparer()->prepare_archive( request: $this->request( 'feature/candidate', false ) );
 		$requests = $this->requests();
 
 		self::assertSame(
@@ -101,7 +101,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 
-		$archive  = $this->preparer()->prepareArchive( $this->request( 'v1.2.3', false ) );
+		$archive  = $this->preparer()->prepare_archive( $this->request( 'v1.2.3', false ) );
 		$requests = $this->requests();
 
 		self::assertCount( 2, $requests );
@@ -119,7 +119,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 		$secrets = $this->secrets( array( 'profile' => $this->credential() ) );
 
-		$archive  = $this->preparer( $secrets )->prepareArchive( $this->request( 'main', true, 'profile' ) );
+		$archive  = $this->preparer( $secrets )->prepare_archive( $this->request( 'main', true, 'profile' ) );
 		$requests = $this->requests();
 
 		self::assertSame(
@@ -141,7 +141,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 		$archive  = $this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-			->prepareArchive( $this->request( strtoupper( self::COMMIT ), true, 'profile' ) );
+			->prepare_archive( $this->request( strtoupper( self::COMMIT ), true, 'profile' ) );
 		$requests = $this->requests();
 
 		self::assertCount( 1, $requests );
@@ -166,7 +166,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 		$archive  = $this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-			->prepareArchive( $this->request( strtoupper( self::COMMIT ), true, 'profile', 'acme/example', $branch ) );
+			->prepare_archive( $this->request( strtoupper( self::COMMIT ), true, 'profile', 'acme/example', $branch ) );
 		$requests = $this->requests();
 
 		self::assertCount( 1, $requests );
@@ -189,7 +189,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				),
 			)
 		);
-		$archive  = $this->preparer()->prepareArchive(
+		$archive  = $this->preparer()->prepare_archive(
 			$this->request( self::COMMIT, false, null, 'acme/example', 'main' )
 		);
 		$requests = $this->requests();
@@ -211,7 +211,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				$this->response( 200, $this->branchBody( 'main', self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
-		$archive = $this->preparer()->prepareArchive(
+		$archive = $this->preparer()->prepare_archive(
 			$this->request( self::COMMIT, false, null, 'acme/example', 'main' )
 		);
 
@@ -228,7 +228,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	public function testExpectedBranchRejectsNonCommitRefBeforeHttpOrArchiveAuthentication(): void {
 		try {
 			$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-				->prepareArchive( $this->request( 'main', true, 'profile', 'acme/example', 'main' ) );
+				->prepare_archive( $this->request( 'main', true, 'profile', 'acme/example', 'main' ) );
 			self::fail( 'An expected branch must be paired with an immutable commit.' );
 		} catch ( RuntimeException $exception ) {
 			self::assertSame( 400, $exception->getCode() );
@@ -270,7 +270,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 			try {
 				$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-					->prepareArchive( $this->request( self::COMMIT, true, 'profile', 'acme/example', 'main' ) );
+					->prepare_archive( $this->request( self::COMMIT, true, 'profile', 'acme/example', 'main' ) );
 				self::fail( 'Expected the webhook branch guard to reject: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $code, $exception->getCode(), $context );
@@ -305,7 +305,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$this->resetHarness();
 
 			try {
-				$this->preparer()->prepareArchive( $requestFactory() );
+				$this->preparer()->prepare_archive( $requestFactory() );
 				self::fail( 'Expected invalid archive input to fail: ' . $name );
 			} catch ( \Throwable $exception ) {
 				$this->assertSafeFailure( $exception, $name );
@@ -319,7 +319,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
 
 		try {
-			$this->preparer( $secrets )->prepareArchive( $this->request( self::COMMIT, true, 'other' ) );
+			$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, true, 'other' ) );
 			self::fail( 'Expected a credential for another workspace to fail.' );
 		} catch ( RuntimeException $exception ) {
 			$this->assertSafeFailure( $exception, 'workspace mismatch' );
@@ -367,7 +367,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 			try {
 				$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-					->prepareArchive( $this->request( 'main', true, 'profile' ) );
+					->prepare_archive( $this->request( 'main', true, 'profile' ) );
 				self::fail( 'Expected branch resolution failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
@@ -413,7 +413,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 			try {
 				$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-					->prepareArchive( $this->request( self::COMMIT, true, 'profile' ) );
+					->prepare_archive( $this->request( self::COMMIT, true, 'profile' ) );
 				self::fail( 'Expected direct commit verification failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
@@ -540,7 +540,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			)
 		);
 		$archive = $this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
-			->prepareArchive( $this->request( self::COMMIT, true, 'profile' ) );
+			->prepare_archive( $this->request( self::COMMIT, true, 'profile' ) );
 
 		self::assertInstanceOf( AuthenticatedPreparedArchive::class, $archive );
 
