@@ -19,19 +19,19 @@ final class BitbucketApiException extends RuntimeException {
 		parent::__construct( $message );
 	}
 
-	public static function invalidUrl(): self {
+	public static function invalid_url(): self {
 		return new self( self::INVALID_URL, 'The Bitbucket API request URL is not allowed.' );
 	}
 
-	public static function transportError(): self {
+	public static function transport_error(): self {
 		return new self( self::TRANSPORT_ERROR, 'Bitbucket could not be reached.' );
 	}
 
-	public static function invalidResponse(): self {
+	public static function invalid_response(): self {
 		return new self( self::INVALID_RESPONSE, 'Bitbucket returned an invalid API response.' );
 	}
 
-	public function getReason(): string {
+	public function get_reason(): string {
 		return $this->reason;
 	}
 }

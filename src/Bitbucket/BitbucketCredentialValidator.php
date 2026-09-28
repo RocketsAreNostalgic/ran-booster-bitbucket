@@ -29,7 +29,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 		try {
 			$response = $this->api->get( $url, $credential, $timeout, $responseSize );
 		} catch ( BitbucketApiException $exception ) {
-			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->getReason() ) {
+			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
 				return CredentialValidationResult::unavailable();
 			}
 

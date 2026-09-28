@@ -262,7 +262,7 @@ final readonly class BitbucketRepositoryBrowser {
 		try {
 			$response = $this->api->get( $url, $credential, $timeout, $responseSize );
 		} catch ( BitbucketApiException $exception ) {
-			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->getReason() ) {
+			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal fixed status selected by the call site; message is fixed.
 				throw new RuntimeException( 'Bitbucket could not be reached. Please try again.', $transportStatus );
 			}

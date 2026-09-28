@@ -309,7 +309,7 @@ final readonly class BitbucketArchivePreparer {
 		try {
 			$response = $this->api->get( $url, $credential );
 		} catch ( BitbucketApiException $exception ) {
-			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->getReason() ) {
+			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
 				throw new RuntimeException( 'Bitbucket could not resolve the requested revision.' );
 			}
 
