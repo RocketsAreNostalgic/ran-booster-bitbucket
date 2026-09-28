@@ -36,7 +36,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 			return CredentialValidationResult::invalidResponse();
 		}
 
-		$status = $response->getStatus();
+		$status = $response->get_status();
 
 		if ( in_array( $status, array( 401, 403, 404 ), true ) ) {
 			return CredentialValidationResult::invalid();
@@ -50,7 +50,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 			return CredentialValidationResult::unavailable();
 		}
 
-		$body = json_decode( $response->getBody() );
+		$body = json_decode( $response->get_body() );
 
 		if ( ! is_object( $body )
 			|| ! isset( $body->values )

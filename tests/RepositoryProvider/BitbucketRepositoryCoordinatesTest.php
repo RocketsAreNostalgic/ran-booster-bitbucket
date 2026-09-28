@@ -12,28 +12,28 @@ use RAN\Booster\Bitbucket\BitbucketRepositoryCoordinates;
 final class BitbucketRepositoryCoordinatesTest extends TestCase {
 
 	public function testValidCoordinatesPreserveTrimmedCaseAndAllowRepositoryDots(): void {
-		$coordinates = BitbucketRepositoryCoordinates::fromFullName( '  RocketsAreNostalgic/RAN.Booster  ' );
+		$coordinates = BitbucketRepositoryCoordinates::from_full_name( full_name: '  RocketsAreNostalgic/RAN.Booster  ' );
 
-		self::assertSame( 'RocketsAreNostalgic', $coordinates->getWorkspace() );
-		self::assertSame( 'RAN.Booster', $coordinates->getRepositorySlug() );
-		self::assertSame( 'RocketsAreNostalgic/RAN.Booster', $coordinates->getFullName() );
+		self::assertSame( 'RocketsAreNostalgic', $coordinates->get_workspace() );
+		self::assertSame( 'RAN.Booster', $coordinates->get_repository_slug() );
+		self::assertSame( 'RocketsAreNostalgic/RAN.Booster', $coordinates->get_full_name() );
 	}
 
 	public function testValidatedFullNameMatchingIsCaseInsensitive(): void {
-		$coordinates = BitbucketRepositoryCoordinates::fromFullName( 'RocketsAreNostalgic/RAN.Booster' );
+		$coordinates = BitbucketRepositoryCoordinates::from_full_name( 'RocketsAreNostalgic/RAN.Booster' );
 
-		self::assertTrue( $coordinates->matchesFullName( 'rocketsarenostalgic/ran.booster' ) );
-		self::assertTrue( $coordinates->matchesFullName( '  ROCKETSARENOSTALGIC/RAN.BOOSTER  ' ) );
-		self::assertFalse( $coordinates->matchesFullName( 'RocketsAreNostalgic/other' ) );
-		self::assertFalse( $coordinates->matchesFullName( 'RocketsAreNostalgic/RAN.Booster/extra' ) );
-		self::assertFalse( $coordinates->matchesFullName( 'RocketsAreNostalgic/..' ) );
+		self::assertTrue( $coordinates->matches_full_name( full_name: 'rocketsarenostalgic/ran.booster' ) );
+		self::assertTrue( $coordinates->matches_full_name( '  ROCKETSARENOSTALGIC/RAN.BOOSTER  ' ) );
+		self::assertFalse( $coordinates->matches_full_name( 'RocketsAreNostalgic/other' ) );
+		self::assertFalse( $coordinates->matches_full_name( 'RocketsAreNostalgic/RAN.Booster/extra' ) );
+		self::assertFalse( $coordinates->matches_full_name( 'RocketsAreNostalgic/..' ) );
 	}
 
 	#[DataProvider( 'validFullNameProvider' )]
 	public function testBoundaryValidCoordinatesAreAccepted( string $fullName ): void {
-		$coordinates = BitbucketRepositoryCoordinates::fromFullName( $fullName );
+		$coordinates = BitbucketRepositoryCoordinates::from_full_name( $fullName );
 
-		self::assertSame( trim( $fullName ), $coordinates->getFullName() );
+		self::assertSame( trim( $fullName ), $coordinates->get_full_name() );
 	}
 
 	/**
@@ -51,7 +51,7 @@ final class BitbucketRepositoryCoordinatesTest extends TestCase {
 	public function testMalformedAndHostileCoordinatesAreRejected( string $fullName ): void {
 		$this->expectException( InvalidArgumentException::class );
 
-		BitbucketRepositoryCoordinates::fromFullName( $fullName );
+		BitbucketRepositoryCoordinates::from_full_name( $fullName );
 	}
 
 	/**

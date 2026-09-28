@@ -12,11 +12,11 @@ final readonly class BitbucketApiResponse {
 	) {
 	}
 
-	public function getStatus(): int {
+	public function get_status(): int {
 		return $this->status;
 	}
 
-	public function getBody(): string {
+	public function get_body(): string {
 		return $this->body;
 	}
 }

@@ -38,7 +38,27 @@ collection-path comparison retains strict inequality and the existing parse
 failure short circuit; only operand order changed. Existing pagination tests
 pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
-Owned method/variable naming exclusions remain separate programme work.
+Owned method/variable naming is enforced for the two completed value objects
+below; remaining source scopes stay with the owning programme.
+
+## Scoped owned-name enforcement
+
+`RANOwnedMethods` and WordPress variable naming cover exactly
+`BitbucketApiResponse.php` and `BitbucketRepositoryCoordinates.php`. Constructors
+retain their required magic spelling. Other product classes still have the
+transitional naming exclusion under #63 / organisation #65; expand enforcement
+only with each audited caller migration, preserving Core-required signatures.
+Tests and purpose-built fixtures keep their existing separate scope.
+
+| Value object | Owned-name migration |
+| --- | --- |
+| `BitbucketApiResponse` | `getStatus` / `getBody` become `get_status` / `get_body`; constructor names `status` and `body` are unchanged. |
+| `BitbucketRepositoryCoordinates` | `fromFullName`, `getWorkspace`, `getRepositorySlug`, `getFullName`, `matchesFullName` become their snake_case equivalents; owned `repositorySlug` / `fullName` become `repository_slug` / `full_name`, including factory/matcher named arguments. |
+
+No coexistence aliases are provided during beta. Audited callers move with these
+methods; similarly named credential, request and Core methods are unchanged.
+Coordinate validation, case-insensitive matching, response bytes/status, wire
+keys, host API generation and the certified Core tuple remain unchanged.
 
 ## Blocking host analysis
 

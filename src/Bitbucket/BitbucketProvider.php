@@ -180,12 +180,12 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 	}
 
 	public function repositoryWebhookSettingsUrl( string $locator ): string {
-		$coordinates = BitbucketRepositoryCoordinates::fromFullName( $locator );
+		$coordinates = BitbucketRepositoryCoordinates::from_full_name( $locator );
 
 		return 'https://bitbucket.org/'
-			. rawurlencode( $coordinates->getWorkspace() )
+			. rawurlencode( $coordinates->get_workspace() )
 			. '/'
-			. rawurlencode( $coordinates->getRepositorySlug() )
+			. rawurlencode( $coordinates->get_repository_slug() )
 			. '/admin/webhooks';
 	}
 }

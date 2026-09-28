@@ -10,13 +10,13 @@ final readonly class BitbucketRepositoryCoordinates {
 
 	private function __construct(
 		private string $workspace,
-		private string $repositorySlug
+		private string $repository_slug
 	) {
 	}
 
-	public static function fromFullName( string $fullName ): self {
-		$fullName = trim( $fullName );
-		$parts    = explode( '/', $fullName );
+	public static function from_full_name( string $full_name ): self {
+		$full_name = trim( $full_name );
+		$parts     = explode( '/', $full_name );
 
 		if ( 2 !== count( $parts )
 			|| 1 !== preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $parts[0] )
@@ -30,25 +30,25 @@ final readonly class BitbucketRepositoryCoordinates {
 		return new self( $parts[0], $parts[1] );
 	}
 
-	public function getWorkspace(): string {
+	public function get_workspace(): string {
 		return $this->workspace;
 	}
 
-	public function getRepositorySlug(): string {
-		return $this->repositorySlug;
+	public function get_repository_slug(): string {
+		return $this->repository_slug;
 	}
 
-	public function getFullName(): string {
-		return $this->workspace . '/' . $this->repositorySlug;
+	public function get_full_name(): string {
+		return $this->workspace . '/' . $this->repository_slug;
 	}
 
-	public function matchesFullName( string $fullName ): bool {
+	public function matches_full_name( string $full_name ): bool {
 		try {
-			$other = self::fromFullName( $fullName );
+			$other = self::from_full_name( $full_name );
 		} catch ( InvalidArgumentException ) {
 			return false;
 		}
 
-		return 0 === strcasecmp( $this->getFullName(), $other->getFullName() );
+		return 0 === strcasecmp( $this->get_full_name(), $other->get_full_name() );
 	}
 }
