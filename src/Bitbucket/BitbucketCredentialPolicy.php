@@ -14,16 +14,16 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 	private const EMAIL_CONSTANT     = 'RAN_BOOSTER_BITBUCKET_EMAIL';
 	private const TOKEN_CONSTANT     = 'RAN_BOOSTER_BITBUCKET_TOKEN';
 
-	public function getProvider(): ProviderCode {
+	public function getProvider(): ProviderCode { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
 		return ProviderCode::parse( 'bb' );
 	}
 
-	public function normalizeCredential( array $metadata, mixed $secret ): array {
-		$label         = $this->requiredString( $metadata['label'] ?? null, 'Credential label' );
-		$kind          = $this->requiredString( $metadata['kind'] ?? null, 'Credential kind' );
+	public function normalizeCredential( array $metadata, mixed $secret ): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
+		$label         = $this->required_string( $metadata['label'] ?? null, 'Credential label' );
+		$kind          = $this->required_string( $metadata['kind'] ?? null, 'Credential kind' );
 		$configuration = $metadata['configuration'] ?? array();
-		$rawSecret     = $secret;
-		$secret        = $this->requiredString( $secret, 'Credential secret' );
+		$raw_secret    = $secret;
+		$secret        = $this->required_string( $secret, 'Credential secret' );
 
 		if ( ! is_array( $configuration ) ) {
 			throw new RuntimeException( 'Credential configuration must be a record.' );
@@ -37,14 +37,14 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 			throw new RuntimeException( 'Bitbucket credentials must use an API token.' );
 		}
 
-		$rawEmail  = $configuration['email'] ?? null;
-		$workspace = $this->requiredString( $configuration['workspace'] ?? null, 'Bitbucket workspace' );
-		$email     = $this->requiredString( $rawEmail, 'Bitbucket account email' );
+		$raw_email = $configuration['email'] ?? null;
+		$workspace = $this->required_string( $configuration['workspace'] ?? null, 'Bitbucket workspace' );
+		$email     = $this->required_string( $raw_email, 'Bitbucket account email' );
 
-		if ( ! $this->isOwner( $workspace )
+		if ( ! $this->is_owner( $workspace )
 			|| false === filter_var( $email, FILTER_VALIDATE_EMAIL )
-			|| $this->hasEmailDelimiterOrControl( $rawEmail )
-			|| $this->hasAsciiControl( $rawSecret )
+			|| $this->has_email_delimiter_or_control( $raw_email )
+			|| $this->has_ascii_control( $raw_secret )
 		) {
 			throw new RuntimeException( 'Bitbucket credentials require a valid workspace and account email.' );
 		}
@@ -60,11 +60,11 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		);
 	}
 
-	public function getConstantNames(): array {
+	public function getConstantNames(): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
 		return array( self::WORKSPACE_CONSTANT, self::EMAIL_CONSTANT, self::TOKEN_CONSTANT );
 	}
 
-	public function credentialFromConstants( array $constants ): ?array {
+	public function credentialFromConstants( array $constants ): ?array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
 		$workspace = $constants[ self::WORKSPACE_CONSTANT ] ?? '';
 		$email     = $constants[ self::EMAIL_CONSTANT ] ?? '';
 		$token     = $constants[ self::TOKEN_CONSTANT ] ?? '';
@@ -94,7 +94,7 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		);
 	}
 
-	private function requiredString( mixed $value, string $name ): string {
+	private function required_string( mixed $value, string $name ): string {
 		if ( ! is_string( $value ) || '' === trim( $value ) ) {
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Provider policy errors are mapped at the admin boundary.
 			throw new RuntimeException( $name . ' must be a non-empty string.' );
@@ -103,15 +103,15 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		return trim( $value );
 	}
 
-	private function isOwner( string $owner ): bool {
+	private function is_owner( string $owner ): bool {
 		return 1 === preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $owner );
 	}
 
-	private function hasEmailDelimiterOrControl( mixed $email ): bool {
+	private function has_email_delimiter_or_control( mixed $email ): bool {
 		return is_string( $email ) && 1 === preg_match( '/[:\x00-\x1F\x7F]/', $email );
 	}
 
-	private function hasAsciiControl( mixed $value ): bool {
+	private function has_ascii_control( mixed $value ): bool {
 		return is_string( $value ) && 1 === preg_match( '/[\x00-\x1F\x7F]/', $value );
 	}
 }

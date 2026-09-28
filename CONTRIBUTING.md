@@ -49,7 +49,8 @@ with the owning programme.
 `BitbucketCredential.php`, `BitbucketCredentialLoader.php`,
 `BitbucketCredentialException.php`, `BitbucketApiClient.php`,
 `BitbucketApiException.php`, `BitbucketRepositoryBrowser.php`,
-`BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php` and `Plugin.php`.
+`BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php`, `Plugin.php`,
+`BitbucketCredentialPolicy.php` and `BitbucketWebhookPolicy.php`.
 Constructors
 retain their required magic spelling. Other product classes still have the
 transitional naming exclusion under #63 / organisation #65; expand enforcement
@@ -68,6 +69,7 @@ Tests and purpose-built fixtures keep their existing separate scope.
 | `BitbucketArchivePreparer` | `prepareArchive` and eleven private helpers become snake_case, with owned parameters/locals and closure captures. Core-required `BitbucketProvider::prepareArchive`, archive methods, request fields and hook/wire names remain unchanged. |
 | `BitbucketDiagnostics` | Five private helpers and the owned credential local become snake_case. Core diagnostic request/result methods and the public `diagnose` signature remain unchanged. |
 | `Plugin` | Registration, documentation and compatibility callbacks, their registered method strings, the compatibility helper and owned parameters become snake_case. Hook names, priority/argument counts, Core registration methods and rendered output remain unchanged. |
+| `BitbucketCredentialPolicy` / `BitbucketWebhookPolicy` | Nine private helpers and three owned locals become snake_case. All twelve public declarations retain their certified Core interface names; webhook authorization and target matching also retain the two interface parameter names. |
 
 The browser/archive scope retains nine line-specific
 `UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
@@ -75,6 +77,14 @@ The browser/archive scope retains nine line-specific
 (`providerRepositoryId`, `credentialId`, `expectedBranch`). These are temporary
 connected-contract exceptions under Core #167, not exceptions for locally owned
 variables or methods. Remove them with the qualified Core field migration.
+
+The two policy files retain declaration-specific `NotSnakeCase` suppressions
+for the twelve `ProviderCredentialPolicy` / `ProviderWebhookPolicy` methods.
+Five line-specific `VariableNotSnakeCase` suppressions preserve the declarations
+and uses of `repositoryAuthorityId` / `repositoryLocator`, preserving named-argument
+compatibility. These temporary certified-contract exceptions belong to Core #167;
+remove them with its qualified connected signature migration. Owned helpers and
+locals remain enforced; no whole-method or whole-class exception is used.
 
 No coexistence aliases are provided during beta. Audited callers move with these
 methods; similarly named request and Core methods are unchanged.
