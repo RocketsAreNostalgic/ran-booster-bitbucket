@@ -46,12 +46,14 @@ final class BitbucketApiClientTest extends TestCase {
 		$url        = 'https://api.bitbucket.org/2.0/repositories/rockets-are-nostalgic/repo.name?after=opaque%3Acursor&pagelen=10';
 		$credential = $this->credential();
 
-		( new BitbucketApiClient() )->get( $url, $credential );
+		( new BitbucketApiClient() )->get( url: $url, credential: $credential, timeout: 2.5, response_size: 17 );
 
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
 		self::assertCount( 1, $requests );
 		self::assertSame( $url, $requests[0]['url'] );
+		self::assertSame( 2.5, $requests[0]['arguments']['timeout'] );
+		self::assertSame( 17, $requests[0]['arguments']['limit_response_size'] );
 		self::assertSame(
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Assert the HTTP Basic wire value required by Bitbucket.
 			'Basic ' . base64_encode( self::EMAIL . ':' . self::TOKEN ),
@@ -97,7 +99,7 @@ final class BitbucketApiClientTest extends TestCase {
 				( new BitbucketApiClient() )->get( $url, $this->credential() );
 				self::fail( 'Expected the hostile Bitbucket URL to be rejected: ' . $url );
 			} catch ( BitbucketApiException $exception ) {
-				self::assertSame( BitbucketApiException::INVALID_URL, $exception->getReason(), $url );
+				self::assertSame( BitbucketApiException::INVALID_URL, $exception->get_reason(), $url );
 				self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage(), $url );
 				self::assertStringNotContainsString( self::TOKEN, $exception->getMessage(), $url );
 			}
@@ -161,7 +163,7 @@ final class BitbucketApiClientTest extends TestCase {
 				);
 				self::fail( 'Expected a safe Bitbucket API exception.' );
 			} catch ( BitbucketApiException $exception ) {
-				self::assertSame( $fixture['reason'], $exception->getReason() );
+				self::assertSame( $fixture['reason'], $exception->get_reason() );
 				self::assertSame( $fixture['message'], $exception->getMessage() );
 				self::assertStringNotContainsString( self::TOKEN, $exception->getMessage() );
 			}

@@ -20,13 +20,15 @@
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
 	</rule>
 
-	<!-- Completed value-object and credential scope; remaining owned naming is tracked in #63 / organisation #65. -->
+	<!-- Completed value-object, credential and HTTP scope; remaining owned naming is tracked in #63 / organisation #65. -->
 	<rule ref="RANOwnedMethods">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredential.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialLoader.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialException.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketApiClient.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
 	</rule>
 	<rule ref="WordPress.NamingConventions.ValidVariableName">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
@@ -34,6 +36,8 @@
 		<include-pattern>/src/Bitbucket/BitbucketCredential.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialLoader.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialException.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketApiClient.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">

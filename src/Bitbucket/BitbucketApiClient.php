@@ -13,14 +13,14 @@ final readonly class BitbucketApiClient {
 		string $url,
 		?BitbucketCredential $credential = null,
 		float|int $timeout = 15,
-		int $responseSize = 262144
+		int $response_size = 262144
 	): BitbucketApiResponse {
-		$this->assertAllowedUrl( $url );
+		$this->assert_allowed_url( $url );
 
 		$arguments = array(
 			'timeout'             => $timeout,
 			'redirection'         => 0,
-			'limit_response_size' => $responseSize,
+			'limit_response_size' => $response_size,
 			'reject_unsafe_urls'  => true,
 			'headers'             => array(
 				'Accept'     => 'application/json',
@@ -36,10 +36,10 @@ final readonly class BitbucketApiClient {
 
 		if ( is_wp_error( $response ) ) {
 			if ( 'http_request_failed' === $response->get_error_code() ) {
-				throw BitbucketApiException::transportError();
+				throw BitbucketApiException::transport_error();
 			}
 
-			throw BitbucketApiException::invalidResponse();
+			throw BitbucketApiException::invalid_response();
 		}
 
 		if ( ! is_array( $response )
@@ -47,7 +47,7 @@ final readonly class BitbucketApiClient {
 			|| ! is_int( $response['response']['code'] ?? null )
 			|| ! is_string( $response['body'] ?? null )
 		) {
-			throw BitbucketApiException::invalidResponse();
+			throw BitbucketApiException::invalid_response();
 		}
 
 		return new BitbucketApiResponse(
@@ -56,18 +56,18 @@ final readonly class BitbucketApiClient {
 		);
 	}
 
-	private function assertAllowedUrl( string $url ): void {
+	private function assert_allowed_url( string $url ): void {
 		if ( '' === $url
 			|| 1 === preg_match( '/[\x00-\x20\x7F]/', $url )
 			|| str_contains( $url, '#' )
 			|| ! str_starts_with( $url, self::API_ORIGIN . self::API_PATH )
 		) {
-			throw BitbucketApiException::invalidUrl();
+			throw BitbucketApiException::invalid_url();
 		}
 
-		$parts       = wp_parse_url( $url );
-		$path        = is_array( $parts ) && is_string( $parts['path'] ?? null ) ? $parts['path'] : '';
-		$decodedPath = rawurldecode( $path );
+		$parts        = wp_parse_url( $url );
+		$path         = is_array( $parts ) && is_string( $parts['path'] ?? null ) ? $parts['path'] : '';
+		$decoded_path = rawurldecode( $path );
 
 		if ( ! is_array( $parts )
 			|| 'https' !== ( $parts['scheme'] ?? null )
@@ -78,15 +78,15 @@ final readonly class BitbucketApiClient {
 			|| isset( $parts['fragment'] )
 			|| ! str_starts_with( $path, self::API_PATH )
 			|| 1 === preg_match( '/%(?:25|2e|2f|5c)/i', $path )
-			|| 1 === preg_match( '/[\x00-\x1F\x7F]/', $decodedPath )
-			|| ! $this->hasCanonicalRepositoryPath( $decodedPath )
-			|| $this->queryContainsCredential( $parts['query'] ?? null )
+			|| 1 === preg_match( '/[\x00-\x1F\x7F]/', $decoded_path )
+			|| ! $this->has_canonical_repository_path( $decoded_path )
+			|| $this->query_contains_credential( $parts['query'] ?? null )
 		) {
-			throw BitbucketApiException::invalidUrl();
+			throw BitbucketApiException::invalid_url();
 		}
 	}
 
-	private function hasCanonicalRepositoryPath( string $path ): bool {
+	private function has_canonical_repository_path( string $path ): bool {
 		if ( ! str_starts_with( $path, self::API_PATH ) || str_contains( $path, '\\' ) ) {
 			return false;
 		}
@@ -102,7 +102,7 @@ final readonly class BitbucketApiClient {
 		return true;
 	}
 
-	private function queryContainsCredential( mixed $query ): bool {
+	private function query_contains_credential( mixed $query ): bool {
 		if ( null === $query ) {
 			return false;
 		}

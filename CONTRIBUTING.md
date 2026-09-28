@@ -39,14 +39,15 @@ failure short circuit; only operand order changed. Existing pagination tests
 pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
 Owned method/variable naming is enforced for the completed value-object and
-credential scopes below; remaining source scopes stay with the owning programme.
+credential/HTTP scopes below; remaining source scopes stay with the owning programme.
 
 ## Scoped owned-name enforcement
 
 `RANOwnedMethods` and WordPress variable naming cover exactly
 `BitbucketApiResponse.php`, `BitbucketRepositoryCoordinates.php`,
-`BitbucketCredential.php`, `BitbucketCredentialLoader.php` and
-`BitbucketCredentialException.php`. Constructors
+`BitbucketCredential.php`, `BitbucketCredentialLoader.php`,
+`BitbucketCredentialException.php`, `BitbucketApiClient.php` and
+`BitbucketApiException.php`. Constructors
 retain their required magic spelling. Other product classes still have the
 transitional naming exclusion under #63 / organisation #65; expand enforcement
 only with each audited caller migration, preserving Core-required signatures.
@@ -58,11 +59,14 @@ Tests and purpose-built fixtures keep their existing separate scope.
 | `BitbucketRepositoryCoordinates` | `fromFullName`, `getWorkspace`, `getRepositorySlug`, `getFullName`, `matchesFullName` become their snake_case equivalents; owned `repositorySlug` / `fullName` become `repository_slug` / `full_name`, including factory/matcher named arguments. |
 | `BitbucketCredential` | `fromMaterial`, `getWorkspace`, `isWorkspace` become `from_material`, `get_workspace`, `is_workspace`; validation and Authorization header bytes stay unchanged. |
 | `BitbucketCredentialLoader` / `BitbucketCredentialException` | `load` takes `credential_id` (including named arguments); `unavailable` is already compliant. Core `credentialMaterial` remains unchanged. |
+| `BitbucketApiClient` | Private URL/query helpers become snake_case; `responseSize` / `decodedPath` become `response_size` / `decoded_path`, including the public `get` named argument. |
+| `BitbucketApiException` | `invalidUrl`, `transportError`, `invalidResponse`, `getReason` become snake_case. Reason constants, error messages and inherited exception methods stay unchanged. |
 
 No coexistence aliases are provided during beta. Audited callers move with these
 methods; similarly named request and Core methods are unchanged.
 Coordinate validation, case-insensitive matching, response bytes/status, wire
-keys, host API generation and the certified Core tuple remain unchanged.
+keys, URL/path/query restrictions, HTTP classification, malformed-response guards,
+host API generation and the certified Core tuple remain unchanged.
 
 ## Blocking host analysis
 
