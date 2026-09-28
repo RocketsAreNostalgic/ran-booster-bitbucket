@@ -167,12 +167,12 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 		return $this->browser->repository(
 			$request->locator,
 			$request->credentialId,
-			publicOnly: $request->publicOnly
+			public_only: $request->publicOnly
 		);
 	}
 
 	public function prepareArchive( ArchiveRequest $request ): PreparedArchive {
-		return $this->archives->prepareArchive( $request );
+		return $this->archives->prepare_archive( $request );
 	}
 
 	public function normalizeWebhook( WebhookRequest $request ): WebhookEnvelope {

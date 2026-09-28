@@ -264,7 +264,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 		$browser  = $this->browser( $secrets );
 		$public   = $browser->repository( '  acme/public-plugin  ' );
-		$private  = $browser->repository( 'acme/private-plugin', 'primary' );
+		$private  = $browser->repository( full_name: 'acme/private-plugin', credential_id: 'primary', timeout: 15, response_size: 262144, public_only: false );
 		$requests = $this->requests();
 
 		self::assertFalse( $public->private );
@@ -324,7 +324,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		$repository = $this->browser( $secrets )->repository(
 			'acme/repository',
 			'public_lookup',
-			publicOnly: true
+			public_only: true
 		);
 
 		self::assertFalse( $repository->private );
@@ -344,7 +344,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			$this->browser( $secrets )->repository(
 				'acme/repository',
 				'public_lookup',
-				publicOnly: true
+				public_only: true
 			);
 			self::fail( 'Public-only exact verification must reject private repositories.' );
 		} catch ( RuntimeException $exception ) {
