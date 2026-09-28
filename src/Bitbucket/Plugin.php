@@ -14,13 +14,13 @@ final class Plugin {
 	public static function boot(): void {
 		$plugin = new self();
 
-		add_action( 'ran_booster_register_providers', array( $plugin, 'registerProvider' ) );
-		add_filter( 'ran_booster_documentation_sections_after_provider_bb', array( $plugin, 'documentationSections' ), 10, 3 );
-		add_action( 'admin_notices', array( $plugin, 'renderCompatibilityNotice' ) );
+		add_action( 'ran_booster_register_providers', array( $plugin, 'register_provider' ) );
+		add_filter( 'ran_booster_documentation_sections_after_provider_bb', array( $plugin, 'documentation_sections' ), 10, 3 );
+		add_action( 'admin_notices', array( $plugin, 'render_compatibility_notice' ) );
 	}
 
-	public function registerProvider( object $registry ): void {
-		if ( ! self::hasCompatibleCore() || ! $registry instanceof ProviderRegistry ) {
+	public function register_provider( object $registry ): void {
+		if ( ! self::has_compatible_core() || ! $registry instanceof ProviderRegistry ) {
 			return;
 		}
 
@@ -28,15 +28,15 @@ final class Plugin {
 			'bb',
 			static function (
 				ProviderCredentialStore $credentials,
-				AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence,
-				ProviderRegistrationContext $registrationContext
+				AuthenticatedWebhookDeliveryEvidenceReader $delivery_evidence,
+				ProviderRegistrationContext $registration_context
 			): RepositoryProvider {
-				unset( $registrationContext );
+				unset( $registration_context );
 				$api      = new BitbucketApiClient();
 				$loader   = new BitbucketCredentialLoader( $credentials );
 				$browser  = new BitbucketRepositoryBrowser( $loader, $api );
 				$archives = new BitbucketArchivePreparer( $loader, $api );
-				$webhooks = new BitbucketWebhookNormalizer( $credentials, $deliveryEvidence );
+				$webhooks = new BitbucketWebhookNormalizer( $credentials, $delivery_evidence );
 
 				return new BitbucketProvider(
 					new BitbucketCredentialValidator( $loader, $api ),
@@ -52,12 +52,12 @@ final class Plugin {
 	 * @param array<int, array{id: string, summary: string, content: callable}> $sections
 	 * @return array<int, array{id: string, summary: string, content: callable}>
 	 */
-	public function documentationSections( array $sections, string $documentationUrl, string $scope ): array {
-		if ( ! self::hasCompatibleCore() ) {
+	public function documentation_sections( array $sections, string $documentation_url, string $scope ): array {
+		if ( ! self::has_compatible_core() ) {
 			return $sections;
 		}
 
-		unset( $documentationUrl, $scope );
+		unset( $documentation_url, $scope );
 		$sections[] = array(
 			'id'      => 'ran-booster-documentation-bitbucket-cloud',
 			'summary' => __( 'Bitbucket Cloud add-on', 'ran-booster-bitbucket' ),
@@ -69,8 +69,8 @@ final class Plugin {
 		return $sections;
 	}
 
-	public function renderCompatibilityNotice(): void {
-		if ( ! current_user_can( 'activate_plugins' ) || self::hasCompatibleCore() ) {
+	public function render_compatibility_notice(): void {
+		if ( ! current_user_can( 'activate_plugins' ) || self::has_compatible_core() ) {
 			return;
 		}
 
@@ -79,7 +79,7 @@ final class Plugin {
 			. '</p></div>';
 	}
 
-	private static function hasCompatibleCore(): bool {
+	private static function has_compatible_core(): bool {
 		return ( ! defined( 'RAN_BOOSTER_RUNTIME_MODE' ) || 'single_site_supported' === RAN_BOOSTER_RUNTIME_MODE )
 			&& defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 			&& 11 === RAN_BOOSTER_PROVIDER_API_VERSION

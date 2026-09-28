@@ -59,7 +59,7 @@ foreach ( is_object( $registrationHook ) && is_array( $registrationHook->callbac
 		$callback = is_array( $registered ) ? ( $registered['function'] ?? null ) : null;
 		if ( is_array( $callback )
 			&& ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin
-			&& 'registerProvider' === ( $callback[1] ?? null )
+			&& 'register_provider' === ( $callback[1] ?? null )
 		) {
 			$registrationCallbacks[] = $callback;
 		}

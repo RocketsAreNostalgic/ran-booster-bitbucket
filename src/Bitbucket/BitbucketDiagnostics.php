@@ -20,14 +20,14 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 
 	public function diagnose( ProviderDiagnosticRequest $request ): array {
 		return array(
-			$this->credentialResult( $request ),
-			$this->repositoryResult( $request ),
+			$this->credential_result( $request ),
+			$this->repository_result( $request ),
 		);
 	}
 
-	private function credentialResult( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
-		$credentialId = $request->getCredentialId();
-		if ( null === $credentialId ) {
+	private function credential_result( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
+		$credential_id = $request->getCredentialId();
+		if ( null === $credential_id ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::NOT_CONFIGURED,
 				'bb.credential.not_configured',
@@ -37,11 +37,11 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		}
 
 		try {
-			$result = $this->credentials->validateCredential( $credentialId, $request->claimRemoteCall(), 65536 );
+			$result = $this->credentials->validateCredential( $credential_id, $request->claimRemoteCall(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
-			return $this->budgetResult( 'bb.credential.budget_exhausted' );
+			return $this->budget_result( 'bb.credential.budget_exhausted' );
 		} catch ( \Throwable ) {
-			return $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
+			return $this->unavailable_result( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
 		}
 
 		if ( $result->isValid() ) {
@@ -70,7 +70,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 			),
 			true
 		) ) {
-			return $this->unavailableResult( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
+			return $this->unavailable_result( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
 		}
 
 		return new ProviderDiagnosticResult(
@@ -81,7 +81,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		);
 	}
 
-	private function repositoryResult( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
+	private function repository_result( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
 		$repository = $request->getRepository();
 		if ( null === $repository ) {
 			return new ProviderDiagnosticResult(
@@ -95,11 +95,11 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		try {
 			$this->browser->repository( $repository, $request->getCredentialId(), $request->claimRemoteCall(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
-			return $this->budgetResult( 'bb.repository.budget_exhausted' );
+			return $this->budget_result( 'bb.repository.budget_exhausted' );
 		} catch ( RuntimeException $exception ) {
-			return $this->repositoryFailure( $exception );
+			return $this->repository_failure( $exception );
 		} catch ( \Throwable ) {
-			return $this->unavailableResult( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' );
+			return $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' );
 		}
 
 		return new ProviderDiagnosticResult(
@@ -110,7 +110,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		);
 	}
 
-	private function repositoryFailure( RuntimeException $exception ): ProviderDiagnosticResult {
+	private function repository_failure( RuntimeException $exception ): ProviderDiagnosticResult {
 		return match ( $exception->getCode() ) {
 			401, 403 => new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
@@ -130,11 +130,11 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 				'Bitbucket rate-limited the repository check.',
 				'Try the check again after the rate limit resets.'
 			),
-			default => $this->unavailableResult( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' ),
+			default => $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' ),
 		};
 	}
 
-	private function budgetResult( string $code ): ProviderDiagnosticResult {
+	private function budget_result( string $code ): ProviderDiagnosticResult {
 		return new ProviderDiagnosticResult(
 			ProviderDiagnosticResult::WARNING,
 			$code,
@@ -143,7 +143,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		);
 	}
 
-	private function unavailableResult( string $code, string $message ): ProviderDiagnosticResult {
+	private function unavailable_result( string $code, string $message ): ProviderDiagnosticResult {
 		return new ProviderDiagnosticResult(
 			ProviderDiagnosticResult::WARNING,
 			$code,
