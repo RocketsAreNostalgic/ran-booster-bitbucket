@@ -39,7 +39,9 @@ violation in the documentation view failed `check:host` during analysis, before
 PHPUnit; the probe was removed. This coverage extension preserves level 3,
 production bytes, dependency locks and the certified-host tuple.
 
-The pilot measured these higher-level results on 11 August 2026:
+The historical pilot measured these higher-level results on 11 August 2026
+(the pre-fix counts were reverified across all 20 shipped paths on 28 September
+2026 at `80895ee9ffe0bf4e49b38939115c8946438f5a60`):
 
 | Levels | Findings | Interpretation |
 | --- | ---: | --- |
@@ -53,9 +55,10 @@ deliberately validates malformed transport values and must not be weakened to
 match that optimistic model. Three `BitbucketArchivePreparer::resolvedNamedRef()`
 findings identify `is_array()` checks against its native `array` parameter; they
 are redundant to the signature but remain part of the defensive response
-validation sequence. Level 6 also identifies a genuine documentation
-opportunity: `Plugin::documentationSections()` has a typed parameter shape but
-no matching iterable value type on its return annotation.
+validation sequence. The missing return-array shape on `Plugin::documentationSections()` is now
+documented to match its parameter and appended section. Candidate analysis at
+level 8 reports the same 14 remaining findings in the HTTP client and archive
+preparer; the required gate remains level 3. No runtime guards were removed.
 
 Before raising the level, a follow-up must:
 
@@ -63,8 +66,8 @@ Before raising the level, a follow-up must:
    runtime checks or applying a broad identifier ignore;
 2. decide explicitly whether the three redundant array guards should remain or
    be removed with their behavior tests;
-3. add and verify the documentation-section return shape if level 6 is still
-   useful;
+3. retain the documented section return shape and verify it at the proposed
+   level;
 4. confirm the stable WordPress extension provides stubs appropriate for the
    plugin's WordPress 7.0+ support; and
 5. rerun every intermediate level and record the remaining finding count.
