@@ -39,10 +39,10 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$loader   = new BitbucketCredentialLoader( $store );
 		$api      = new BitbucketApiClient();
 		$provider = new BitbucketProvider(
-			new BitbucketCredentialValidator( $loader, $api ),
-			new BitbucketRepositoryBrowser( $loader, $api ),
-			new BitbucketArchivePreparer( $loader, $api ),
-			new BitbucketWebhookNormalizer( $store )
+			credential_validator: new BitbucketCredentialValidator( $loader, $api ),
+			browser: new BitbucketRepositoryBrowser( $loader, $api ),
+			archives: new BitbucketArchivePreparer( $loader, $api ),
+			webhooks: new BitbucketWebhookNormalizer( $store )
 		);
 		$result   = $provider->validateCredential( 'profile' );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
@@ -188,7 +188,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $name => $fixture ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $fixture['response'] );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validateCredential( credentialId: 'profile', timeout: 15, response_size: 262144 );
 
 			self::assertFalse( $result->isValid(), (string) $name );
 			self::assertSame( $fixture['message'], $result->getDisplayMessage(), (string) $name );

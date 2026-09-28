@@ -38,17 +38,17 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 
 	private ProviderMetadata $metadata;
 	private BitbucketDiagnostics $diagnostics;
-	private BitbucketCredentialPolicy $credentialPolicy;
+	private BitbucketCredentialPolicy $credential_policy;
 
 	public function __construct(
-		private BitbucketCredentialValidator $credentialValidator,
+		private BitbucketCredentialValidator $credential_validator,
 		private BitbucketRepositoryBrowser $browser,
 		private BitbucketArchivePreparer $archives,
 		private BitbucketWebhookNormalizer $webhooks
 	) {
-		$this->diagnostics      = new BitbucketDiagnostics( $credentialValidator, $browser );
-		$this->credentialPolicy = new BitbucketCredentialPolicy();
-		$this->metadata         = new ProviderMetadata(
+		$this->diagnostics       = new BitbucketDiagnostics( $credential_validator, $browser );
+		$this->credential_policy = new BitbucketCredentialPolicy();
+		$this->metadata          = new ProviderMetadata(
 			ProviderCode::parse( 'bb' ),
 			'Bitbucket',
 			'https://bitbucket.org/',
@@ -131,55 +131,55 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 		);
 	}
 
-	public function getMetadata(): ProviderMetadata {
+	public function getMetadata(): ProviderMetadata { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->metadata;
 	}
 
-	public function getProviderDiagnostics(): ProviderDiagnostics {
+	public function getProviderDiagnostics(): ProviderDiagnostics { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->diagnostics;
 	}
 
-	public function getCredentialPolicy(): ProviderCredentialPolicy {
-		return $this->credentialPolicy;
+	public function getCredentialPolicy(): ProviderCredentialPolicy { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+		return $this->credential_policy;
 	}
 
-	public function getWebhookPolicy(): ProviderWebhookPolicy {
+	public function getWebhookPolicy(): ProviderWebhookPolicy { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->webhooks->getWebhookPolicy();
 	}
 
-	public function diagnoseWebhookReadiness(): ProviderDiagnosticResult {
+	public function diagnoseWebhookReadiness(): ProviderDiagnosticResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->webhooks->diagnoseWebhookReadiness();
 	}
 
-	public function validateCredential( string $credentialId ): CredentialValidationResult {
-		return $this->credentialValidator->validateCredential( $credentialId );
+	public function validateCredential( string $credentialId ): CredentialValidationResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+		return $this->credential_validator->validateCredential( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 	}
 
-	public function browseRepositories( RepositoryBrowseRequest $request ): RepositoryBrowseResult {
+	public function browseRepositories( RepositoryBrowseRequest $request ): RepositoryBrowseResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->browser->browse( $request );
 	}
 
-	public function getPublicRepositoryBrowseMetadata(): PublicRepositoryBrowseMetadata {
+	public function getPublicRepositoryBrowseMetadata(): PublicRepositoryBrowseMetadata { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return new PublicRepositoryBrowseMetadata( true );
 	}
 
-	public function resolveRepository( RepositoryLookupRequest $request ): RepositoryDescriptor {
+	public function resolveRepository( RepositoryLookupRequest $request ): RepositoryDescriptor { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->browser->repository(
 			$request->locator,
-			$request->credentialId,
-			public_only: $request->publicOnly
+			$request->credentialId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryLookupRequest field; migrate with Core #167.
+			public_only: $request->publicOnly // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryLookupRequest field; migrate with Core #167.
 		);
 	}
 
-	public function prepareArchive( ArchiveRequest $request ): PreparedArchive {
+	public function prepareArchive( ArchiveRequest $request ): PreparedArchive { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->archives->prepare_archive( $request );
 	}
 
-	public function normalizeWebhook( WebhookRequest $request ): WebhookEnvelope {
+	public function normalizeWebhook( WebhookRequest $request ): WebhookEnvelope { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		return $this->webhooks->normalizeWebhook( $request );
 	}
 
-	public function repositoryWebhookSettingsUrl( string $locator ): string {
+	public function repositoryWebhookSettingsUrl( string $locator ): string { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		$coordinates = BitbucketRepositoryCoordinates::from_full_name( $locator );
 
 		return 'https://bitbucket.org/'

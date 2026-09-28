@@ -50,12 +50,13 @@ with the owning programme.
 `BitbucketCredentialException.php`, `BitbucketApiClient.php`,
 `BitbucketApiException.php`, `BitbucketRepositoryBrowser.php`,
 `BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php`, `Plugin.php`,
-`BitbucketCredentialPolicy.php`, `BitbucketWebhookPolicy.php` and
-`BitbucketWebhookNormalizer.php`.
-Constructors
-retain their required magic spelling. Other product classes still have the
-transitional naming exclusion under #63 / organisation #65; expand enforcement
-only with each audited caller migration, preserving Core-required signatures.
+`BitbucketCredentialPolicy.php`, `BitbucketWebhookPolicy.php`,
+`BitbucketWebhookNormalizer.php`, `BitbucketProvider.php` and
+`BitbucketCredentialValidator.php`.
+Constructors retain their required magic spelling. All current product class
+files now have selected enforcement with the narrow
+Core contract exceptions below. Future-file scope and final exclusion disposition
+remain under #63 / organisation #65; preserve Core-required signatures.
 Tests and purpose-built fixtures keep their existing separate scope.
 
 | Owned scope | Owned-name migration |
@@ -72,6 +73,7 @@ Tests and purpose-built fixtures keep their existing separate scope.
 | `Plugin` | Registration, documentation and compatibility callbacks, their registered method strings, the compatibility helper and owned parameters become snake_case. Hook names, priority/argument counts, Core registration methods and rendered output remain unchanged. |
 | `BitbucketCredentialPolicy` / `BitbucketWebhookPolicy` | Nine private helpers and three owned locals become snake_case. All twelve public declarations retain their certified Core interface names; webhook authorization and target matching also retain the two interface parameter names. |
 | `BitbucketWebhookNormalizer` | Eight private helpers, two owned properties/constructor parameters and three locals become snake_case. Constructor named arguments are `webhook_profiles` and `delivery_evidence`. Core interface methods and authenticated-delivery evidence fields remain unchanged. |
+| `BitbucketProvider` / `BitbucketCredentialValidator` | Provider properties become `credential_validator` / `credential_policy`, including the owned constructor parameter. Validator's extra optional parameter becomes `response_size`; Core-required `credentialId` stays unchanged. Public interface methods and request fields are retained. |
 
 The browser/archive scope retains nine line-specific
 `UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
@@ -94,6 +96,14 @@ suppressions for its certified Core interface methods and one line-specific
 `AuthenticatedWebhookDeliveryEvidence::matchedManagedPackage`. Remove these
 with Core #167's qualified connected signature/field migration. Its own properties,
 constructor parameters, locals and private helpers remain enforced.
+
+Provider/Validator retain thirteen declaration-specific `NotSnakeCase`
+suppressions for their certified Core interface methods, four line-specific
+`VariableNotSnakeCase` suppressions for `credentialId` declarations/uses, and
+two `UsedPropertyNotSnakeCase` suppressions for `RepositoryLookupRequest` fields
+`credentialId` / `publicOnly`. Core #167 owns removal with its qualified connected
+signature/field migration. The Validator-only optional timeout/response-size
+arguments are not part of Core's one-argument interface.
 
 No coexistence aliases are provided during beta. Audited callers move with these
 methods; similarly named request and Core methods are unchanged.
