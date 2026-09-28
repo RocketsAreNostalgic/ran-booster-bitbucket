@@ -109,6 +109,11 @@ final class BitbucketApiClientTest extends TestCase {
 	public function testTransportAndMalformedResponsesBecomeFixedSafeExceptions(): void {
 		$fixtures = array(
 			array(
+				'response' => new BitbucketCredentialValidationTransportError( '' ),
+				'reason'   => BitbucketApiException::INVALID_RESPONSE,
+				'message'  => 'Bitbucket returned an invalid API response.',
+			),
+			array(
 				'response' => new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ),
 				'reason'   => BitbucketApiException::INVALID_RESPONSE,
 				'message'  => 'Bitbucket returned an invalid API response.',
@@ -138,7 +143,7 @@ final class BitbucketApiClientTest extends TestCase {
 			),
 		);
 
-		foreach ( array( null, false, 42, self::TOKEN, array(), array( 'response' => 42, 'body' => '' ), array( 'response' => array( 'code' => '200' ), 'body' => '' ) ) as $malformed ) {
+		foreach ( array( null, false, 42, self::TOKEN, new \stdClass(), array(), array( 'response' => 42, 'body' => '' ), array( 'response' => array( 'code' => '200' ), 'body' => '' ) ) as $malformed ) {
 			$fixtures[] = array(
 				'response' => $malformed,
 				'reason'   => BitbucketApiException::INVALID_RESPONSE,

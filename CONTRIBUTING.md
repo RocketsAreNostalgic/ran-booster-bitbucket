@@ -68,10 +68,16 @@ types and calls to nonexistent methods on a narrowed WP_Error.
 
 The existing and expanded malformed-response tests retain fixed safe errors for
 null/scalar results, missing/malformed nested response data and non-string bodies.
-All production PHP and defensive guards remain unchanged in this modelling slice.
-Levels 4–8 now retain one finding: the `method_exists()` guard is statically
-redundant after WP_Error narrowing. Its runtime/test-double disposition remains a
-separate decision; the required gate stays at level 3.
+The modelling slice itself changed no production PHP. The subsequent cleanup
+removes only the redundant `method_exists()` guard after `is_wp_error()`:
+WordPress narrows that branch to `WP_Error`, whose public `get_error_code()`
+method is always available. The existing namespaced test double supplies the
+same method. Only `http_request_failed` becomes a transport error; other codes,
+including an empty code, still become fixed safe invalid-response errors.
+Non-error objects still reach the malformed-response guard. The expanded
+classification fixtures pass before and after the cleanup.
+Levels 3–8 now report zero findings across all 20 shipped PHP paths; the
+required gate stays at level 3 pending separately reviewed promotion.
 
 The three historical `BitbucketArchivePreparer::resolvedNamedRef()` findings
 were redundant outer `is_array($data)` checks against its native `array`
@@ -82,12 +88,12 @@ without installing archive hooks. Regression fixtures pass before and after
 the cleanup.
 
 The missing return-array shape on `Plugin::documentationSections()` is now
-documented to match its parameter and appended section. The required gate remains level 3; the residual finding is described above.
+documented to match its parameter and appended section. The required gate remains level 3.
 
 Before raising the level, a follow-up must:
 
-1. explicitly disposition the residual WP_Error method-existence guard with
-   runtime and test-double evidence, preserving transport error classification;
+1. retain the WP_Error method contract and the transport error classification
+   evidence described above;
 2. preserve the nested response guards and the regression coverage for the
    removed native-array redundancies;
 3. retain the documented section return shape and verify it at the proposed

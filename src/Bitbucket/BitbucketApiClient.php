@@ -35,7 +35,7 @@ final readonly class BitbucketApiClient {
 		$response = wp_remote_get( $url, $arguments );
 
 		if ( is_wp_error( $response ) ) {
-			if ( method_exists( $response, 'get_error_code' ) && 'http_request_failed' === $response->get_error_code() ) {
+			if ( 'http_request_failed' === $response->get_error_code() ) {
 				throw BitbucketApiException::transportError();
 			}
 
