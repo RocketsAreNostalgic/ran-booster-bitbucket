@@ -50,7 +50,7 @@
         "phpunit/phpunit": "^11.0",
         "phpstan/phpstan": "^2.2.8",
         "szepeviktor/phpstan-wordpress": "^2.0.3",
-        "ran/coding-standards": "dev-main",
+        "ran/coding-standards": "^1.0",
         "squizlabs/php_codesniffer": "^3.13.5",
         "wp-coding-standards/wpcs": "^3.4",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
