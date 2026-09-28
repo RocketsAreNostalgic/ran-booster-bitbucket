@@ -72,6 +72,6 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 			}
 		};
 
-		return new BitbucketWebhookNormalizer( $profiles, $evidence );
+		return new BitbucketWebhookNormalizer( webhook_profiles: $profiles, delivery_evidence: $evidence );
 	}
 }

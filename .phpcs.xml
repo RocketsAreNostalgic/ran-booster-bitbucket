@@ -20,7 +20,7 @@
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
 	</rule>
 
-	<!-- Completed value-object, credential, HTTP, repository, archive, diagnostics, Plugin and policy internals scope; remaining owned naming is tracked in #63 / organisation #65. -->
+	<!-- Completed value-object, credential, HTTP, repository, archive, diagnostics, Plugin, policy and webhook internals scope; remaining owned naming is tracked in #63 / organisation #65. -->
 	<rule ref="RANOwnedMethods">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
@@ -35,6 +35,7 @@
 		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialPolicy.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketWebhookPolicy.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketWebhookNormalizer.php</include-pattern>
 	</rule>
 	<rule ref="WordPress.NamingConventions.ValidVariableName">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
@@ -50,6 +51,7 @@
 		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketCredentialPolicy.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketWebhookPolicy.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketWebhookNormalizer.php</include-pattern>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">

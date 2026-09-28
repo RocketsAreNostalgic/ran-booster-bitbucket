@@ -642,7 +642,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			}
 		};
 
-		return new BitbucketWebhookNormalizer( new BitbucketProviderCredentialStore( $secrets ) );
+		return new BitbucketWebhookNormalizer( webhook_profiles: new BitbucketProviderCredentialStore( $secrets ) );
 	}
 
 	private function request(
