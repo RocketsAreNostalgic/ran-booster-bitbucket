@@ -50,7 +50,8 @@ with the owning programme.
 `BitbucketCredentialException.php`, `BitbucketApiClient.php`,
 `BitbucketApiException.php`, `BitbucketRepositoryBrowser.php`,
 `BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php`, `Plugin.php`,
-`BitbucketCredentialPolicy.php` and `BitbucketWebhookPolicy.php`.
+`BitbucketCredentialPolicy.php`, `BitbucketWebhookPolicy.php` and
+`BitbucketWebhookNormalizer.php`.
 Constructors
 retain their required magic spelling. Other product classes still have the
 transitional naming exclusion under #63 / organisation #65; expand enforcement
@@ -70,6 +71,7 @@ Tests and purpose-built fixtures keep their existing separate scope.
 | `BitbucketDiagnostics` | Five private helpers and the owned credential local become snake_case. Core diagnostic request/result methods and the public `diagnose` signature remain unchanged. |
 | `Plugin` | Registration, documentation and compatibility callbacks, their registered method strings, the compatibility helper and owned parameters become snake_case. Hook names, priority/argument counts, Core registration methods and rendered output remain unchanged. |
 | `BitbucketCredentialPolicy` / `BitbucketWebhookPolicy` | Nine private helpers and three owned locals become snake_case. All twelve public declarations retain their certified Core interface names; webhook authorization and target matching also retain the two interface parameter names. |
+| `BitbucketWebhookNormalizer` | Eight private helpers, two owned properties/constructor parameters and three locals become snake_case. Constructor named arguments are `webhook_profiles` and `delivery_evidence`. Core interface methods and authenticated-delivery evidence fields remain unchanged. |
 
 The browser/archive scope retains nine line-specific
 `UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
@@ -85,6 +87,13 @@ and uses of `repositoryAuthorityId` / `repositoryLocator`, preserving named-argu
 compatibility. These temporary certified-contract exceptions belong to Core #167;
 remove them with its qualified connected signature migration. Owned helpers and
 locals remain enforced; no whole-method or whole-class exception is used.
+
+`BitbucketWebhookNormalizer` retains three declaration-specific `NotSnakeCase`
+suppressions for its certified Core interface methods and one line-specific
+`UsedPropertyNotSnakeCase` suppression for
+`AuthenticatedWebhookDeliveryEvidence::matchedManagedPackage`. Remove these
+with Core #167's qualified connected signature/field migration. Its own properties,
+constructor parameters, locals and private helpers remain enforced.
 
 No coexistence aliases are provided during beta. Audited callers move with these
 methods; similarly named request and Core methods are unchanged.
