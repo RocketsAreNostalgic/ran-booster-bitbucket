@@ -176,8 +176,8 @@ final class BitbucketApiClientTest extends TestCase {
 			$reflection->getMethods( \ReflectionMethod::IS_PUBLIC )
 		);
 
-		self::assertSame( 'rockets-are-nostalgic', $credential->getWorkspace() );
-		self::assertContains( 'getWorkspace', $methods );
+		self::assertSame( 'rockets-are-nostalgic', $credential->get_workspace() );
+		self::assertContains( 'get_workspace', $methods );
 		self::assertContains( 'authorize', $methods );
 		self::assertNotContains( 'getToken', $methods );
 		self::assertNotContains( 'getEmail', $methods );
@@ -207,7 +207,7 @@ final class BitbucketApiClientTest extends TestCase {
 			)
 		);
 
-		return ( new BitbucketCredentialLoader( new BitbucketProviderCredentialStore( $secrets ) ) )->load( 'profile' );
+		return ( new BitbucketCredentialLoader( new BitbucketProviderCredentialStore( $secrets ) ) )->load( credential_id: 'profile' );
 	}
 
 	/** @return array<string, mixed> */

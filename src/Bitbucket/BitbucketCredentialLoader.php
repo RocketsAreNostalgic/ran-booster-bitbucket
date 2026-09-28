@@ -13,15 +13,15 @@ final readonly class BitbucketCredentialLoader {
 	public function __construct( private ProviderCredentialStore $credentials ) {
 	}
 
-	public function load( string $credentialId ): BitbucketCredential {
-		$credentialId = trim( $credentialId );
+	public function load( string $credential_id ): BitbucketCredential {
+		$credential_id = trim( $credential_id );
 
-		if ( '' === $credentialId ) {
+		if ( '' === $credential_id ) {
 			throw BitbucketCredentialException::unavailable();
 		}
 
 		try {
-			$material = $this->credentials->credentialMaterial( $credentialId );
+			$material = $this->credentials->credentialMaterial( $credential_id );
 		} catch ( RuntimeException ) {
 			throw BitbucketCredentialException::unavailable();
 		}
@@ -34,7 +34,7 @@ final readonly class BitbucketCredentialLoader {
 			throw BitbucketCredentialException::unavailable();
 		}
 
-		return BitbucketCredential::fromMaterial(
+		return BitbucketCredential::from_material(
 			$material['configuration']['workspace'] ?? null,
 			$material['configuration']['email'] ?? null,
 			$material['secret'] ?? null
