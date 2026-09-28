@@ -304,7 +304,7 @@ final readonly class BitbucketRepositoryBrowser {
 	private function assertCollectionPageUrl( string $url, string $collectionPath ): void {
 		$parts = wp_parse_url( $url );
 
-		if ( ! is_array( $parts ) || $collectionPath !== ( $parts['path'] ?? null ) ) {
+		if ( ! is_array( $parts ) || ( $parts['path'] ?? null ) !== $collectionPath ) {
 			throw new RuntimeException( 'Bitbucket returned an invalid repository pagination response.', 422 );
 		}
 	}

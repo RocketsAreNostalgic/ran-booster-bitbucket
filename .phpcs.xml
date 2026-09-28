@@ -19,7 +19,6 @@
 	<rule ref="RANWordPressPlugin">
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
 		<exclude name="WordPress.NamingConventions.ValidVariableName"/>
-		<exclude name="WordPress.PHP.YodaConditions"/>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">

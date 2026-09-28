@@ -20,6 +20,16 @@ newlines in filenames, excluded invalid files, invalid PHP and failed discovery
 before or after a filename is emitted. It runs in the independent `composer check`
 and therefore also in `composer check:host` and native source-quality CI.
 
+## Condition-style enforcement
+
+The WordPress Yoda-condition rule is enforced across the configured production
+PHPCS paths. `standards` and `standards:fix` use the same ruleset. The pagination
+collection-path comparison retains strict inequality and the existing parse
+failure short circuit; only operand order changed. Existing pagination tests
+pass before and after the change. Restoring the old comparison fails the
+configured standards gate, and two clean PHPCBF passes leave source unchanged.
+Owned method/variable naming exclusions remain separate programme work.
+
 ## Blocking host analysis
 
 PHPStan level 8 is required by `composer check:host` and the full repository CI
