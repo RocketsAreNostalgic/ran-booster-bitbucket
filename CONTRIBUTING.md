@@ -48,8 +48,8 @@ with the owning programme.
 `BitbucketApiResponse.php`, `BitbucketRepositoryCoordinates.php`,
 `BitbucketCredential.php`, `BitbucketCredentialLoader.php`,
 `BitbucketCredentialException.php`, `BitbucketApiClient.php`,
-`BitbucketApiException.php`, `BitbucketRepositoryBrowser.php` and
-`BitbucketArchivePreparer.php`. Constructors
+`BitbucketApiException.php`, `BitbucketRepositoryBrowser.php`,
+`BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php` and `Plugin.php`. Constructors
 retain their required magic spelling. Other product classes still have the
 transitional naming exclusion under #63 / organisation #65; expand enforcement
 only with each audited caller migration, preserving Core-required signatures.
@@ -65,6 +65,9 @@ Tests and purpose-built fixtures keep their existing separate scope.
 | `BitbucketApiException` | `invalidUrl`, `transportError`, `invalidResponse`, `getReason` become snake_case. Reason constants, error messages and inherited exception methods stay unchanged. |
 | `BitbucketRepositoryBrowser` | Six private helpers and owned parameters/locals become snake_case; `repository` named arguments are `full_name`, `credential_id`, `timeout`, `response_size`, `public_only`. Core DTO properties and browse-request methods remain unchanged. |
 | `BitbucketArchivePreparer` | `prepareArchive` and eleven private helpers become snake_case, with owned parameters/locals and closure captures. Core-required `BitbucketProvider::prepareArchive`, archive methods, request fields and hook/wire names remain unchanged. |
+
+| `BitbucketDiagnostics` | Five private helpers and the owned credential local become snake_case. Core diagnostic request/result methods and the public `diagnose` signature remain unchanged. |
+| `Plugin` | Registration, documentation and compatibility callbacks, their registered method strings, the compatibility helper and owned parameters become snake_case. Hook names, priority/argument counts, Core registration methods and rendered output remain unchanged. |
 
 The browser/archive scope retains nine line-specific
 `UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
@@ -168,7 +171,7 @@ is rejected before that typed method, and malformed nested values still fail
 without installing archive hooks. Regression fixtures pass before and after
 the cleanup.
 
-The missing return-array shape on `Plugin::documentationSections()` is now
+The missing return-array shape on `Plugin::documentation_sections()` is now
 documented to match its parameter and appended section.
 
 For future analysis-tool or level changes:

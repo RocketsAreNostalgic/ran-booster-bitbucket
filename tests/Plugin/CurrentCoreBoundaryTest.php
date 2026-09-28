@@ -17,8 +17,8 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertIsString( $plugin );
 		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
-		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $deliveryEvidence', $plugin );
-		self::assertStringContainsString( 'ProviderRegistrationContext $registrationContext', $plugin );
+		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $delivery_evidence', $plugin );
+		self::assertStringContainsString( 'ProviderRegistrationContext $registration_context', $plugin );
 		self::assertStringNotContainsString( 'interface_exists( AuthenticatedWebhookDeliveryEvidenceReader::class )', $plugin );
 		self::assertStringNotContainsString( 'class_exists( ProviderRegistrationContext::class )', $plugin );
 	}

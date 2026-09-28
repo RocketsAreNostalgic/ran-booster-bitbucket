@@ -20,7 +20,7 @@
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
 	</rule>
 
-	<!-- Completed value-object, credential, HTTP, repository and archive scope; remaining owned naming is tracked in #63 / organisation #65. -->
+	<!-- Completed value-object, credential, HTTP, repository, archive, diagnostics and Plugin scope; remaining owned naming is tracked in #63 / organisation #65. -->
 	<rule ref="RANOwnedMethods">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
@@ -31,6 +31,8 @@
 		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketRepositoryBrowser.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketArchivePreparer.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketDiagnostics.php</include-pattern>
+		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
 	</rule>
 	<rule ref="WordPress.NamingConventions.ValidVariableName">
 		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
@@ -42,6 +44,8 @@
 		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketRepositoryBrowser.php</include-pattern>
 		<include-pattern>/src/Bitbucket/BitbucketArchivePreparer.php</include-pattern>
+		<include-pattern>/src/Bitbucket/BitbucketDiagnostics.php</include-pattern>
+		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
 	</rule>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
