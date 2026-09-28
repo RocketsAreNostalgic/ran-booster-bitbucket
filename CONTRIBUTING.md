@@ -12,7 +12,7 @@ in an issue or pull request.
 
 ## Blocking host analysis
 
-PHPStan level 3 is required by `composer check:host` and the full repository CI
+PHPStan level 8 is required by `composer check:host` and the full repository CI
 lane, whose failure feeds terminal `Quality`. The independent `composer check`
 remains usable without Core. The focused command also fails on analysis errors.
 Run it against the exact certified Core production source; Core's own Composer
@@ -23,7 +23,7 @@ RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
 ```
 
 The lockfile currently resolves PHPStan 2.2.8, `phpstan-wordpress` 2.0.3 and
-WordPress stubs 6.9.4. Direct level-3 roots are `autoload.php`, the plugin
+WordPress stubs 6.9.4. Direct level-8 roots are `autoload.php`, the plugin
 entrypoint, `src/`, `views/` and `index.php`: all 20 currently shipped PHP files
 selected by `release-files.txt`. Directory roots include future PHP files under
 `src/` and `views/`. The inert index is included for complete shipped-path
@@ -36,8 +36,8 @@ rule or production annotation. On 27 September 2026, all 20 paths reported zero
 errors with the locked tools against certified Core
 `ffc11fc8e40618624a785b7fca5193029c6d492e` (beta.29). A temporary return-type
 violation in the documentation view failed `check:host` during analysis, before
-PHPUnit; the probe was removed. This coverage extension preserves level 3,
-production bytes, dependency locks and the certified-host tuple.
+PHPUnit; the probe was removed. That coverage extension retained the then-required
+level 3, production bytes, dependency locks and the certified-host tuple.
 
 The historical pilot measured these higher-level results on 11 August 2026
 (the pre-fix counts were reverified across all 20 shipped paths on 28 September
@@ -76,8 +76,18 @@ same method. Only `http_request_failed` becomes a transport error; other codes,
 including an empty code, still become fixed safe invalid-response errors.
 Non-error objects still reach the malformed-response guard. The expanded
 classification fixtures pass before and after the cleanup.
-Levels 3–8 now report zero findings across all 20 shipped PHP paths; the
-required gate stays at level 3 pending separately reviewed promotion.
+Levels 3–8 report zero findings across all 20 shipped PHP paths. The required
+gate is now level 8; the promotion changes configuration and guidance only.
+On 28 September 2026, each intermediate level 3–8 was rerun separately with
+zero findings against the same certified Core and locked tools. A temporary
+nullable `DateTimeImmutable` method-call probe passed levels 3 and 7, but failed
+the default `composer analyze` and `composer check:host` at level 8 before tests.
+The probe was removed and the clean host aggregate rerun.
+
+The locked WordPress stubs cover the symbols used by this add-on, with the
+filterable HTTP return correction above. Their 6.9.4 version is not a claim of
+complete WordPress 7.0 API coverage: retain the native WordPress 7.0.3 installed
+proof and review stub accuracy when adopting new WordPress APIs or tool versions.
 
 The three historical `BitbucketArchivePreparer::resolvedNamedRef()` findings
 were redundant outer `is_array($data)` checks against its native `array`
@@ -88,9 +98,9 @@ without installing archive hooks. Regression fixtures pass before and after
 the cleanup.
 
 The missing return-array shape on `Plugin::documentationSections()` is now
-documented to match its parameter and appended section. The required gate remains level 3.
+documented to match its parameter and appended section.
 
-Before raising the level, a follow-up must:
+For future analysis-tool or level changes:
 
 1. retain the WP_Error method contract and the transport error classification
    evidence described above;

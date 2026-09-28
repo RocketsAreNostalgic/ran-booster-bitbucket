@@ -59,7 +59,7 @@ composer build:release -- "$(git rev-parse HEAD)"
 ```
 
 `composer check` is the Core-independent source-quality contract used by the
-shared PHP provider. `composer check:host` adds blocking level-3 PHPStan analysis,
+shared PHP provider. `composer check:host` adds blocking level-8 PHPStan analysis,
 the Core-backed unit and release-candidate contracts and is required for the
 full repository handoff when the certified Core is available.
 
