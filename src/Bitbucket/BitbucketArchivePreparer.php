@@ -241,17 +241,15 @@ final readonly class BitbucketArchivePreparer {
 		?string $providerRepositoryId,
 		string $kind
 	): string {
-		$hash               = is_array( $data ) && is_array( $data['target'] ?? null )
+		$hash               = is_array( $data['target'] ?? null )
 			? $data['target']['hash'] ?? null
 			: null;
-		$returnedRepository = is_array( $data )
-			&& is_array( $data['target'] ?? null )
+		$returnedRepository = is_array( $data['target'] ?? null )
 			&& is_array( $data['target']['repository'] ?? null )
 			? $data['target']['repository']
 			: null;
 
-		if ( ! is_array( $data )
-			|| ! is_string( $data['name'] ?? null )
+		if ( ! is_string( $data['name'] ?? null )
 			|| ! hash_equals( $name, $data['name'] )
 			|| ! is_string( $hash )
 			|| 1 !== preg_match( '/^[0-9a-f]{40}$/i', $hash )
