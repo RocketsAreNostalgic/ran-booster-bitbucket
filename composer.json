@@ -63,14 +63,18 @@
         "standards": "vendor/bin/phpcs --standard=.phpcs.xml --report=summary",
         "standards:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
         "lint:syntax": "bash scripts/lint-syntax.sh",
+        "test:coverage": "bash tests/Workflow/product-php-coverage.sh",
+        "check:coverage": "php scripts/check-product-php-coverage.php",
         "analyze": "vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M",
         "test": "vendor/bin/phpunit --configuration phpunit.xml",
         "build:release": "bash scripts/build-release.sh",
         "verify:release": "bash scripts/verify-release.sh",
         "check": [
+            "@check:coverage",
             "@standards",
             "@lint:syntax",
-            "@test:syntax"
+            "@test:syntax",
+            "@test:coverage"
         ],
         "check:host": [
             "@analyze",
