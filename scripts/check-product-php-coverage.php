@@ -15,7 +15,10 @@ $filter = new RecursiveCallbackFilterIterator(
 );
 $files = [];
 foreach (new RecursiveIteratorIterator($filter) as $entry) {
-	if ($entry->isFile() && $entry->getExtension() === 'php') {
+	if ($entry->isFile() && strcasecmp($entry->getExtension(), 'php') === 0) {
+		if ($entry->getExtension() !== 'php') {
+			throw new RuntimeException('Review unsupported product PHP extension: ' . $entry->getPathname());
+		}
 		$files[] = str_replace(DIRECTORY_SEPARATOR, '/', substr($entry->getPathname(), strlen($root) + 1));
 	}
 }
@@ -36,38 +39,25 @@ foreach ($commands as $name => $expected) {
 	}
 }
 
-// Keep the supported local scope grammar narrow. New includes/exclusions or a
-// changed format require an explicit review instead of silently widening this proof.
-$neon = file_get_contents($root . '/phpstan.neon.dist');
-if ($neon === false || preg_match('/^\s*excludePaths\s*:/m', $neon)) {
-	throw new RuntimeException('Cannot certify PHPStan scope with unreadable or excluded paths.');
-}
-if (preg_match("/^\\s*['\"][^'\"]+['\"]\\s*:/m", $neon)) {
-	throw new RuntimeException('Review quoted PHPStan keys before certifying coverage.');
-}
-if (preg_match_all('/^includes\s*:/m', $neon) !== 1
-	|| !preg_match('/^includes:\s*\R\t- vendor\/szepeviktor\/phpstan-wordpress\/extension\.neon\R\Rparameters:/m', $neon)) {
+// Parse NEON with the locked PHPStan adapter so merge keys, quoted keys and
+// comments have the same meaning here as they do in the analysis command.
+require $root . '/vendor/autoload.php';
+$config = (new PHPStan\DependencyInjection\NeonAdapter([]))->load($root . '/phpstan.neon.dist');
+if (($config['includes'] ?? null) !== ['vendor/szepeviktor/phpstan-wordpress/extension.neon']) {
 	throw new RuntimeException('Review PHPStan includes before certifying coverage.');
 }
-if (preg_match_all('/^\s*paths\s*:/m', $neon) !== 1
-	|| !preg_match('/^\tpaths:\s*\R((?:\t\t- [^\r\n]+\R?)+)/m', $neon, $match)) {
+$parameters = $config['parameters'] ?? [];
+if (array_key_exists('excludePaths', $parameters)) {
+	throw new RuntimeException('Cannot certify PHPStan scope with excluded paths.');
+}
+if (!isset($parameters['paths']) || !is_array($parameters['paths'])) {
 	throw new RuntimeException('Review PHPStan paths before certifying coverage.');
 }
-$extensionCount = preg_match_all('/^\s*fileExtensions\s*:/m', $neon);
-if ($extensionCount > 0) {
-	if ($extensionCount !== 1 || !preg_match('/^\tfileExtensions:\s*\R((?:\t\t- [a-zA-Z0-9]+\R?)+)/m', $neon, $extensionMatch)) {
-		throw new RuntimeException('Review PHPStan file extensions before certifying PHP coverage.');
-	}
-	$extensions = array_map(static fn (string $line): string => substr($line, strlen("\t\t- ")),
-		preg_split('/\R/', rtrim($extensionMatch[1], "\r\n")));
-	if (!in_array('php', $extensions, true)) {
-		throw new RuntimeException('PHPStan file extensions omit PHP.');
-	}
+if (array_key_exists('fileExtensions', $parameters)
+	&& (!is_array($parameters['fileExtensions']) || !in_array('php', $parameters['fileExtensions'], true))) {
+	throw new RuntimeException('PHPStan file extensions omit PHP.');
 }
-$analysis = [];
-foreach (preg_split('/\R/', rtrim($match[1], "\r\n")) as $line) {
-	$analysis[] = substr($line, strlen("\t\t- "));
-}
+$analysis = $parameters['paths'];
 
 $xml = new DOMDocument();
 if (!@$xml->load($root . '/.phpcs.xml', LIBXML_NONET)) {
@@ -91,7 +81,7 @@ foreach (['PHPStan' => $analysis, 'PHPCS/PHPCBF' => $standards] as $tool => $pat
 		throw new RuntimeException("$tool selects no product paths.");
 	}
 	foreach ($paths as $path) {
-		if ($path === '' || str_starts_with($path, '/') || str_contains($path, '..')
+		if (!is_string($path) || $path === '' || str_starts_with($path, '/') || str_contains($path, '..')
 			|| str_contains($path, '*') || (!is_file($root . '/' . $path) && !is_dir($root . '/' . $path))) {
 			throw new RuntimeException("Review unsupported or missing $tool path: $path");
 		}

@@ -7,6 +7,7 @@ trap 'rm -rf "$work_root"' EXIT
 fixture="$work_root/repository with spaces"
 mkdir -p "$fixture/scripts" "$fixture/src" "$fixture/views" "$fixture/tests" "$fixture/vendor/bin" "$work_root/bin"
 cp "$repo_root/scripts/check-product-php-coverage.php" "$fixture/scripts/"
+ln -s "$repo_root/vendor/autoload.php" "$fixture/vendor/autoload.php"
 cp "$repo_root/phpstan.neon.dist" "$repo_root/.phpcs.xml" "$fixture/"
 for file in autoload.php index.php ran-booster-bitbucket.php src/Sample.php views/guide.php; do
 	printf '<?php\n' > "$fixture/$file"
@@ -46,6 +47,13 @@ if composer --working-dir="$fixture" check > "$work_root/new-root.log" 2>&1; the
 fi
 grep -q 'PHPStan does not directly select maintained PHP: new product/plugin.php' "$work_root/new-root.log" || fail 'root control did not run'
 rm -r "$fixture/new product"
+
+printf '<?php\n' > "$fixture/src/Skipped.PHP"
+if composer --working-dir="$fixture" check > "$work_root/uppercase.log" 2>&1; then
+	fail 'case-variant PHP extension escaped the required check'
+fi
+grep -q 'Review unsupported product PHP extension' "$work_root/uppercase.log" || fail 'uppercase control did not run'
+rm "$fixture/src/Skipped.PHP"
 
 printf '<?php\n' > "$fixture/src/Other.php"
 sed -i 's/\t\t- src$/\t\t- src\/Sample.php/' "$fixture/phpstan.neon.dist"
@@ -93,8 +101,25 @@ printf '\t"excludePaths":\n\t\t- src\n' >> "$fixture/phpstan.neon.dist"
 if composer --working-dir="$fixture" check > "$work_root/quoted-exclusion.log" 2>&1; then
 	fail 'quoted PHPStan exclusion escaped the required check'
 fi
-grep -q 'Review quoted PHPStan keys' "$work_root/quoted-exclusion.log" || fail 'quoted exclusion control did not run'
+grep -q 'Cannot certify PHPStan scope with excluded paths' "$work_root/quoted-exclusion.log" || fail 'quoted exclusion control did not run'
 cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+
+printf '\texcludePaths!:\n\t\t- src\n' >> "$fixture/phpstan.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/merge-exclusion.log" 2>&1; then
+	fail 'NEON merge-control exclusion escaped the required check'
+fi
+grep -q 'Cannot certify PHPStan scope with excluded paths' "$work_root/merge-exclusion.log" || fail 'merge exclusion control did not run'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+
+mkdir "$fixture/addon" "$fixture/addon # legacy"
+printf '<?php\n' > "$fixture/addon # legacy/plugin.php"
+sed -i '/\t\t- index.php/a\		- addon # legacy' "$fixture/phpstan.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/comment-path.log" 2>&1; then
+	fail 'unparsed NEON comment in source path escaped the required check'
+fi
+grep -q 'PHPStan does not directly select maintained PHP: addon # legacy/plugin.php' "$work_root/comment-path.log" || fail 'comment path control did not run'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+rm -r "$fixture/addon" "$fixture/addon # legacy"
 
 sed -i 's/--configuration=phpstan.neon.dist/--configuration=phpstan.neon.dist-narrow/' "$fixture/composer.json"
 if composer --working-dir="$fixture" check > "$work_root/command.log" 2>&1; then
@@ -114,4 +139,4 @@ if composer --working-dir="$fixture" check > "$work_root/positional-path.log" 2>
 fi
 grep -q 'actual Composer analyze configuration' "$work_root/positional-path.log" || fail 'positional path control did not run'
 
-printf 'Coverage regression passed: valid scopes; new root, narrowed paths, PHPCS exclusions, non-PHP extensions, quoted exclusions and command overrides rejected by required check.\n'
+printf 'Coverage regression passed: valid scopes; root/case-variant PHP, narrowed paths, PHPCS exclusions, parsed NEON variants and command overrides rejected by required check.\n'

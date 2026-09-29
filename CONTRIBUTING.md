@@ -39,7 +39,8 @@ analysis includes/exclusions, a non-PHP file extension list or standards
 exclusions (patterns and ignore arguments) also fail closed. The
 guard requires the reviewed Composer tool commands verbatim, so positional
 PHPStan paths and CLI overrides cannot quietly replace configured selection;
-quoted NEON mapping keys require an explicit parser review. The
+PHPStan's locked NEON adapter parses scope keys and values; unsupported PHP
+extension case variants fail before they can evade the lowercase PHP tools. The
 `composer test:coverage` disposable fixture proves that the required `check`
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release
