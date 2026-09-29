@@ -30,6 +30,22 @@ newlines in filenames, excluded invalid files, invalid PHP and failed discovery
 before or after a filename is emitted. It runs in the independent `composer check`
 and therefore also in `composer check:host` and native source-quality CI.
 
+`composer check:coverage` discovers maintained product PHP in the repository,
+excluding tests, scripts and generated/dependency directories. It checks that
+each discovered file is directly selected by both the configured PHPStan paths
+and the shared PHPCS/PHPCBF ruleset. New root or nested product PHP therefore
+fails until its analysis and standards scope is reviewed. Unexpected local
+analysis includes/exclusions, a non-PHP file extension list or standards
+exclusions (patterns and ignore arguments) also fail closed. The
+guard requires the reviewed Composer tool commands verbatim, so positional
+PHPStan paths and CLI overrides cannot quietly replace configured selection;
+PHPStan's locked NEON adapter parses scope keys and values; unsupported PHP
+extension case variants fail before they can evade the lowercase PHP tools. The
+`composer test:coverage` disposable fixture proves that the required `check`
+rejects a new root product file, narrowed analysis or standards scope and a
+PHPCS exclusion; `check:host` inherits this repository check. The release
+verifier and purpose-built test fixtures retain their separate scopes.
+
 ## Condition-style enforcement
 
 The WordPress Yoda-condition rule is enforced across the configured production

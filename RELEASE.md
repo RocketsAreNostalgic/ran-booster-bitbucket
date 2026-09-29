@@ -19,7 +19,7 @@ Do not recreate local Release Please lifecycle state, candidate markers, custom 
 ## Contributor release checks
 
 1. Review the Release Please pull request, including the plugin header, `readme.txt`, manifest and changelog versions.
-2. Run `composer check` for the Core-independent source-quality contract.
+2. Run `composer check` for the Core-independent source-quality contract, including the maintained-PHP analysis/standards coverage drift guard and its negative controls.
 3. Check out the exact Core release recorded in `extra.ran-booster-core-certification`, install its locked production dependencies, set `RAN_BOOSTER_CORE_PATH` and `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, and run `composer check:host`.
 4. `composer check:host` includes required level-8 PHPStan analysis before the host tests. Analysis errors fail the aggregate and the full repository Quality lane. `composer analyze` is available as a focused rerun; it is not an additional release step or an advisory gate. Direct analysis covers all shipped PHP: `autoload.php`, the plugin entrypoint, `src/`, `views/` and `index.php`. The certified Core tuple is unchanged.
 5. Run `composer build:release -- "$(git rev-parse HEAD)"`, then run `composer verify:release -- "build/ran-booster-bitbucket-<version>.zip" "$(git rev-parse HEAD)"` for the resulting ZIP. Preserve the package allowlist and exclusion of tests, vendor, Core code, caches, credentials and development tooling.
