@@ -33,7 +33,9 @@ $commands = [
 foreach ($commands as $name => [$executable, $config, $option]) {
 	$command = $composer['scripts'][$name] ?? null;
 	if (!is_string($command) || !str_starts_with($command, $executable . ' ')
-		|| substr_count($command, $option) !== 1 || !str_contains($command, $config)) {
+		|| substr_count($command, $option) !== 1
+		|| !preg_match('/(?:^|\s)' . preg_quote($config, '/') . '(?:\s|$)/', $command)
+		|| (str_starts_with($name, 'standards') && preg_match('/(?:^|\s)--ignore(?:=|\s|$)/', $command))) {
 		throw new RuntimeException("Review the actual Composer $name configuration before certifying coverage.");
 	}
 }
@@ -52,6 +54,17 @@ if (preg_match_all('/^\s*paths\s*:/m', $neon) !== 1
 	|| !preg_match('/^\tpaths:\s*\R((?:\t\t- [^\r\n]+\R?)+)/m', $neon, $match)) {
 	throw new RuntimeException('Review PHPStan paths before certifying coverage.');
 }
+$extensionCount = preg_match_all('/^\s*fileExtensions\s*:/m', $neon);
+if ($extensionCount > 0) {
+	if ($extensionCount !== 1 || !preg_match('/^\tfileExtensions:\s*\R((?:\t\t- [a-zA-Z0-9]+\R?)+)/m', $neon, $extensionMatch)) {
+		throw new RuntimeException('Review PHPStan file extensions before certifying PHP coverage.');
+	}
+	$extensions = array_map(static fn (string $line): string => substr($line, strlen("\t\t- ")),
+		preg_split('/\R/', rtrim($extensionMatch[1], "\r\n")));
+	if (!in_array('php', $extensions, true)) {
+		throw new RuntimeException('PHPStan file extensions omit PHP.');
+	}
+}
 $analysis = [];
 foreach (preg_split('/\R/', rtrim($match[1], "\r\n")) as $line) {
 	$analysis[] = substr($line, strlen("\t\t- "));
@@ -62,7 +75,7 @@ if (!@$xml->load($root . '/.phpcs.xml', LIBXML_NONET)) {
 	throw new RuntimeException('Cannot parse the PHPCS ruleset.');
 }
 $xpath = new DOMXPath($xml);
-if ($xpath->query('//exclude-pattern')->length !== 0) {
+if ($xpath->query('//exclude-pattern | //arg[@name="ignore"]')->length !== 0) {
 	throw new RuntimeException('Review PHPCS exclusions before certifying coverage.');
 }
 $standards = [];

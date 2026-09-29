@@ -35,7 +35,8 @@ excluding tests, scripts and generated/dependency directories. It checks that
 each discovered file is directly selected by both the configured PHPStan paths
 and the shared PHPCS/PHPCBF ruleset. New root or nested product PHP therefore
 fails until its analysis and standards scope is reviewed. Unexpected local
-analysis includes/exclusions or standards exclusions also fail closed. The
+analysis includes/exclusions, a non-PHP file extension list or standards
+exclusions (patterns and ignore arguments) also fail closed. The
 `composer test:coverage` disposable fixture proves that the required `check`
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release

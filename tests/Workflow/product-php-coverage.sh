@@ -32,6 +32,7 @@ echo json_encode(["scripts" => [
 	"check" => $source["check"],
 ]], JSON_THROW_ON_ERROR);
 ' "$repo_root/composer.json" > "$fixture/composer.json"
+cp "$fixture/composer.json" "$work_root/composer.clean.json"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$fixture/vendor/bin/phpcs"
 chmod +x "$fixture/vendor/bin/phpcs"
 
@@ -71,10 +72,33 @@ fi
 grep -q 'Review PHPCS exclusions' "$work_root/exclusion.log" || fail 'exclusion control did not run'
 cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
 
-sed -i 's/--configuration=phpstan.neon.dist/--configuration=other.neon/' "$fixture/composer.json"
+sed -i '/<file>src<\/file>/a\	<arg name="ignore" value="src/*"/>' "$fixture/.phpcs.xml"
+if composer --working-dir="$fixture" check > "$work_root/ignore.log" 2>&1; then
+	fail 'PHPCS ignore argument escaped the required check'
+fi
+grep -q 'Review PHPCS exclusions' "$work_root/ignore.log" || fail 'PHPCS ignore control did not run'
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
+printf '\tfileExtensions:\n\t\t- inc\n' >> "$fixture/phpstan.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/extensions.log" 2>&1; then
+	fail 'non-PHP PHPStan extension list escaped the required check'
+fi
+grep -q 'PHPStan file extensions omit PHP' "$work_root/extensions.log" || fail 'extension control did not run'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+printf '\tfileExtensions:\n\t\t- php\n' >> "$fixture/phpstan.neon.dist"
+composer --working-dir="$fixture" check > "$work_root/php-extension.log" 2>&1 || fail 'explicit PHP extension failed'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+
+sed -i 's/--configuration=phpstan.neon.dist/--configuration=phpstan.neon.dist-narrow/' "$fixture/composer.json"
 if composer --working-dir="$fixture" check > "$work_root/command.log" 2>&1; then
-	fail 'analysis command config drift escaped the required check'
+	fail 'similar analysis config name escaped the required check'
 fi
 grep -q 'actual Composer analyze configuration' "$work_root/command.log" || fail 'command control did not run'
+cp "$work_root/composer.clean.json" "$fixture/composer.json"
+sed -i 's/--standard=.phpcs.xml/--standard=.phpcs.xml-narrow/g' "$fixture/composer.json"
+if composer --working-dir="$fixture" check > "$work_root/standards-command.log" 2>&1; then
+	fail 'similar standards config name escaped the required check'
+fi
+grep -q 'actual Composer standards configuration' "$work_root/standards-command.log" || fail 'standards command control did not run'
 
-printf 'Coverage regression passed: valid scopes; new root, narrowed analysis/standards, PHPCS exclusion and command drift rejected by required check.\n'
+printf 'Coverage regression passed: valid scopes; new root, narrowed analysis/standards, PHPCS exclusions, non-PHP extensions and similar config names rejected by required check.\n'
