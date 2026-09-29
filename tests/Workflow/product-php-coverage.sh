@@ -89,6 +89,13 @@ printf '\tfileExtensions:\n\t\t- php\n' >> "$fixture/phpstan.neon.dist"
 composer --working-dir="$fixture" check > "$work_root/php-extension.log" 2>&1 || fail 'explicit PHP extension failed'
 cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
 
+printf '\t"excludePaths":\n\t\t- src\n' >> "$fixture/phpstan.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/quoted-exclusion.log" 2>&1; then
+	fail 'quoted PHPStan exclusion escaped the required check'
+fi
+grep -q 'Review quoted PHPStan keys' "$work_root/quoted-exclusion.log" || fail 'quoted exclusion control did not run'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
+
 sed -i 's/--configuration=phpstan.neon.dist/--configuration=phpstan.neon.dist-narrow/' "$fixture/composer.json"
 if composer --working-dir="$fixture" check > "$work_root/command.log" 2>&1; then
 	fail 'similar analysis config name escaped the required check'
@@ -100,5 +107,11 @@ if composer --working-dir="$fixture" check > "$work_root/standards-command.log" 
 	fail 'similar standards config name escaped the required check'
 fi
 grep -q 'actual Composer standards configuration' "$work_root/standards-command.log" || fail 'standards command control did not run'
+cp "$work_root/composer.clean.json" "$fixture/composer.json"
+php -r '$f = $argv[1]; $v = json_decode(file_get_contents($f), true, 512, JSON_THROW_ON_ERROR); $v["scripts"]["analyze"] .= " src"; file_put_contents($f, json_encode($v, JSON_THROW_ON_ERROR));' "$fixture/composer.json"
+if composer --working-dir="$fixture" check > "$work_root/positional-path.log" 2>&1; then
+	fail 'positional PHPStan path escaped the required check'
+fi
+grep -q 'actual Composer analyze configuration' "$work_root/positional-path.log" || fail 'positional path control did not run'
 
-printf 'Coverage regression passed: valid scopes; new root, narrowed analysis/standards, PHPCS exclusions, non-PHP extensions and similar config names rejected by required check.\n'
+printf 'Coverage regression passed: valid scopes; new root, narrowed paths, PHPCS exclusions, non-PHP extensions, quoted exclusions and command overrides rejected by required check.\n'

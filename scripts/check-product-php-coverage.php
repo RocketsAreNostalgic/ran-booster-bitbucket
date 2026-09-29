@@ -26,16 +26,12 @@ if ($files === []) {
 
 $composer = json_decode((string) file_get_contents($root . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 $commands = [
-	'analyze' => ['vendor/bin/phpstan analyse', '--configuration=phpstan.neon.dist', '--configuration'],
-	'standards' => ['vendor/bin/phpcs', '--standard=.phpcs.xml', '--standard'],
-	'standards:fix' => ['vendor/bin/phpcbf', '--standard=.phpcs.xml', '--standard'],
+	'analyze' => 'vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M',
+	'standards' => 'vendor/bin/phpcs --standard=.phpcs.xml --report=summary',
+	'standards:fix' => 'vendor/bin/phpcbf --standard=.phpcs.xml --report=summary',
 ];
-foreach ($commands as $name => [$executable, $config, $option]) {
-	$command = $composer['scripts'][$name] ?? null;
-	if (!is_string($command) || !str_starts_with($command, $executable . ' ')
-		|| substr_count($command, $option) !== 1
-		|| !preg_match('/(?:^|\s)' . preg_quote($config, '/') . '(?:\s|$)/', $command)
-		|| (str_starts_with($name, 'standards') && preg_match('/(?:^|\s)--ignore(?:=|\s|$)/', $command))) {
+foreach ($commands as $name => $expected) {
+	if (($composer['scripts'][$name] ?? null) !== $expected) {
 		throw new RuntimeException("Review the actual Composer $name configuration before certifying coverage.");
 	}
 }
@@ -45,6 +41,9 @@ foreach ($commands as $name => [$executable, $config, $option]) {
 $neon = file_get_contents($root . '/phpstan.neon.dist');
 if ($neon === false || preg_match('/^\s*excludePaths\s*:/m', $neon)) {
 	throw new RuntimeException('Cannot certify PHPStan scope with unreadable or excluded paths.');
+}
+if (preg_match("/^\\s*['\"][^'\"]+['\"]\\s*:/m", $neon)) {
+	throw new RuntimeException('Review quoted PHPStan keys before certifying coverage.');
 }
 if (preg_match_all('/^includes\s*:/m', $neon) !== 1
 	|| !preg_match('/^includes:\s*\R\t- vendor\/szepeviktor\/phpstan-wordpress\/extension\.neon\R\Rparameters:/m', $neon)) {

@@ -37,6 +37,9 @@ and the shared PHPCS/PHPCBF ruleset. New root or nested product PHP therefore
 fails until its analysis and standards scope is reviewed. Unexpected local
 analysis includes/exclusions, a non-PHP file extension list or standards
 exclusions (patterns and ignore arguments) also fail closed. The
+guard requires the reviewed Composer tool commands verbatim, so positional
+PHPStan paths and CLI overrides cannot quietly replace configured selection;
+quoted NEON mapping keys require an explicit parser review. The
 `composer test:coverage` disposable fixture proves that the required `check`
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release
