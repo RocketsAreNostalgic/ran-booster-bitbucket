@@ -17,9 +17,9 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 	) {
 	}
 
-	public function validateCredential( string $credentialId, float|int $timeout = 15, int $responseSize = 262144 ): CredentialValidationResult {
+	public function validateCredential( string $credentialId, float|int $timeout = 15, int $response_size = 262144 ): CredentialValidationResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		try {
-			$credential = $this->credentials->load( $credentialId );
+			$credential = $this->credentials->load( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
 		} catch ( BitbucketCredentialException ) {
 			return CredentialValidationResult::invalid();
 		}
@@ -27,7 +27,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 		$url = self::API_BASE . rawurlencode( $credential->get_workspace() ) . '?pagelen=1';
 
 		try {
-			$response = $this->api->get( $url, $credential, $timeout, $responseSize );
+			$response = $this->api->get( $url, $credential, $timeout, $response_size );
 		} catch ( BitbucketApiException $exception ) {
 			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
 				return CredentialValidationResult::unavailable();
