@@ -7,6 +7,7 @@
 
 	<file>ran-booster-bitbucket.php</file>
 	<file>autoload.php</file>
+	<file>index.php</file>
 	<file>src</file>
 	<file>views</file>
 
@@ -16,47 +17,10 @@
 	<arg name="parallel" value="4"/>
 	<arg value="sp"/>
 
-	<rule ref="RANWordPressPlugin">
-		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
-	</rule>
+	<rule ref="RANWordPressPlugin"/>
 
-	<!-- Completed value-object, credential, HTTP, repository, archive, diagnostics, Plugin, policy, webhook and provider internals scope; remaining owned naming is tracked in #63 / organisation #65. -->
-	<rule ref="RANOwnedMethods">
-		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredential.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialLoader.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialException.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketApiClient.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketRepositoryBrowser.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketArchivePreparer.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketDiagnostics.php</include-pattern>
-		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialPolicy.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketWebhookPolicy.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketWebhookNormalizer.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketProvider.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialValidator.php</include-pattern>
-	</rule>
-	<rule ref="WordPress.NamingConventions.ValidVariableName">
-		<include-pattern>/src/Bitbucket/BitbucketApiResponse.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketRepositoryCoordinates.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredential.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialLoader.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialException.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketApiClient.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketApiException.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketRepositoryBrowser.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketArchivePreparer.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketDiagnostics.php</include-pattern>
-		<include-pattern>/src/Bitbucket/Plugin.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialPolicy.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketWebhookPolicy.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketWebhookNormalizer.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketProvider.php</include-pattern>
-		<include-pattern>/src/Bitbucket/BitbucketCredentialValidator.php</include-pattern>
-	</rule>
+	<!-- Enforce owned methods across all product paths, including future classes with inheritance. -->
+	<rule ref="RANOwnedMethods"/>
 
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
@@ -65,15 +29,6 @@
 				<element value="RAN\\"/>
 			</property>
 		</properties>
-	</rule>
-	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound">
-		<severity>0</severity>
-	</rule>
-	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
-		<severity>0</severity>
-	</rule>
-	<rule ref="Universal.NamingConventions.NoReservedKeywordParameterNames">
-		<severity>0</severity>
 	</rule>
 	<rule ref="WordPress.WP.I18n">
 		<properties>

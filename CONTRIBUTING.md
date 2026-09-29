@@ -38,26 +38,28 @@ collection-path comparison retains strict inequality and the existing parse
 failure short circuit; only operand order changed. Existing pagination tests
 pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
-Owned method/variable naming is enforced for all sixteen current product class
-files listed below, with narrow certified Core exceptions. Future-file scope and
-final exception disposition remain with the owning programme.
+Owned method/variable naming is enforced across all configured product paths,
+including future classes and classes with inherited or implemented contracts.
+Narrow certified Core exceptions remain at the affected declarations/accesses.
 
-## Scoped owned-name enforcement
+## Production naming enforcement
 
-`RANOwnedMethods` and WordPress variable naming cover exactly
-`BitbucketApiResponse.php`, `BitbucketRepositoryCoordinates.php`,
-`BitbucketCredential.php`, `BitbucketCredentialLoader.php`,
-`BitbucketCredentialException.php`, `BitbucketApiClient.php`,
-`BitbucketApiException.php`, `BitbucketRepositoryBrowser.php`,
-`BitbucketArchivePreparer.php`, `BitbucketDiagnostics.php`, `Plugin.php`,
-`BitbucketCredentialPolicy.php`, `BitbucketWebhookPolicy.php`,
-`BitbucketWebhookNormalizer.php`, `BitbucketProvider.php` and
-`BitbucketCredentialValidator.php`.
-Constructors retain their required magic spelling. All current product class
-files now have selected enforcement with the narrow
-Core contract exceptions below. Future-file scope and final exclusion disposition
-remain under #63 / organisation #65; preserve Core-required signatures.
-Tests and purpose-built fixtures keep their existing separate scope.
+`RANOwnedMethods` and the shared WordPress naming rules cover `src/`, `views/`,
+`autoload.php`, `ran-booster-bitbucket.php` and `index.php`: all 20 currently
+shipped PHP files. Check and fix use this same scope; new PHP files under the
+configured directories are included automatically. Tests and purpose-built
+fixtures keep their existing separate scope.
+
+The former per-class allowlist and blanket method-name, namespace-prefix,
+unused-parameter and reserved-parameter suppressions have been removed.
+Unused-parameter checks follow the shared WPCS baseline, including its upstream
+inherited-signature allowances. The autoloader uses `class_name` for its owned
+callback parameter. PHP magic
+methods retain their required spelling. Precise certified Core exceptions below
+remain temporary connected-contract debt under Core #167; production-wide
+coverage does not mean those contracts have migrated.
+
+Completed owned-name migrations:
 
 | Owned scope | Owned-name migration |
 | --- | --- |
