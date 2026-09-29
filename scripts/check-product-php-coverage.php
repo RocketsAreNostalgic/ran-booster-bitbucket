@@ -24,6 +24,20 @@ if ($files === []) {
 	throw new RuntimeException('No maintained product PHP files were discovered.');
 }
 
+$composer = json_decode((string) file_get_contents($root . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
+$commands = [
+	'analyze' => ['vendor/bin/phpstan analyse', '--configuration=phpstan.neon.dist', '--configuration'],
+	'standards' => ['vendor/bin/phpcs', '--standard=.phpcs.xml', '--standard'],
+	'standards:fix' => ['vendor/bin/phpcbf', '--standard=.phpcs.xml', '--standard'],
+];
+foreach ($commands as $name => [$executable, $config, $option]) {
+	$command = $composer['scripts'][$name] ?? null;
+	if (!is_string($command) || !str_starts_with($command, $executable . ' ')
+		|| substr_count($command, $option) !== 1 || !str_contains($command, $config)) {
+		throw new RuntimeException("Review the actual Composer $name configuration before certifying coverage.");
+	}
+}
+
 // Keep the supported local scope grammar narrow. New includes/exclusions or a
 // changed format require an explicit review instead of silently widening this proof.
 $neon = file_get_contents($root . '/phpstan.neon.dist');
