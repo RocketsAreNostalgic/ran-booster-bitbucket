@@ -20,7 +20,7 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entryFile );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentationFile );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*11\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*12\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
@@ -36,11 +36,29 @@ final class CoreContractTest extends TestCase {
 
 		$certification = $this->certification();
 		$commit        = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' rev-parse HEAD' );
-		$tag           = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' describe --tags --exact-match HEAD' );
 		self::assertIsString( $commit );
-		self::assertIsString( $tag );
-		self::assertSame( $certification['commit'], trim( $commit ) );
-		self::assertSame( $certification['tag'], trim( $tag ) );
+		if ( 'candidate' === getenv( 'RAN_BOOSTER_CORE_TEST_MODE' ) ) {
+			$composer = json_decode( (string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local candidate identity.
+			self::assertSame( $composer['extra']['ran-booster-core-candidate']['commit'], trim( $commit ) );
+		} else {
+			$tag = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' describe --tags --exact-match HEAD' );
+			self::assertIsString( $tag );
+			self::assertSame( $certification['commit'], trim( $commit ) );
+			self::assertSame( $certification['tag'], trim( $tag ) );
+		}
+	}
+
+	public function testCandidateModeRejectsAnUnrelatedCheckoutAndUnknownMode(): void {
+		$root = dirname( __DIR__, 2 );
+		foreach ( array( 'candidate' => 'requires the exact configured Core checkout', 'unknown' => 'Unsupported Core test mode' ) as $mode => $message ) {
+			$program = 'require ' . var_export( $root . '/tests/fixtures/certified-core-checkout.php', true ) . '; try { ran_booster_bitbucket_certified_core_root(); echo "unexpected success"; } catch (RuntimeException $error) { echo $error->getMessage(); }';
+			$command = 'RAN_BOOSTER_CORE_TEST_MODE=' . escapeshellarg( $mode )
+				. ' RAN_BOOSTER_CORE_PATH=' . escapeshellarg( $root )
+				. ' ' . escapeshellarg( PHP_BINARY ) . ' -r ' . escapeshellarg( $program );
+			$output = shell_exec( $command );
+			self::assertIsString( $output );
+			self::assertStringContainsString( $message, $output );
+		}
 	}
 
 	public function testInstalledProofSeparatesTagTargetFromArchiveSource(): void {
@@ -57,13 +75,13 @@ final class CoreContractTest extends TestCase {
 		);
 	}
 
-	public function testQualityPinsTheExactReleasedCoreAndCurrentSetupPhpAction(): void {
+	public function testQualityPinsExactCandidateSourceWithoutClaimingReleasedCertification(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
-		self::assertStringContainsString( '.extra["ran-booster-core-certification"].tag', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-candidate"].commit', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
 		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
-		self::assertStringContainsString( 'git describe --tags --exact-match HEAD', $workflow );
+		self::assertStringNotContainsString( 'git describe --tags --exact-match HEAD', $workflow );
 		self::assertStringContainsString( 'composer validate --strict --no-check-all --no-check-publish', $workflow );
 		self::assertStringContainsString( 'shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2', $workflow );
 	}

@@ -41,7 +41,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'availability'      => 'free',
 				'requires-wordpress' => '7.0',
 				'requires-php'      => '8.2',
-				'booster-apis'      => array( 'required' => array( 'provider' => 11, 'addon' => 16 ), 'optional' => array() ),
+				'booster-apis'      => array( 'required' => array( 'provider' => 12, 'addon' => 16 ), 'optional' => array() ),
 				'maturity'          => 'beta',
 				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
 				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
@@ -52,7 +52,7 @@ final class PluginCompatibilityTest extends TestCase {
 		);
 		self::assertStringContainsString( 'Plugin Name: RAN Booster Bitbucket Cloud', $entrypoint );
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
-		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '12 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		$security = file_get_contents( $root . '/SECURITY.md' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local public-support contract.
 		self::assertIsString( $security );
@@ -131,18 +131,26 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function testItFailsClosedWithImmediateOldProviderAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-sixteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eleven-addon-sixteen' );
 	}
 
 	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eleven-addon-fifteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-twelve-addon-fifteen' );
 	}
 
 	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-ten-addon-fifteen' );
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eleven-addon-fifteen' );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiElevenWithoutClaimingOptionalCapabilities(): void {
+	public function testItFailsClosedWithNewerProviderApi(): void {
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-thirteen-addon-sixteen' );
+	}
+
+	public function testItFailsClosedWithNewerAddOnApi(): void {
+		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-twelve-addon-seventeen' );
+	}
+
+	public function testItRegistersOnlyAgainstProviderApiTwelveWithoutClaimingOptionalCapabilities(): void {
 		$result = $this->runFixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
@@ -252,6 +260,7 @@ final class PluginCompatibilityTest extends TestCase {
 			self::assertSame( $markersDefinedWhenLoaded, $result['markers_defined_when_loaded'], $fixtureMode );
 			self::assertFalse( $result['provider_loaded'], $fixtureMode );
 			self::assertFalse( $result['registered'], $fixtureMode );
+			self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'], $fixtureMode );
 			self::assertSame( 0, $result['credential_store_reads'], $fixtureMode );
 			self::assertSame( 0, $result['remote_calls'], $fixtureMode );
 		}
