@@ -2,7 +2,17 @@
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. Then check out the exact Core release recorded in `extra.ran-booster-core-certification`, set `RAN_BOOSTER_CORE_PATH` to that checkout, run `composer check:host` for the Core-backed unit and release-candidate contracts, and run `composer build:release`. The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 12 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`18b0ec619174000a9a9dbc27b9d68b44b0265449`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
+
+```sh
+export RAN_BOOSTER_CORE_TEST_MODE=candidate
+export RAN_BOOSTER_CORE_PATH=../ran-booster
+export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
+composer check:host
+composer analyze
+```
+
+The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These candidate checks do not replace certification against a matching immutable Core release or installed proof. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 
