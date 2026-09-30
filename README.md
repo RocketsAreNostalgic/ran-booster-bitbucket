@@ -43,18 +43,23 @@ installation records or credential storage to remove.
 ## Development
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
-use the exact certified RAN Booster production source as their contract fixture.
-The suite loads Core's shipped `autoload.php` and public production contracts,
-which require the exact certified Core checkout's locked production Composer
-dependencies. Do not install Core development dependencies. With the certified
-Core checkout at `../ran-booster`:
+use the exact API 12 candidate in `extra.ran-booster-core-candidate.commit`
+(currently `18b0ec619174000a9a9dbc27b9d68b44b0265449`) as their contract fixture.
+Check out that commit in a separate Core checkout at `../ran-booster`. The suite
+loads Core's shipped `autoload.php` and public production contracts, which require
+that checkout's locked production Composer dependencies. Do not install Core
+development dependencies. Candidate mode is explicit and verifies the checkout's
+exact commit; it does not certify a Core release. From this add-on checkout:
 
 ```sh
 composer install
 composer check
 (cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
-RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer check:host
-RAN_BOOSTER_CORE_PATH=../ran-booster RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php composer analyze
+export RAN_BOOSTER_CORE_TEST_MODE=candidate
+export RAN_BOOSTER_CORE_PATH=../ran-booster
+export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
+composer check:host
+composer analyze
 composer build:release -- "$(git rev-parse HEAD)"
 ```
 
@@ -63,9 +68,14 @@ shared PHP provider. It also checks that maintained product PHP remains directly
 selected by PHPStan and PHPCS/PHPCBF, including future root files.
 `composer check:host` adds blocking level-8 PHPStan analysis,
 the Core-backed unit and release-candidate contracts and is required for the
-full repository handoff when the certified Core is available.
+source handoff when the exact candidate Core is available. It does not replace
+release certification or installed proof.
 
-Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
+Set `RAN_BOOSTER_CORE_PATH` if the exact candidate Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
+The default test mode uses the historical `ran-booster-core-certification` tuple;
+that API 11 release cannot qualify this API 12 branch. Keep candidate mode enabled
+for both host checks and focused analysis. Follow [RELEASE.md](RELEASE.md) for the
+separate matching-release and installed-proof requirements before merge/publication.
 Do not import Core-owned test fixtures into this repository. The add-on owns its
 PHP tools in its local `vendor/`, but never packages a vendor tree or Core code
 in the release artifact. PHPStan is a blocking, Bitbucket-only host gate; read
