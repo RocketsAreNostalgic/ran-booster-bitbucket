@@ -42,6 +42,8 @@ ordinary PR / main
 
 `workflow_dispatch` on `Quality` is intentionally input-free. The shared Profile B workflow dispatches the canonical Release Please branch when exact candidate qualification is required; the repository validates that the dispatched revision is the unique bot-owned Release Please candidate before treating it as the release-candidate lane.
 
+Candidate content validation compares the actual pull-request base and head. The head must descend from that base, and the net change must contain exactly the four generated release files with aligned versions, preserved changelog history and no unrelated bootstrap or readme edits. Commit count and merge-parent order do not determine content validity; refreshing a candidate from main uses its refreshed pull-request base for this comparison. Repository merge policy still applies.
+
 The release workflow is a thin caller pinned to the reviewed shared Profile B implementation. It does not rebuild release bytes. The shared promoter downloads the exact run/attempt artifact named by the successful main Quality run and requires the promotion manifest to bind repository, admitted SHA, tag, asset names and SHA-256 digests. Missing, conflicting or expired evidence fails closed.
 
 Release Please is configured with `draft: true` and `force-tag-creation: true`. Publication occurs only after the exact tested assets have been attached and read back. GitHub immutable releases remain an external production constraint.

@@ -14,8 +14,6 @@ release_commit=$(git rev-parse --verify "$2^{commit}") \
 
 git merge-base --is-ancestor "$base_commit" "$release_commit" \
 	|| fail 'release commit does not descend from its pull-request base.'
-[[ "$(git rev-parse "${release_commit}^")" == "$base_commit" ]] \
-	|| fail 'release candidate must be the single generated commit directly above its pull-request base.'
 
 expected_changes=$(printf '%s\n' \
 	$'M\t.release-please-manifest.json' \
