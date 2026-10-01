@@ -14,11 +14,11 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 	private const EMAIL_CONSTANT     = 'RAN_BOOSTER_BITBUCKET_EMAIL';
 	private const TOKEN_CONSTANT     = 'RAN_BOOSTER_BITBUCKET_TOKEN';
 
-	public function getProvider(): ProviderCode { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
+	public function get_provider(): ProviderCode {
 		return ProviderCode::parse( 'bb' );
 	}
 
-	public function normalizeCredential( array $metadata, mixed $secret ): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
+	public function normalize_credential( array $metadata, mixed $secret ): array {
 		$label         = $this->required_string( $metadata['label'] ?? null, 'Credential label' );
 		$kind          = $this->required_string( $metadata['kind'] ?? null, 'Credential kind' );
 		$configuration = $metadata['configuration'] ?? array();
@@ -60,11 +60,11 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		);
 	}
 
-	public function getConstantNames(): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
+	public function get_constant_names(): array {
 		return array( self::WORKSPACE_CONSTANT, self::EMAIL_CONSTANT, self::TOKEN_CONSTANT );
 	}
 
-	public function credentialFromConstants( array $constants ): ?array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderCredentialPolicy signature; migrate with Core #167.
+	public function credential_from_constants( array $constants ): ?array {
 		$workspace = $constants[ self::WORKSPACE_CONSTANT ] ?? '';
 		$email     = $constants[ self::EMAIL_CONSTANT ] ?? '';
 		$token     = $constants[ self::TOKEN_CONSTANT ] ?? '';
@@ -81,7 +81,7 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 			throw new RuntimeException( 'Bitbucket deployment constants require workspace, email, and API token together.' );
 		}
 
-		return $this->normalizeCredential(
+		return $this->normalize_credential(
 			array(
 				'label'         => 'Deployment configuration',
 				'kind'          => 'api-token',

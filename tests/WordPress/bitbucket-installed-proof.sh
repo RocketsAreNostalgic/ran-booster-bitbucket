@@ -188,8 +188,10 @@ unset RAN_BOOSTER_BITBUCKET_LOAD_ORDER
 
 export RAN_BOOSTER_BITBUCKET_INERT_MODE=absent
 wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
-export RAN_BOOSTER_BITBUCKET_INERT_MODE=incompatible
-wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
+for inert_mode in incompatible provider-twelve provider-fourteen addon-fifteen addon-seventeen; do
+	export RAN_BOOSTER_BITBUCKET_INERT_MODE="$inert_mode"
+	wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
+done
 unset RAN_BOOSTER_BITBUCKET_INERT_MODE
 
 printf 'Bitbucket installed proof passed for %s (%s) against certified Core %s (tag %s, archive %s).\n' \

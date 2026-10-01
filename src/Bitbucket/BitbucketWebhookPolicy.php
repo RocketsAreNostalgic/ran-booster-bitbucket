@@ -11,19 +11,19 @@ use RuntimeException;
 
 final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 
-	public function getProvider(): ProviderCode { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function get_provider(): ProviderCode {
 		return ProviderCode::parse( 'bb' );
 	}
 
-	public function getRetainedHeaders(): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function get_retained_headers(): array {
 		return array( 'x-event-key', 'x-request-uuid', 'x-hub-signature' );
 	}
 
-	public function getSignatureHeader(): string { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function get_signature_header(): string {
 		return 'x-hub-signature';
 	}
 
-	public function normalizeWebhook( array $metadata, mixed $secret ): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function normalize_webhook( array $metadata, mixed $secret ): array {
 		$label        = $this->required_string( $metadata['label'] ?? null, 'Webhook secret label' );
 		$scope        = $this->required_string( $metadata['scope'] ?? null, 'Webhook secret scope' );
 		$target       = isset( $metadata['target'] ) && is_string( $metadata['target'] )
@@ -58,20 +58,20 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		);
 	}
 
-	public function getConstantNames(): array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function get_constant_names(): array {
 		return array();
 	}
 
-	public function webhookFromConstants( array $constants ): ?array { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function webhook_from_constants( array $constants ): ?array {
 		return null;
 	}
 
-	public function authorizeWebhook( // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function authorize_webhook(
 		SignedWebhookVerification $verification,
-		string $repositoryAuthorityId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+		string $repositoryAuthorityId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 		string $repository
 	): bool {
-		if ( '' === $repositoryAuthorityId || ! $verification->getProvider()->equals( $this->getProvider() ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+		if ( '' === $repositoryAuthorityId || ! $verification->getProvider()->equals( $this->get_provider() ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 			return false;
 		}
 
@@ -83,7 +83,7 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 			if ( ( 'owner' === $scope && '' !== $target && $target === $workspace )
 				|| ( 'repository' === $scope
 					&& '' !== $profile['authority_id']
-					&& hash_equals( $profile['authority_id'], $repositoryAuthorityId ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+					&& hash_equals( $profile['authority_id'], $repositoryAuthorityId ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 			) {
 				return true;
 			}
@@ -92,8 +92,8 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		return false;
 	}
 
-	public function repositoryTargetMatches( string $target, string $repositoryLocator ): bool { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
-		return 0 === strcasecmp( trim( $target, '/' ), trim( $repositoryLocator, '/' ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core ProviderWebhookPolicy signature; migrate with Core #167.
+	public function repository_target_matches( string $target, string $repositoryLocator ): bool { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+		return 0 === strcasecmp( trim( $target, '/' ), trim( $repositoryLocator, '/' ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 	}
 
 	private function assert_secret( string $secret ): void {

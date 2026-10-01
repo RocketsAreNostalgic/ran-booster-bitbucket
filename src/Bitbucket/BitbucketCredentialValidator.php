@@ -17,9 +17,9 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 	) {
 	}
 
-	public function validateCredential( string $credentialId, float|int $timeout = 15, int $response_size = 262144 ): CredentialValidationResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+	public function validate_credential( string $credentialId, float|int $timeout = 15, int $response_size = 262144 ): CredentialValidationResult { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 		try {
-			$credential = $this->credentials->load( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+			$credential = $this->credentials->load( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
 		} catch ( BitbucketCredentialException ) {
 			return CredentialValidationResult::invalid();
 		}

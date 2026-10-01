@@ -32,11 +32,11 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$this->policy = new BitbucketWebhookPolicy();
 	}
 
-	public function getWebhookPolicy(): ProviderWebhookPolicy { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
+	public function get_webhook_policy(): ProviderWebhookPolicy {
 		return $this->policy;
 	}
 
-	public function diagnoseWebhookReadiness(): ProviderDiagnosticResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
+	public function diagnose_webhook_readiness(): ProviderDiagnosticResult {
 		try {
 			if ( ! $this->webhook_profiles->hasWebhookProfile() ) {
 				return new ProviderDiagnosticResult(
@@ -91,7 +91,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		);
 	}
 
-	public function normalizeWebhook( WebhookRequest $request ): WebhookEnvelope { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
+	public function normalize_webhook( WebhookRequest $request ): WebhookEnvelope {
 		if ( ! $request->getProvider()->equals( ProviderCode::parse( 'bb' ) ) ) {
 			throw new WebhookRejected( 400, 'Webhook provider does not match Bitbucket.' );
 		}
@@ -109,7 +109,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$payload      = $this->decode_push_payload( $body );
 		$repository   = $this->push_repository( $payload );
 
-		if ( ! $this->policy->authorizeWebhook( $verification, $repository['id'], $repository['coordinates']->get_full_name() ) ) {
+		if ( ! $this->policy->authorize_webhook( $verification, $repository['id'], $repository['coordinates']->get_full_name() ) ) {
 			throw new WebhookRejected( 401, 'Webhook authentication failed.' );
 		}
 

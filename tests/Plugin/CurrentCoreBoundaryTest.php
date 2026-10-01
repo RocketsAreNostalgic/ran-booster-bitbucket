@@ -11,11 +11,11 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 final class CurrentCoreBoundaryTest extends TestCase {
-	public function testRuntimeUsesThePublishedApiTupleAndProviderRegistrationContract(): void {
+	public function testRuntimeUsesTheRequiredApiTupleAndProviderRegistrationContract(): void {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
-		self::assertStringContainsString( '11 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '13 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '16 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $delivery_evidence', $plugin );
 		self::assertStringContainsString( 'ProviderRegistrationContext $registration_context', $plugin );
@@ -23,7 +23,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringNotContainsString( 'class_exists( ProviderRegistrationContext::class )', $plugin );
 	}
 
-	public function testRepositoryTestsUseOnlyTheCertifiedCoreProductionAutoloader(): void {
+	public function testRepositoryTestsUseOnlyThePinnedCoreProductionAutoloader(): void {
 		$root = dirname( __DIR__, 2 );
 
 		foreach ( array( 'tests/bootstrap.php', 'tests/phpstan-bootstrap.php', 'tests/fixtures/plugin-lifecycle.php' ) as $path ) {
@@ -48,7 +48,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
-		self::assertStringContainsString( 'Install certified Core production dependencies', $workflow );
+		self::assertStringContainsString( 'Install candidate Core production dependencies', $workflow );
 		self::assertStringContainsString( 'composer install --no-dev --no-interaction --prefer-dist --no-progress', $workflow );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $workflow );
 		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install\n", $workflow );
@@ -68,7 +68,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 
 		try {
 			$this->expectException( \RuntimeException::class );
-			$this->expectExceptionMessage( 'requires the exact certified Core checkout' );
+			$this->expectExceptionMessage( 'requires the exact configured Core checkout' );
 			\ran_booster_bitbucket_certified_core_root();
 		} finally {
 			if ( false === $previous ) {

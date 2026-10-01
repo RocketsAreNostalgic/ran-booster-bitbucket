@@ -8,7 +8,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 $mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
-if ( ! in_array( $mode, array( 'absent', 'incompatible' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fourteen', 'addon-fifteen', 'addon-seventeen' ), true ) ) {
 	throw new RuntimeException( 'A supported installed inertness mode is required.' );
 }
 $expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
@@ -25,9 +25,17 @@ if ( $expectedVersion !== ( $pluginData['Version'] ?? null )
 	throw new RuntimeException( 'The inertness lane did not retain the exact installed Bitbucket candidate.' );
 }
 
-if ( 'incompatible' === $mode ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', 9 );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', 16 );
+$apiVersions = match ( $mode ) {
+	'incompatible' => array( 11, 16 ),
+	'provider-twelve' => array( 12, 16 ),
+	'provider-fourteen' => array( 14, 16 ),
+	'addon-fifteen' => array( 13, 15 ),
+	'addon-seventeen' => array( 13, 17 ),
+	default => null,
+};
+if ( null !== $apiVersions ) {
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
 }
 require $pluginFile;
@@ -59,9 +67,9 @@ try {
 if ( 0 !== $requests || array() !== $sections || class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ) ) {
 	throw new RuntimeException( 'The installed Bitbucket candidate was not inert without exact Core.' );
 }
-if ( 'incompatible' === $mode
-	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 9 !== RAN_BOOSTER_PROVIDER_API_VERSION
-		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION )
+if ( null !== $apiVersions
+	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || $apiVersions[0] !== RAN_BOOSTER_PROVIDER_API_VERSION
+		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || $apiVersions[1] !== RAN_BOOSTER_ADDON_API_VERSION )
 ) {
 	throw new RuntimeException( 'The incompatible installed Core fixture is invalid.' );
 }

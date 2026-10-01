@@ -2,7 +2,17 @@
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. Then check out the exact Core release recorded in `extra.ran-booster-core-certification`, set `RAN_BOOSTER_CORE_PATH` to that checkout, run `composer check:host` for the Core-backed unit and release-candidate contracts, and run `composer build:release`. The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 13 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`d18299fd4ad69b2df1efd319d604d1a2195b6d2d`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
+
+```sh
+export RAN_BOOSTER_CORE_TEST_MODE=candidate
+export RAN_BOOSTER_CORE_PATH=../ran-booster
+export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
+composer check:host
+composer analyze
+```
+
+The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These candidate checks do not replace certification against a matching immutable Core release or installed proof. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 
@@ -75,7 +85,7 @@ methods retain their required spelling. Precise certified Core exceptions below
 remain temporary connected-contract debt under Core #167; production-wide
 coverage does not mean those contracts have migrated.
 
-Completed owned-name migrations:
+Earlier owned-name migrations (before the connected API 13 tranche below):
 
 | Owned scope | Owned-name migration |
 | --- | --- |
@@ -100,36 +110,38 @@ The browser/archive scope retains nine line-specific
 connected-contract exceptions under Core #167, not exceptions for locally owned
 variables or methods. Remove them with the qualified Core field migration.
 
-The two policy files retain declaration-specific `NotSnakeCase` suppressions
-for the twelve `ProviderCredentialPolicy` / `ProviderWebhookPolicy` methods.
-Five line-specific `VariableNotSnakeCase` suppressions preserve the declarations
-and uses of `repositoryAuthorityId` / `repositoryLocator`, preserving named-argument
-compatibility. These temporary certified-contract exceptions belong to Core #167;
-remove them with its qualified connected signature migration. Owned helpers and
-locals remain enforced; no whole-method or whole-class exception is used.
+## Provider API 13 connected methods
 
-`BitbucketWebhookNormalizer` retains three declaration-specific `NotSnakeCase`
-suppressions for its certified Core interface methods and one line-specific
-`UsedPropertyNotSnakeCase` suppression for
-`AuthenticatedWebhookDeliveryEvidence::matchedManagedPackage`. Remove these
-with Core #167's qualified connected signature/field migration. Its own properties,
-constructor parameters, locals and private helpers remain enforced.
+The connected Core #167 tranche now migrates 28 interface declarations across
+five Bitbucket classes and their resolved callers to snake_case. The exact
+Core mapping is the interface diff in candidate
+`d18299fd4ad69b2df1efd319d604d1a2195b6d2d` (47 declarations across 20 interfaces).
+The earlier table records historical stages; its statements retaining public
+method names are superseded by this methods-only tranche.
 
-Provider/Validator retain thirteen declaration-specific `NotSnakeCase`
-suppressions for their certified Core interface methods, four line-specific
-`VariableNotSnakeCase` suppressions for `credentialId` declarations/uses, and
-two `UsedPropertyNotSnakeCase` suppressions for `RepositoryLookupRequest` fields
-`credentialId` / `publicOnly`. Core #167 owns removal with its qualified connected
-signature/field migration. The Validator-only optional timeout/response-size
-arguments are not part of Core's one-argument interface.
+All 28 obsolete declaration-specific `NotSnakeCase` waivers are removed.
+`composer test:naming` checks the production scope and deliberately restores
+each old spelling in disposable copies to prove that all 28 declarations are
+blocked by the existing `RANOwnedMethods` gate. `composer check` includes this
+control; configured PHPCS/PHPCBF coverage and the level-8 analysis floor remain.
 
-No coexistence aliases are provided during beta. Audited callers move with these
-methods; similarly named request and Core methods are unchanged.
-Coordinate validation, case-insensitive matching, response bytes/status, wire
-keys, URL/path/query restrictions, HTTP classification, malformed-response guards,
-pagination/budgets/partial results,
-repository/ref/commit identity, archive authentication and cleanup,
-host API generation and the certified Core tuple remain unchanged.
+Public parameters remain unchanged, including `credentialId`,
+`repositoryAuthorityId` and `repositoryLocator`; their narrow variable-name
+waivers preserve named-argument compatibility. Core DTO fields and their
+property-name waivers remain outside this tranche, including
+`AuthenticatedWebhookDeliveryEvidence::matchedManagedPackage` and
+`RepositoryLookupRequest::credentialId` / `publicOnly`. The Validator-only
+optional timeout/response-size arguments retain their names, types and defaults.
+
+No coexistence aliases are provided during beta. Audited callers move with the
+mapped methods; similarly named request/result methods remain unchanged,
+including `WebhookRequest::getProvider` and
+`SignedWebhookVerification::getProvider`. Coordinate validation, authorization,
+case-insensitive matching, response bytes/status, wire keys, URL/path/query
+restrictions, HTTP classification, malformed-response guards, pagination,
+repository/ref/commit identity, archive authentication and cleanup are preserved.
+Provider API advances to 13; Workflow V3 and Add-on API 16 are unchanged.
+Historical immutable Core certification is retained as provenance only.
 
 ## Blocking host analysis
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -12,11 +12,22 @@ if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-ten-ad
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
+// Observe every implementation autoload attempt, including unsuccessful requests.
+$implementationLoadAttempts = 0;
+spl_autoload_register(
+	static function ( string $class ) use ( &$implementationLoadAttempts ): void {
+		if ( str_starts_with( $class, 'RAN\\Booster\\Bitbucket\\' ) && 'RAN\\Booster\\Bitbucket\\Plugin' !== $class ) {
+			++$implementationLoadAttempts;
+		}
+	},
+	true,
+	true
+);
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first' );
-$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen-addon-first' );
+$incompatibleModes                       = array( 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
+$addOnFirstModes                         = array( 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
 $coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -123,10 +134,13 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	}
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
-		'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first' => array( 10, 16 ),
+		'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first' => array( 14, 16 ),
+		'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first' => array( 13, 17 ),
+		'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first' => array( 11, 16 ),
+		'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first' => array( 13, 15 ),
 		'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' => array( 11, 15 ),
-		'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first' => array( 10, 15 ),
-		default => array( 11, 16 ),
+		'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first' => array( 12, 16 ),
+		default => array( 13, 16 ),
 	};
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
@@ -234,7 +248,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$result['registered'] = array_key_exists( 'bb', $registry->all() );
 	if ( $result['registered'] ) {
 		$provider                             = $registry->get( 'bb' );
-		$metadata                             = $provider->getMetadata();
+		$metadata                             = $provider->get_metadata();
 		$result['provider_code']              = $metadata->code->value;
 		$result['owner_requires_managed_target'] = $metadata->admin?->getWebhookScope( 'owner' )?->requiresManagedTarget ?? false;
 		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
@@ -247,7 +261,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		);
 		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
 		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
-		$repository = $provider->resolveRepository(
+		$repository = $provider->resolve_repository(
 			new \RAN\RepositoryProvider\RepositoryLookupRequest( 'example/reference-plugin', null, true )
 		);
 		$result['operation_locator'] = $repository->locator;
@@ -257,6 +271,8 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$callbacks[0]( new stdClass() );
 }
 
+$result['provider_loaded'] = class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false );
+$result['implementation_load_attempts'] = $implementationLoadAttempts;
 $result['remote_calls'] = $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
 
 echo json_encode( $result, JSON_THROW_ON_ERROR );

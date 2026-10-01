@@ -7,11 +7,33 @@ namespace Tests\RepositoryProvider;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RAN\Booster\Bitbucket\BitbucketWebhookPolicy;
+use RAN\RepositoryProvider\ProviderCode;
+use RAN\RepositoryProvider\SignedWebhookVerification;
 use RuntimeException;
 
 final class BitbucketWebhookPolicyTest extends TestCase {
 
 	private const SECRET = 'bitbucket-webhook-policy-secret-0001';
+
+	public function testNamedArgumentsPreserveRepositoryAuthorityAndLocatorBoundaries(): void {
+		$policy = new BitbucketWebhookPolicy();
+		$verification = new SignedWebhookVerification(
+			ProviderCode::parse( 'bb' ),
+			array(
+				array(
+					'id' => 'test-profile',
+					'scope' => 'repository',
+					'target' => 'workspace/repository',
+					'authority_id' => 'stable-repository-id',
+				),
+			)
+		);
+
+		self::assertTrue( $policy->authorize_webhook( verification: $verification, repositoryAuthorityId: 'stable-repository-id', repository: 'workspace/repository' ) );
+		self::assertFalse( $policy->authorize_webhook( verification: $verification, repositoryAuthorityId: 'other-repository-id', repository: 'workspace/repository' ) );
+		self::assertTrue( $policy->repository_target_matches( target: '/WORKSPACE/Repository/', repositoryLocator: 'workspace/repository' ) );
+		self::assertFalse( $policy->repository_target_matches( target: 'workspace/repository', repositoryLocator: 'workspace/other' ) );
+	}
 
 	/** @return iterable<string, array{string, string, string}> */
 	public static function invalidTargets(): iterable {
@@ -34,7 +56,7 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 		$this->expectException( RuntimeException::class );
 		$this->expectExceptionMessage( $message );
 
-		$policy->normalizeWebhook(
+		$policy->normalize_webhook(
 			array(
 				'label'        => 'Test',
 				'scope'        => $scope,
@@ -58,7 +80,7 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 		$this->expectException( RuntimeException::class );
 		$this->expectExceptionMessage( 'Webhook secret scope is not supported by this provider.' );
 
-		$policy->normalizeWebhook(
+		$policy->normalize_webhook(
 			array(
 				'label'        => 'Test',
 				'scope'        => $scope,
@@ -72,9 +94,9 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 	public function testLegacyGlobalConstantIsNotDeclaredOrRead(): void {
 		$policy = new BitbucketWebhookPolicy();
 
-		self::assertSame( array(), $policy->getConstantNames() );
+		self::assertSame( array(), $policy->get_constant_names() );
 		self::assertNull(
-			$policy->webhookFromConstants(
+			$policy->webhook_from_constants(
 				array( 'RAN_BOOSTER_BITBUCKET_WEBHOOK_SECRET' => self::SECRET )
 			)
 		);

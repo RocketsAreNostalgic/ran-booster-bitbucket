@@ -44,7 +44,7 @@ if ( false === $addon || false === $core
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
 
-if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 11 !== RAN_BOOSTER_PROVIDER_API_VERSION
+if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 13 !== RAN_BOOSTER_PROVIDER_API_VERSION
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION
 	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
 	|| ! class_exists( RAN\RepositoryProvider\ProviderRegistrationContext::class )
@@ -118,7 +118,7 @@ if ( 1 !== count( array_filter( $providers, static fn( string $code ): bool => '
 	throw new RuntimeException( 'The installed Bitbucket provider did not register exactly once.' );
 }
 $provider = $registry->get( 'bb' );
-if ( 'bb' !== $provider->getMetadata()->code->value
+if ( 'bb' !== $provider->get_metadata()->code->value
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseMetadata
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseCandidateListing
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseInspector
@@ -131,7 +131,7 @@ if ( 'bb' !== $provider->getMetadata()->code->value
 }
 
 $webhooks   = $registry->requireCapability( 'bb', RAN\RepositoryProvider\WebhookNormalizer::class );
-$diagnostic = $webhooks->diagnoseWebhookReadiness();
+$diagnostic = $webhooks->diagnose_webhook_readiness();
 if ( RAN\RepositoryProvider\ProviderDiagnosticResult::PASSED !== $diagnostic->status
 	|| 'bb.webhook.delivery_verified' !== $diagnostic->code
 ) {
@@ -194,7 +194,7 @@ $transport = static function ( mixed $response, array $arguments, string $url ) 
 };
 add_filter( 'pre_http_request', $transport, 10, 3 );
 try {
-	$repository = $provider->resolveRepository(
+	$repository = $provider->resolve_repository(
 		new RAN\RepositoryProvider\RepositoryLookupRequest(
 			'rocketsarenostalgic/ran-booster-fixture-public-plugin',
 			null,

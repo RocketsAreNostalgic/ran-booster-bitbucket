@@ -76,7 +76,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		);
 
 		self::assertInstanceOf( CredentialedPublicRepositoryBrowser::class, $provider );
-		self::assertTrue( $provider->getPublicRepositoryBrowseMetadata()->supportsProviderDefaultProfile );
+		self::assertTrue( $provider->get_public_repository_browse_metadata()->supportsProviderDefaultProfile );
 	}
 
 	public function testSelectedPublicLookupCredentialAuthenticatesAcrossWorkspacesAndKeepsResultsCredentialFree(): void {

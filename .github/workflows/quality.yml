@@ -247,6 +247,7 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 10
     env:
+      RAN_BOOSTER_CORE_TEST_MODE: candidate
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
     steps:
       - name: Check out repository
@@ -255,12 +256,11 @@ jobs:
           path: ran-booster-bitbucket
           fetch-depth: 0
           persist-credentials: false
-      - name: Read canonical Core certification
+      - name: Read exact Core source candidate
         working-directory: ran-booster-bitbucket
         run: |
-          core_tag="$(jq -er '.extra["ran-booster-core-certification"].tag | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$"))' composer.json)"
-          core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
-          printf 'RAN_BOOSTER_CORE_TAG=%s\nRAN_BOOSTER_CORE_REF=%s\n' "$core_tag" "$core_commit" >> "$GITHUB_ENV"
+          core_commit="$(jq -er '.extra["ran-booster-core-candidate"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          printf 'RAN_BOOSTER_CORE_REF=%s\n' "$core_commit" >> "$GITHUB_ENV"
       - name: Check out compatible Booster Core
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -269,13 +269,10 @@ jobs:
           ref: ${{ env.RAN_BOOSTER_CORE_REF }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Confirm exact tag-backed Core commit
+      - name: Confirm exact candidate Core commit
         working-directory: ran-booster
         run: |
           test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
-          core_tag="$(git describe --tags --exact-match HEAD)"
-          test "$core_tag" = "$RAN_BOOSTER_CORE_TAG"
-          [[ "$core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
           test -f autoload.php
       - name: Set up PHP
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
@@ -283,7 +280,7 @@ jobs:
           php-version: "8.2"
           coverage: none
           tools: composer:v2
-      - name: Install certified Core production dependencies
+      - name: Install candidate Core production dependencies
         working-directory: ran-booster
         run: |
           composer install --no-dev --no-interaction --prefer-dist --no-progress

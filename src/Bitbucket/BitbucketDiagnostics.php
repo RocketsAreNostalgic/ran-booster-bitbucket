@@ -37,7 +37,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		}
 
 		try {
-			$result = $this->credentials->validateCredential( $credential_id, $request->claimRemoteCall(), 65536 );
+			$result = $this->credentials->validate_credential( $credential_id, $request->claimRemoteCall(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
 			return $this->budget_result( 'bb.credential.budget_exhausted' );
 		} catch ( \Throwable ) {

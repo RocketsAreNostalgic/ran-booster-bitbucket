@@ -20,7 +20,7 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 				'2026-09-15 12:00:00',
 				true
 			)
-		)->diagnoseWebhookReadiness();
+		)->diagnose_webhook_readiness();
 
 		self::assertSame( ProviderDiagnosticResult::PASSED, $result->status );
 		self::assertSame( 'bb.webhook.delivery_verified', $result->code );
@@ -33,7 +33,7 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 				'2026-09-15 12:00:00',
 				false
 			)
-		)->diagnoseWebhookReadiness();
+		)->diagnose_webhook_readiness();
 
 		self::assertSame( ProviderDiagnosticResult::WARNING, $result->status );
 		self::assertSame( 'bb.webhook.delivery_unmatched', $result->code );
@@ -50,7 +50,7 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 				throw new \RuntimeException( 'private-delivery-evidence-canary' );
 			}
 		};
-		$result = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnoseWebhookReadiness();
+		$result = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnose_webhook_readiness();
 		$output = implode( ' ', $result->toArray() );
 
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );

@@ -44,7 +44,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			archives: new BitbucketArchivePreparer( $loader, $api ),
 			webhooks: new BitbucketWebhookNormalizer( $store )
 		);
-		$result   = $provider->validateCredential( 'profile' );
+		$result   = $provider->validate_credential( 'profile' );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
 		self::assertTrue( $result->isValid() );
@@ -71,7 +71,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 	}
 
 	public function testValidatorForwardsNamedRequestBudgets(): void {
-		$result   = $this->validator( $this->secrets() )->validateCredential( credentialId: 'profile', timeout: 3.5, response_size: 12345 );
+		$result   = $this->validator( $this->secrets() )->validate_credential( credentialId: 'profile', timeout: 3.5, response_size: 12345 );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
 		self::assertTrue( $result->isValid() );
@@ -84,8 +84,8 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$secrets   = new BitbucketCredentialValidationSecretsStub( array() );
 		$validator = $this->validator( $secrets );
 
-		$blank   = $validator->validateCredential( ' ' );
-		$missing = $validator->validateCredential( 'missing-profile' );
+		$blank   = $validator->validate_credential( ' ' );
+		$missing = $validator->validate_credential( 'missing-profile' );
 
 		self::assertFalse( $blank->isValid() );
 		self::assertFalse( $missing->isValid() );
@@ -107,7 +107,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			)
 		);
 
-		$result = $this->validator( $secrets )->validateCredential( 'constant' );
+		$result = $this->validator( $secrets )->validate_credential( 'constant' );
 
 		self::assertFalse( $result->isValid() );
 		self::assertSame(
@@ -130,7 +130,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$this->expectException( \LogicException::class );
 		$this->expectExceptionMessage( 'programming-error-canary' );
 
-		$this->validator( $secrets )->validateCredential( 'profile' );
+		$this->validator( $secrets )->validate_credential( 'profile' );
 	}
 
 	public function testMalformedCredentialRecordsFailBeforeAnyRequest(): void {
@@ -152,7 +152,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			$validator = $this->validator(
 				new BitbucketCredentialValidationSecretsStub( array( 'profile' => $credential ) )
 			);
-			$result    = $validator->validateCredential( 'profile' );
+			$result    = $validator->validate_credential( 'profile' );
 
 			self::assertFalse( $result->isValid(), $name );
 			self::assertSame(
@@ -198,7 +198,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $name => $fixture ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $fixture['response'] );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
 			self::assertFalse( $result->isValid(), (string) $name );
 			self::assertSame( $fixture['message'], $result->getDisplayMessage(), (string) $name );
@@ -229,7 +229,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $responses as $response ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $response );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
 			self::assertFalse( $result->isValid() );
 			self::assertSame(
@@ -252,7 +252,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $body ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $this->response( 200, $body ) );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
 			self::assertFalse( $result->isValid(), $body );
 			self::assertSame(
