@@ -42,6 +42,10 @@ ordinary PR / main
 
 `workflow_dispatch` on `Quality` is intentionally input-free. The shared Profile B workflow dispatches the canonical Release Please branch when exact candidate qualification is required; the repository validates that the dispatched revision is the unique bot-owned Release Please candidate before treating it as the release-candidate lane.
 
+Candidate content validation compares the actual pull-request base and head. The net change must contain exactly the four generated release files with aligned versions, preserved changelog history and no unrelated bootstrap or readme edits. Ancestry, commit count and merge-parent order do not determine content validity; missing content from the supplied base still fails the complete diff. Refreshing a candidate from main requires qualification against its refreshed pull-request base. Repository merge policy still applies.
+
+The reduced candidate lane relies on that content boundary: production code, dependencies, tests and workflow configuration must match the supplied base, apart from the generated version values. It therefore skips the repository-specific quality job while retaining shared PHP quality, building and verifying the exact candidate archive, and installing and reading back that ZIP. Ordinary PRs and main continue through full Quality; candidate validation does not establish that a previously captured base is still current.
+
 The release workflow is a thin caller pinned to the reviewed shared Profile B implementation. It does not rebuild release bytes. The shared promoter downloads the exact run/attempt artifact named by the successful main Quality run and requires the promotion manifest to bind repository, admitted SHA, tag, asset names and SHA-256 digests. Missing, conflicting or expired evidence fails closed.
 
 Release Please is configured with `draft: true` and `force-tag-creation: true`. Publication occurs only after the exact tested assets have been attached and read back. GitHub immutable releases remain an external production constraint.
