@@ -142,12 +142,28 @@ prepare_valid nonancestor-base
 git -C "$case_dir" checkout --quiet -b unrelated-main "$base_sha"
 git -C "$case_dir" commit --quiet --allow-empty -m 'chore: main not incorporated by candidate'
 base_sha=$(git -C "$case_dir" rev-parse HEAD)
-expect_invalid nonancestor-base
+expect_valid nonancestor-base
+
+# Identical product content does not require shared commit history.
+prepare_valid orphan-candidate
+candidate_tree=$(git -C "$case_dir" rev-parse "$head_sha^{tree}")
+head_sha=$(git -C "$case_dir" commit-tree "$candidate_tree" -m 'Generated candidate with independent history')
+expect_valid orphan-candidate
+
+# An advanced base with actual new content must not be silently omitted.
+prepare_valid missing-newer-base-content
+git -C "$case_dir" checkout --quiet -b advanced-main "$base_sha"
+printf 'Accepted main change.\n' > "$case_dir/accepted-main.txt"
+git -C "$case_dir" add .
+git -C "$case_dir" commit --quiet -m 'feat: accepted main change'
+base_sha=$(git -C "$case_dir" rev-parse HEAD)
+expect_invalid missing-newer-base-content
 
 prepare_valid multi-commit-production-edit
 printf '\n// Unexpected bootstrap edit.\n' >> "$case_dir/ran-booster-bitbucket.php"
 git -C "$case_dir" add .
 git -C "$case_dir" commit --quiet -m 'feat: unexpected production edit'
+git -C "$case_dir" commit --quiet --allow-empty -m 'chore: unchanged final commit hides earlier edit'
 head_sha=$(git -C "$case_dir" rev-parse HEAD)
 expect_invalid multi-commit-production-edit
 
