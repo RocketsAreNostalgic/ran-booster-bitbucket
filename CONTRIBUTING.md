@@ -2,7 +2,7 @@
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 13 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`d18299fd4ad69b2df1efd319d604d1a2195b6d2d`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 13 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`a9fd5491b69e71a8543c507d097d1b1028bfa196`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
 
 ```sh
 export RAN_BOOSTER_CORE_TEST_MODE=candidate
@@ -115,7 +115,7 @@ variables or methods. Remove them with the qualified Core field migration.
 The connected Core #167 tranche now migrates 28 interface declarations across
 five Bitbucket classes and their resolved callers to snake_case. The exact
 Core mapping is the interface diff in candidate
-`d18299fd4ad69b2df1efd319d604d1a2195b6d2d` (47 declarations across 20 interfaces).
+`a9fd5491b69e71a8543c507d097d1b1028bfa196` (47 declarations across 20 interfaces).
 The earlier table records historical stages; its statements retaining public
 method names are superseded by this methods-only tranche.
 

@@ -15,7 +15,7 @@
     ],
     "extra": {
         "ran-booster-core-candidate": {
-            "commit": "d18299fd4ad69b2df1efd319d604d1a2195b6d2d"
+            "commit": "a9fd5491b69e71a8543c507d097d1b1028bfa196"
         },
         "ran-booster-core-certification": {
             "tag": "v1.0.0-beta.29",

@@ -19,8 +19,8 @@ and CI optimization are outside scope. Blacksmith AI/autofix was not used.
 - Qualified implementation commit: `fd4e720ed4ff57318f67a5c896c74a3797a912d8`.
 - Qualified implementation tree: `8f17226f09fd3f2a2876584c9e6bb5d677237527`.
 - This handoff document is added separately; subsequent head/tree must be recorded in the PR conversation after publication.
-- Current Core candidate: `d18299fd4ad69b2df1efd319d604d1a2195b6d2d` (coordinator handoff 5942591785).
-- Current Core tree: `cb1452642c64ebbfa5c069b79e53a117c044ba09`.
+- Current Core candidate: `a9fd5491b69e71a8543c507d097d1b1028bfa196` (Core #220 actual beta.10 adoption).
+- Current Core tree: `77de44bfed58298f1118abf63e09bfcfd9975c6f`.
 
 All three #89 commits are retained as ancestors: `073a64328b62e2a9ec253a1ad3672cd5074dd199`,
 `0a4b6d5e265a7dc614f6c9d1783ab28756f97f0d`,
@@ -40,21 +40,27 @@ was imported. Its production lock contains:
 
 | Package | Version | Source |
 | --- | --- | --- |
-| ran/booster-github-provider | v1.0.0-beta.9 | 82ad810e8cde6a2f54318448e81685a619c2cfc3 |
+| ran/booster-github-provider | v1.0.0-beta.10 | d39d83747af3109a79e80fd307d50e4fcc34d412 |
 | ran/updater-support | v1.0.0-beta.4 | 357db930b407941bd19a9e890c925d3d16ae9b15 |
 | ran/wp-branch-updater | v1.0.0-beta.8 | 729a15c30f088236d0702b52d4a9cbe15c851508 |
 | ran/wp-release-updater | v0.1.0-beta.7 | 203b4cf5e0bc133ff6664617cfd954d7e28dcc04 |
 
-This qualifies Bitbucket against the candidate's public production contracts.
-The API-12 GitHub Provider lock is not a matching full Core runtime composition;
-this is not Core adoption, combined installed proof or permission to merge Core.
-The coordinator published the rebased candidate in handoff 5942591785. Its only
-delta from the previously tested `a53d35f18d226bf37f8485f351a5d0decdac6066`
-is `pnpm-lock.yaml`; the API-13 interface/guard mapping and production Composer
-lock are unchanged. The candidate pin and connected development instructions
-now use that durable revision. The qualification below initially covered a53d35f;
-refreshed exact-head/d18299fd checks are recorded in the PR conversation.
-Never infer a tag or substitute source qualification for release proof.
+This qualifies Bitbucket against the candidate's public production contracts,
+with its actual released API-13 GitHub Provider beta.10 dependency installed from
+the unmodified production lock. It does not certify Core's full installed runtime
+or a released Core host; Core #220 remains coordinator-owned and separately gated.
+
+Qualification history is explicit. Initial local evidence below used
+`a53d35f18d226bf37f8485f351a5d0decdac6066`. Published Bitbucket head `abc47c2`
+then passed native Quality 36941924728 and hosted review against durable rebase
+`d18299fd4ad69b2df1efd319d604d1a2195b6d2d`, whose only change was pnpm-lock.yaml.
+A final coordinator refresh exposed Core #220 at
+`a9fd5491b69e71a8543c507d097d1b1028bfa196`: only the released Provider dependency
+record/content hash and four documentation files differ from that rebase; Core
+PHP interfaces and guards are unchanged. Current metadata/development instructions
+pin that actual adoption candidate, and the PR conversation records its fresh
+exact-head host/archive/native-review evidence. Earlier green evidence is not
+relabeled. Never infer a tag or substitute candidate checks for release proof.
 
 ## Mapping and receiver audit
 
