@@ -54,7 +54,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 		self::assertSame(
 			'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip',
-			$archive->getUrl()
+			$archive->get_url()
 		);
 		self::assertCount( 1, $requests );
 		self::assertSame(
@@ -88,8 +88,8 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
-		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->getUrl() );
-		self::assertSame( self::COMMIT, $archive->getResolvedRef() );
+		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
+		self::assertSame( self::COMMIT, $archive->get_resolved_ref() );
 		$this->assertNoArchiveHooks();
 	}
 
@@ -107,8 +107,8 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		self::assertCount( 2, $requests );
 		self::assertStringContainsString( '/refs/branches/v1.2.3?', $requests[0]['url'] );
 		self::assertStringContainsString( '/refs/tags/v1.2.3?', $requests[1]['url'] );
-		self::assertSame( self::COMMIT, $archive->getResolvedRef() );
-		self::assertStringEndsWith( '/' . self::COMMIT . '.zip', $archive->getUrl() );
+		self::assertSame( self::COMMIT, $archive->get_resolved_ref() );
+		self::assertStringEndsWith( '/' . self::COMMIT . '.zip', $archive->get_url() );
 	}
 
 	public function testPrivateBranchResolutionUsesExactBasicAuthThenPreparesImmutableArchiveAuth(): void {
@@ -127,9 +127,9 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
-		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->getUrl() );
-		self::assertStringNotContainsString( self::TOKEN, $archive->getUrl() );
-		self::assertStringNotContainsString( self::EMAIL, $archive->getUrl() );
+		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
+		self::assertStringNotContainsString( self::TOKEN, $archive->get_url() );
+		self::assertStringNotContainsString( self::EMAIL, $archive->get_url() );
 		self::assertCount( 1, $this->archiveFilters() );
 		self::assertCount( 1, $this->archiveActions() );
 	}
@@ -150,7 +150,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
-		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->getUrl() );
+		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
 		self::assertCount( 1, $this->archiveFilters() );
 		self::assertCount( 1, $this->archiveActions() );
 	}
@@ -175,7 +175,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
-		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->getUrl() );
+		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
 		self::assertCount( 1, $this->archiveFilters() );
 		self::assertCount( 1, $this->archiveActions() );
 	}
@@ -200,7 +200,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
-		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->getUrl() );
+		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
 		$this->assertNoArchiveHooks();
 	}
 
@@ -216,7 +216,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 
 		try {
-			$archive->verifyCurrentHead();
+			$archive->verify_current_head();
 			self::fail( 'The second Bitbucket head check must reject a branch that moved before mutation.' );
 		} catch ( \RAN\RepositoryProvider\StaleDeployment $exception ) {
 			self::assertSame( 409, $exception->getCode() );
@@ -436,7 +436,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	public function testPrivateAuthenticationIsOneShotAndBoundToTheExactImmutableArchive(): void {
 		$archive  = $this->privateImmutableArchive();
 		$callback = $this->archiveFilters()[0]['callback'];
-		$url      = $archive->getUrl();
+		$url      = $archive->get_url();
 		$hostile  = array(
 			'https://example.test/archive.zip',
 			'https://bitbucket.org.evil.test/acme/example/get/' . self::COMMIT . '.zip',
@@ -473,7 +473,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$archive          = $this->privateImmutableArchive();
 		$requestCallback  = $this->archiveFilters()[0]['callback'];
 		$redirectCallback = $this->archiveActions()[0]['callback'];
-		$url              = $archive->getUrl();
+		$url              = $archive->get_url();
 		$arguments        = $requestCallback( array( 'headers' => array() ), $url );
 		$location         = 'https://bbuseruploads.example.test/signed/archive.zip';
 		$unrelatedHeaders = $arguments['headers'];
@@ -509,14 +509,14 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$this->assertNoArchiveHooks();
 
 		try {
-			$callback( array( 'headers' => array() ), $cancelled->getUrl() );
+			$callback( array( 'headers' => array() ), $cancelled->get_url() );
 			self::fail( 'Expected cleaned archive authentication to remain unavailable.' );
 		} catch ( RuntimeException $exception ) {
 			$this->assertSafeFailure( $exception );
 		}
 
 		$consumed = $this->privateImmutableArchive();
-		$this->archiveFilters()[0]['callback']( array( 'headers' => array() ), $consumed->getUrl() );
+		$this->archiveFilters()[0]['callback']( array( 'headers' => array() ), $consumed->get_url() );
 		$consumed->cleanup();
 		$consumed->cleanup();
 		$this->assertNoArchiveHooks();
@@ -525,9 +525,9 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	public function testPrivateArchiveExposesOnlyItsImmutableResolvedRef(): void {
 		$archive = $this->privateImmutableArchive();
 
-		self::assertSame( self::COMMIT, $archive->getResolvedRef() );
-		self::assertStringNotContainsString( self::TOKEN, $archive->getUrl() );
-		self::assertStringNotContainsString( self::EMAIL, $archive->getUrl() );
+		self::assertSame( self::COMMIT, $archive->get_resolved_ref() );
+		self::assertStringNotContainsString( self::TOKEN, $archive->get_url() );
+		self::assertStringNotContainsString( self::EMAIL, $archive->get_url() );
 		$archive->cleanup();
 
 		$this->assertNoArchiveHooks();
@@ -557,14 +557,14 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	private function request(
 		string $ref,
 		bool $private,
-		?string $credentialId = null,
+		?string $credential_id = null,
 		string $fullName = 'acme/example',
-		?string $expectedBranch = null
+		?string $expected_branch = null
 	): ArchiveRequest {
 		return new ArchiveRequest(
-			new RepositoryReference( $fullName, self::REPOSITORY_UUID, $private, $credentialId ),
+			new RepositoryReference( $fullName, self::REPOSITORY_UUID, $private, $credential_id ),
 			$ref,
-			$expectedBranch
+			$expected_branch
 		);
 	}
 

@@ -32,13 +32,13 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$this->policy = new BitbucketWebhookPolicy();
 	}
 
-	public function getWebhookPolicy(): ProviderWebhookPolicy { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
+	public function get_webhook_policy(): ProviderWebhookPolicy {
 		return $this->policy;
 	}
 
-	public function diagnoseWebhookReadiness(): ProviderDiagnosticResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
+	public function diagnose_webhook_readiness(): ProviderDiagnosticResult {
 		try {
-			if ( ! $this->webhook_profiles->hasWebhookProfile() ) {
+			if ( ! $this->webhook_profiles->has_webhook_profile() ) {
 				return new ProviderDiagnosticResult(
 					ProviderDiagnosticResult::NOT_CONFIGURED,
 					'bb.webhook.not_configured',
@@ -60,7 +60,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		}
 
 		try {
-			$delivery = $this->delivery_evidence->latestAuthenticatedDelivery();
+			$delivery = $this->delivery_evidence->latest_authenticated_delivery();
 		} catch ( \Throwable ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
@@ -74,7 +74,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 			return $this->unverified_delivery_result();
 		}
 
-		if ( ! $delivery->matchedManagedPackage ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core AuthenticatedWebhookDeliveryEvidence field; migrate with Core #167.
+		if ( ! $delivery->matched_managed_package ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::WARNING,
 				'bb.webhook.delivery_unmatched',
@@ -91,25 +91,25 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		);
 	}
 
-	public function normalizeWebhook( WebhookRequest $request ): WebhookEnvelope { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Certified Core WebhookNormalizer signature; migrate with Core #167.
-		if ( ! $request->getProvider()->equals( ProviderCode::parse( 'bb' ) ) ) {
+	public function normalize_webhook( WebhookRequest $request ): WebhookEnvelope {
+		if ( ! $request->get_provider()->equals( ProviderCode::parse( 'bb' ) ) ) {
 			throw new WebhookRejected( 400, 'Webhook provider does not match Bitbucket.' );
 		}
 
-		$body = $request->getBody();
+		$body = $request->get_body();
 
 		$event_key = $this->event_key( $request );
 		if ( 'repo:push' !== $event_key ) {
-			$request->requireVerification();
+			$request->require_verification();
 			return WebhookEnvelope::ignored();
 		}
 
 		$delivery_id  = $this->delivery_id( $request );
-		$verification = $request->requireVerification();
+		$verification = $request->require_verification();
 		$payload      = $this->decode_push_payload( $body );
 		$repository   = $this->push_repository( $payload );
 
-		if ( ! $this->policy->authorizeWebhook( $verification, $repository['id'], $repository['coordinates']->get_full_name() ) ) {
+		if ( ! $this->policy->authorize_webhook( $verification, $repository['id'], $repository['coordinates']->get_full_name() ) ) {
 			throw new WebhookRejected( 401, 'Webhook authentication failed.' );
 		}
 
@@ -135,7 +135,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 	}
 
 	private function event_key( WebhookRequest $request ): string {
-		$event_key = $this->bounded_header( $request->getRawHeaderValues( 'x-event-key' ) );
+		$event_key = $this->bounded_header( $request->get_raw_header_values( 'x-event-key' ) );
 
 		if ( null === $event_key ) {
 			throw new WebhookRejected( 400, 'Bitbucket event key is required.' );
@@ -145,7 +145,7 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 	}
 
 	private function delivery_id( WebhookRequest $request ): string {
-		$delivery_id = $this->bounded_header( $request->getRawHeaderValues( 'x-request-uuid' ) );
+		$delivery_id = $this->bounded_header( $request->get_raw_header_values( 'x-request-uuid' ) );
 
 		if ( null === $delivery_id ) {
 			throw new WebhookRejected( 400, 'Bitbucket request identifier is required.' );
@@ -284,6 +284,6 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 	}
 
 	private function is_branch( string $branch ): bool {
-		return GitReferenceSyntax::isValidNamedReference( $branch );
+		return GitReferenceSyntax::is_valid_named_reference( $branch );
 	}
 }

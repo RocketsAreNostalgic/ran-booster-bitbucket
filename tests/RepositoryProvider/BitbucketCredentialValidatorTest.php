@@ -44,11 +44,11 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			archives: new BitbucketArchivePreparer( $loader, $api ),
 			webhooks: new BitbucketWebhookNormalizer( $store )
 		);
-		$result   = $provider->validateCredential( 'profile' );
+		$result   = $provider->validate_credential( 'profile' );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
-		self::assertTrue( $result->isValid() );
-		self::assertNull( $result->getDisplayMessage() );
+		self::assertTrue( $result->is_valid() );
+		self::assertNull( $result->get_display_message() );
 		self::assertSame( array( array( 'bb', 'profile' ) ), $secrets->lookups );
 		self::assertCount( 1, $requests );
 		self::assertSame(
@@ -71,10 +71,10 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 	}
 
 	public function testValidatorForwardsNamedRequestBudgets(): void {
-		$result   = $this->validator( $this->secrets() )->validateCredential( credentialId: 'profile', timeout: 3.5, response_size: 12345 );
+		$result   = $this->validator( $this->secrets() )->validate_credential( credential_id: 'profile', timeout: 3.5, response_size: 12345 );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
-		self::assertTrue( $result->isValid() );
+		self::assertTrue( $result->is_valid() );
 		self::assertCount( 1, $requests );
 		self::assertSame( 3.5, $requests[0]['arguments']['timeout'] );
 		self::assertSame( 12345, $requests[0]['arguments']['limit_response_size'] );
@@ -84,16 +84,16 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$secrets   = new BitbucketCredentialValidationSecretsStub( array() );
 		$validator = $this->validator( $secrets );
 
-		$blank   = $validator->validateCredential( ' ' );
-		$missing = $validator->validateCredential( 'missing-profile' );
+		$blank   = $validator->validate_credential( ' ' );
+		$missing = $validator->validate_credential( 'missing-profile' );
 
-		self::assertFalse( $blank->isValid() );
-		self::assertFalse( $missing->isValid() );
+		self::assertFalse( $blank->is_valid() );
+		self::assertFalse( $missing->is_valid() );
 		self::assertSame( array( array( 'bb', 'missing-profile' ) ), $secrets->lookups );
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 		self::assertSame(
 			'The repository provider rejected this credential.',
-			$missing->getDisplayMessage()
+			$missing->get_display_message()
 		);
 	}
 
@@ -107,22 +107,22 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			)
 		);
 
-		$result = $this->validator( $secrets )->validateCredential( 'constant' );
+		$result = $this->validator( $secrets )->validate_credential( 'constant' );
 
-		self::assertFalse( $result->isValid() );
+		self::assertFalse( $result->is_valid() );
 		self::assertSame(
 			'The repository provider rejected this credential.',
-			$result->getDisplayMessage()
+			$result->get_display_message()
 		);
-		$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->getDisplayMessage() );
-		self::assertStringNotContainsString( 'credential-material-canary', (string) $result->getDisplayMessage() );
+		$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message() );
+		self::assertStringNotContainsString( 'credential-material-canary', (string) $result->get_display_message() );
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 	}
 
 	public function testProgrammingErrorsFromCredentialStorageAreNotHidden(): void {
 		$secrets = new class( null, array() ) extends SecretsFile {
 			/** @return array<string, mixed>|null */
-			public function credentialMaterial( ProviderCode|string $provider, ?string $id = null ): ?array {
+			public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
 				throw new \LogicException( 'programming-error-canary' );
 			}
 		};
@@ -130,7 +130,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$this->expectException( \LogicException::class );
 		$this->expectExceptionMessage( 'programming-error-canary' );
 
-		$this->validator( $secrets )->validateCredential( 'profile' );
+		$this->validator( $secrets )->validate_credential( 'profile' );
 	}
 
 	public function testMalformedCredentialRecordsFailBeforeAnyRequest(): void {
@@ -152,12 +152,12 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			$validator = $this->validator(
 				new BitbucketCredentialValidationSecretsStub( array( 'profile' => $credential ) )
 			);
-			$result    = $validator->validateCredential( 'profile' );
+			$result    = $validator->validate_credential( 'profile' );
 
-			self::assertFalse( $result->isValid(), $name );
+			self::assertFalse( $result->is_valid(), $name );
 			self::assertSame(
 				'The repository provider rejected this credential.',
-				$result->getDisplayMessage(),
+				$result->get_display_message(),
 				$name
 			);
 			self::assertSame(
@@ -198,11 +198,11 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $name => $fixture ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $fixture['response'] );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
-			self::assertFalse( $result->isValid(), (string) $name );
-			self::assertSame( $fixture['message'], $result->getDisplayMessage(), (string) $name );
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->getDisplayMessage(), (string) $name );
+			self::assertFalse( $result->is_valid(), (string) $name );
+			self::assertSame( $fixture['message'], $result->get_display_message(), (string) $name );
+			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message(), (string) $name );
 		}
 	}
 
@@ -229,14 +229,14 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $responses as $response ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $response );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
-			self::assertFalse( $result->isValid() );
+			self::assertFalse( $result->is_valid() );
 			self::assertSame(
 				'The repository provider returned an invalid credential-validation response.',
-				$result->getDisplayMessage()
+				$result->get_display_message()
 			);
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->getDisplayMessage() );
+			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message() );
 		}
 	}
 
@@ -252,15 +252,15 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		foreach ( $fixtures as $body ) {
 			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset( $this->response( 200, $body ) );
-			$result = $this->validator( $this->secrets() )->validateCredential( 'profile' );
+			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
-			self::assertFalse( $result->isValid(), $body );
+			self::assertFalse( $result->is_valid(), $body );
 			self::assertSame(
 				'The repository provider returned an invalid credential-validation response.',
-				$result->getDisplayMessage(),
+				$result->get_display_message(),
 				$body
 			);
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->getDisplayMessage(), $body );
+			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message(), $body );
 		}
 	}
 

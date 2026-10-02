@@ -41,7 +41,7 @@ final readonly class BitbucketArchivePreparer {
 		$credential      = null;
 
 		if ( $repository->private ) {
-			$credential_id = $repository->credentialId; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryReference field; coordinated migration remains with Core #167.
+			$credential_id = $repository->credential_id;
 
 			if ( null === $credential_id ) {
 				throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
@@ -62,9 +62,9 @@ final readonly class BitbucketArchivePreparer {
 			$workspace,
 			$repository_slug,
 			$full_name,
-			$repository->providerRepositoryId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryReference field; coordinated migration remains with Core #167.
+			$repository->provider_repository_id,
 			$request->ref,
-			$request->expectedBranch, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core ArchiveRequest field; coordinated migration remains with Core #167.
+			$request->expected_branch,
 			$credential
 		);
 		$url    = self::ARCHIVE_BASE
@@ -76,12 +76,12 @@ final readonly class BitbucketArchivePreparer {
 			. '.zip';
 
 		$head_verifier   = null;
-		$expected_branch = $request->expectedBranch; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core ArchiveRequest field; coordinated migration remains with Core #167.
+		$expected_branch = $request->expected_branch;
 		if ( null !== $expected_branch ) {
 			$head_verifier = function () use ( $workspace, $repository_slug, $full_name, $repository, $expected_branch, $commit ): void {
 				$verification_credential = null;
 				if ( $repository->private ) {
-					$credential_id = $repository->credentialId; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryReference field; coordinated migration remains with Core #167.
+					$credential_id = $repository->credential_id;
 					if ( null === $credential_id ) {
 						throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
 					}
@@ -101,7 +101,7 @@ final readonly class BitbucketArchivePreparer {
 					$workspace,
 					$repository_slug,
 					$full_name,
-					$repository->providerRepositoryId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryReference field; coordinated migration remains with Core #167.
+					$repository->provider_repository_id,
 					$expected_branch,
 					$verification_credential
 				);
@@ -398,7 +398,7 @@ final readonly class BitbucketArchivePreparer {
 	}
 
 	private function validate_branch( string $branch ): string {
-		if ( ! GitReferenceSyntax::isValidNamedReference( $branch ) ) {
+		if ( ! GitReferenceSyntax::is_valid_named_reference( $branch ) ) {
 			throw new RuntimeException( 'Enter a valid Bitbucket repository branch.', 400 );
 		}
 

@@ -29,6 +29,7 @@ echo json_encode(["scripts" => [
 	"standards:fix" => $source["standards:fix"],
 	"lint:syntax" => "php -r '\''exit(0);'\''",
 	"test:syntax" => "php -r '\''exit(0);'\''",
+	"test:naming" => "php -r '\''exit(0);'\''",
 	"test:coverage" => "php -r '\''exit(0);'\''",
 	"check" => $source["check"],
 ]], JSON_THROW_ON_ERROR);

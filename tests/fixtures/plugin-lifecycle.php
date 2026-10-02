@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -12,11 +12,22 @@ if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-ten-ad
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
+// Observe every implementation autoload attempt, including unsuccessful requests.
+$implementationLoadAttempts = 0;
+spl_autoload_register(
+	static function ( string $class ) use ( &$implementationLoadAttempts ): void {
+		if ( str_starts_with( $class, 'RAN\\Booster\\Bitbucket\\' ) && 'RAN\\Booster\\Bitbucket\\Plugin' !== $class ) {
+			++$implementationLoadAttempts;
+		}
+	},
+	true,
+	true
+);
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first' );
-$addOnFirstModes                         = array( 'compatible-addon-first', 'provider-ten-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first', 'provider-ten-addon-fifteen-addon-first' );
+$incompatibleModes                       = array( 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
+$addOnFirstModes                         = array( 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
 $coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -123,14 +134,17 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	}
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
-		'provider-ten-addon-sixteen', 'provider-ten-addon-sixteen-addon-first' => array( 10, 16 ),
+		'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first' => array( 15, 17 ),
+		'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first' => array( 14, 18 ),
+		'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first' => array( 13, 17 ),
+		'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first' => array( 14, 16 ),
 		'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' => array( 11, 15 ),
-		'provider-ten-addon-fifteen', 'provider-ten-addon-fifteen-addon-first' => array( 10, 15 ),
-		default => array( 11, 16 ),
+		'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first' => array( 12, 17 ),
+		default => array( 14, 17 ),
 	};
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
-	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
+	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 
 if ( 'unsupported-multisite' === $mode ) {
@@ -192,19 +206,19 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public int $reads = 0;
 
-		public function credentialProfiles(): array {
+		public function credential_profiles(): array {
 			++$this->reads;
 
 			return array();
 		}
 
-		public function credentialMaterial( ?string $id = null ): ?array {
+		public function credential_material( ?string $id = null ): ?array {
 			++$this->reads;
 
 			return null;
 		}
 
-		public function hasWebhookProfile(): bool {
+		public function has_webhook_profile(): bool {
 			++$this->reads;
 
 			return false;
@@ -222,7 +236,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 			$result['delivery_evidence_was_scoped'] = 'bb' === $code->value;
 
 			return new class() implements \RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
-				public function latestAuthenticatedDelivery(): ?\RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+				public function latest_authenticated_delivery(): ?\RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
 					return null;
 				}
 			};
@@ -234,9 +248,9 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$result['registered'] = array_key_exists( 'bb', $registry->all() );
 	if ( $result['registered'] ) {
 		$provider                             = $registry->get( 'bb' );
-		$metadata                             = $provider->getMetadata();
+		$metadata                             = $provider->get_metadata();
 		$result['provider_code']              = $metadata->code->value;
-		$result['owner_requires_managed_target'] = $metadata->admin?->getWebhookScope( 'owner' )?->requiresManagedTarget ?? false;
+		$result['owner_requires_managed_target'] = $metadata->admin?->get_webhook_scope( 'owner' )?->requires_managed_target ?? false;
 		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
 		$result['implements_release_capabilities'] = array(
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseMetadata,
@@ -247,7 +261,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		);
 		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
 		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
-		$repository = $provider->resolveRepository(
+		$repository = $provider->resolve_repository(
 			new \RAN\RepositoryProvider\RepositoryLookupRequest( 'example/reference-plugin', null, true )
 		);
 		$result['operation_locator'] = $repository->locator;
@@ -257,6 +271,8 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$callbacks[0]( new stdClass() );
 }
 
+$result['provider_loaded'] = class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false );
+$result['implementation_load_attempts'] = $implementationLoadAttempts;
 $result['remote_calls'] = $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
 
 echo json_encode( $result, JSON_THROW_ON_ERROR );

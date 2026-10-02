@@ -44,8 +44,8 @@ if ( false === $addon || false === $core
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
 
-if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 11 !== RAN_BOOSTER_PROVIDER_API_VERSION
-	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 16 !== RAN_BOOSTER_ADDON_API_VERSION
+if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 14 !== RAN_BOOSTER_PROVIDER_API_VERSION
+	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 17 !== RAN_BOOSTER_ADDON_API_VERSION
 	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
 	|| ! class_exists( RAN\RepositoryProvider\ProviderRegistrationContext::class )
 ) {
@@ -72,15 +72,15 @@ if ( 1 !== count( $registrationCallbacks ) ) {
 $credentialStoreScoped = false;
 $deliveryEvidenceScoped = false;
 $store = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
-	public function credentialProfiles(): array {
+	public function credential_profiles(): array {
 		return array();
 	}
 
-	public function credentialMaterial( ?string $id = null ): ?array {
+	public function credential_material( ?string $id = null ): ?array {
 		return null;
 	}
 
-	public function hasWebhookProfile(): bool {
+	public function has_webhook_profile(): bool {
 		return true;
 	}
 };
@@ -96,7 +96,7 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 		$deliveryEvidenceScoped = 'bb' === $code->value;
 
 		return new class() implements RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
-			public function latestAuthenticatedDelivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+			public function latest_authenticated_delivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
 				return new RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence(
 					RAN\RepositoryProvider\ProviderCode::parse( 'bb' ),
 					gmdate( 'Y-m-d H:i:s' ),
@@ -109,7 +109,7 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 );
 $registrationCallbacks[0]( $registry );
 $registry->seal();
-if ( ! $credentialStoreScoped || ! $deliveryEvidenceScoped || ! $registry->isSealed() ) {
+if ( ! $credentialStoreScoped || ! $deliveryEvidenceScoped || ! $registry->is_sealed() ) {
 	throw new RuntimeException( 'The installed provider registration did not receive provider-bound Core readers.' );
 }
 
@@ -118,7 +118,7 @@ if ( 1 !== count( array_filter( $providers, static fn( string $code ): bool => '
 	throw new RuntimeException( 'The installed Bitbucket provider did not register exactly once.' );
 }
 $provider = $registry->get( 'bb' );
-if ( 'bb' !== $provider->getMetadata()->code->value
+if ( 'bb' !== $provider->get_metadata()->code->value
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseMetadata
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseCandidateListing
 	|| $provider instanceof RAN\RepositoryProvider\RepositoryReleaseInspector
@@ -130,8 +130,8 @@ if ( 'bb' !== $provider->getMetadata()->code->value
 	throw new RuntimeException( 'The installed Bitbucket provider capability contract is invalid.' );
 }
 
-$webhooks   = $registry->requireCapability( 'bb', RAN\RepositoryProvider\WebhookNormalizer::class );
-$diagnostic = $webhooks->diagnoseWebhookReadiness();
+$webhooks   = $registry->require_capability( 'bb', RAN\RepositoryProvider\WebhookNormalizer::class );
+$diagnostic = $webhooks->diagnose_webhook_readiness();
 if ( RAN\RepositoryProvider\ProviderDiagnosticResult::PASSED !== $diagnostic->status
 	|| 'bb.webhook.delivery_verified' !== $diagnostic->code
 ) {
@@ -194,7 +194,7 @@ $transport = static function ( mixed $response, array $arguments, string $url ) 
 };
 add_filter( 'pre_http_request', $transport, 10, 3 );
 try {
-	$repository = $provider->resolveRepository(
+	$repository = $provider->resolve_repository(
 		new RAN\RepositoryProvider\RepositoryLookupRequest(
 			'rocketsarenostalgic/ran-booster-fixture-public-plugin',
 			null,
@@ -207,9 +207,9 @@ try {
 
 if ( 1 !== $requests
 	|| 'rocketsarenostalgic/ran-booster-fixture-public-plugin' !== $repository->locator
-	|| '{5a314489-3bbb-4914-9568-01ee989751e1}' !== $repository->providerRepositoryId
+	|| '{5a314489-3bbb-4914-9568-01ee989751e1}' !== $repository->provider_repository_id
 	|| $repository->private
-	|| 'main' !== $repository->defaultBranch
+	|| 'main' !== $repository->default_branch
 ) {
 	throw new RuntimeException( 'The controlled installed provider operation failed.' );
 }

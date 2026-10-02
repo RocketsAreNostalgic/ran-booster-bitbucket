@@ -51,7 +51,7 @@ final class BitbucketDiagnosticsBoundaryTest extends TestCase {
 			new BitbucketWebhookNormalizer( $store )
 		);
 
-		$results = $provider->getProviderDiagnostics()->diagnose( new ProviderDiagnosticRequest() );
+		$results = $provider->get_provider_diagnostics()->diagnose( new ProviderDiagnosticRequest() );
 
 		self::assertSame( array( 'bb.credential.not_configured', 'bb.repository.not_configured' ), array_column( $results, 'code' ) );
 		self::assertStringNotContainsString( 'token', serialize( $results ) );

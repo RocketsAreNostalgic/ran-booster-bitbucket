@@ -10,9 +10,9 @@ The repository owns only its product-specific evidence:
 
 - `Quality` builds and verifies the Bitbucket ZIP and checksum from the exact revision under test;
 - the promotion manifest binds those exact bytes to the Quality revision and expected release tag;
-- repository Quality retains the exact certified Core contract and source tests;
+- repository Quality checks the exact pinned Core source contract and source tests;
 - the release-candidate lane installs and reads back the exact candidate ZIP;
-- `Certified Core installed proof` independently exercises the add-on beside the immutable certified Core release in WordPress 7.0.3.
+- `Certified Core installed proof` gates release admission by exercising the add-on beside the immutable certified Core release in WordPress 7.0.3.
 
 Do not recreate local Release Please lifecycle state, candidate markers, custom version semantics, merge geometry, trusted-run discovery, mutable recovery, or a repository-local publisher.
 
@@ -32,6 +32,7 @@ Do not recreate local Release Please lifecycle state, candidate markers, custom 
 ordinary PR / main
 → full Quality
 → exact tested ZIP + checksum + promotion manifest
+→ certified immutable Core installed proof for that exact main SHA
 → shared Profile B exact successful-main admission
 → Release Please
 → exact candidate Quality when a release PR exists
@@ -54,4 +55,10 @@ Release Please is configured with `draft: true` and `force-tag-creation: true`. 
 
 `tests/WordPress/bitbucket-installed-proof.sh` remains the repeatable installed boundary. It verifies both archives, Core release provenance, the installed Bitbucket tree, normal dependency activation, public provider registration, authenticated-delivery diagnostics and cleanup.
 
-The `Certified Core installed proof` workflow independently downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact add-on source under review.
+The reusable `Certified Core installed proof` workflow downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact successful main Quality SHA supplied by the release caller. The release job depends on this proof succeeding; failure or a skipped proof prevents shared Profile B admission, including after a release PR merges. Manual dispatch remains available for certification diagnosis and does not invoke publication.
+
+## API 14 candidate qualification
+
+The current branch requires Provider API 14 and Add-on API 17. Run source host checks with `RAN_BOOSTER_CORE_TEST_MODE=candidate`, the exact checkout recorded in `extra.ran-booster-core-candidate.commit`, and its production dependency autoloader. Quality uses that same explicit source identity; it does not certify an immutable Core release.
+
+The beta.29 `ran-booster-core-certification` record remains historical API 11 evidence. The certified installed-proof workflow intentionally retains that release-only path and cannot qualify this API 14 candidate. Source changes may merge after exact candidate-source Quality and independent review. Before release admission/publication, obtain a matching approved immutable Core release, update certification to its actual tag/commit/archive identities, restore release-backed host qualification, and pass installed proof. Ordinary source PRs do not run a knowingly incompatible historical installed proof; release admission always does. No updater dependency or release version is changed here.

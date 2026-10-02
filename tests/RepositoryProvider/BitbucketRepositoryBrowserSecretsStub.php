@@ -21,7 +21,7 @@ final class BitbucketRepositoryBrowserSecretsStub extends SecretsFile {
 	}
 
 	/** @return array<string, array<string, mixed>> */
-	public function credentialProfiles( ProviderCode|string $provider ): array {
+	public function credential_profiles( ProviderCode|string $provider ): array {
 		$provider               = $provider instanceof ProviderCode ? $provider->value : $provider;
 		$this->profileLookups[] = $provider;
 
@@ -48,7 +48,7 @@ final class BitbucketRepositoryBrowserSecretsStub extends SecretsFile {
 	}
 
 	/** @return array<string, mixed>|null */
-	public function credentialMaterial( ProviderCode|string $provider, ?string $id = null ): ?array {
+	public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
 		$provider                = $provider instanceof ProviderCode ? $provider->value : $provider;
 		$this->materialLookups[] = array( $provider, $id );
 

@@ -26,7 +26,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	}
 
 	private function credential_result( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
-		$credential_id = $request->getCredentialId();
+		$credential_id = $request->get_credential_id();
 		if ( null === $credential_id ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::NOT_CONFIGURED,
@@ -37,14 +37,14 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		}
 
 		try {
-			$result = $this->credentials->validateCredential( $credential_id, $request->claimRemoteCall(), 65536 );
+			$result = $this->credentials->validate_credential( $credential_id, $request->claim_remote_call(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
 			return $this->budget_result( 'bb.credential.budget_exhausted' );
 		} catch ( \Throwable ) {
 			return $this->unavailable_result( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
 		}
 
-		if ( $result->isValid() ) {
+		if ( $result->is_valid() ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::PASSED,
 				'bb.credential.valid',
@@ -82,7 +82,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	}
 
 	private function repository_result( ProviderDiagnosticRequest $request ): ProviderDiagnosticResult {
-		$repository = $request->getRepository();
+		$repository = $request->get_repository();
 		if ( null === $repository ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::NOT_CONFIGURED,
@@ -93,7 +93,7 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		}
 
 		try {
-			$this->browser->repository( $repository, $request->getCredentialId(), $request->claimRemoteCall(), 65536 );
+			$this->browser->repository( $repository, $request->get_credential_id(), $request->claim_remote_call(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
 			return $this->budget_result( 'bb.repository.budget_exhausted' );
 		} catch ( RuntimeException $exception ) {

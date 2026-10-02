@@ -14,6 +14,9 @@
         }
     ],
     "extra": {
+        "ran-booster-core-candidate": {
+            "commit": "ae4de158e3ae02d99162b9b8d0babdc9269a36da"
+        },
         "ran-booster-core-certification": {
             "tag": "v1.0.0-beta.29",
             "commit": "ffc11fc8e40618624a785b7fca5193029c6d492e",
@@ -31,8 +34,8 @@
             "requires-php": "8.2",
             "booster-apis": {
                 "required": {
-                    "provider": 11,
-                    "addon": 16
+                    "provider": 14,
+                    "addon": 17
                 },
                 "optional": {}
             },
@@ -64,6 +67,7 @@
         "standards:fix": "vendor/bin/phpcbf --standard=.phpcs.xml --report=summary",
         "lint:syntax": "bash scripts/lint-syntax.sh",
         "test:coverage": "bash tests/Workflow/product-php-coverage.sh",
+        "test:naming": "bash tests/Workflow/provider-api13-naming.sh",
         "check:coverage": "php scripts/check-product-php-coverage.php",
         "analyze": "vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M",
         "test": "vendor/bin/phpunit --configuration phpunit.xml",
@@ -74,7 +78,8 @@
             "@standards",
             "@lint:syntax",
             "@test:syntax",
-            "@test:coverage"
+            "@test:coverage",
+            "@test:naming"
         ],
         "check:host": [
             "@analyze",

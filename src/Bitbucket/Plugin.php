@@ -24,7 +24,7 @@ final class Plugin {
 			return;
 		}
 
-		$registry->registerWithCredentialStore(
+		$registry->register_with_credential_store(
 			'bb',
 			static function (
 				ProviderCredentialStore $credentials,
@@ -82,8 +82,8 @@ final class Plugin {
 	private static function has_compatible_core(): bool {
 		return ( ! defined( 'RAN_BOOSTER_RUNTIME_MODE' ) || 'single_site_supported' === RAN_BOOSTER_RUNTIME_MODE )
 			&& defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-			&& 11 === RAN_BOOSTER_PROVIDER_API_VERSION
+			&& 14 === RAN_BOOSTER_PROVIDER_API_VERSION
 			&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
-			&& 16 === RAN_BOOSTER_ADDON_API_VERSION;
+			&& 17 === RAN_BOOSTER_ADDON_API_VERSION;
 	}
 }

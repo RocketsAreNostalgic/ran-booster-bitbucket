@@ -17,9 +17,9 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 	) {
 	}
 
-	public function validateCredential( string $credentialId, float|int $timeout = 15, int $response_size = 262144 ): CredentialValidationResult { // phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase, WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+	public function validate_credential( string $credential_id, float|int $timeout = 15, int $response_size = 262144 ): CredentialValidationResult {
 		try {
-			$credential = $this->credentials->load( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Certified Core interface signature; migrate with Core #167.
+			$credential = $this->credentials->load( $credential_id );
 		} catch ( BitbucketCredentialException ) {
 			return CredentialValidationResult::invalid();
 		}
@@ -33,7 +33,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 				return CredentialValidationResult::unavailable();
 			}
 
-			return CredentialValidationResult::invalidResponse();
+			return CredentialValidationResult::invalid_response();
 		}
 
 		$status = $response->get_status();
@@ -43,7 +43,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 		}
 
 		if ( 429 === $status ) {
-			return CredentialValidationResult::rateLimited();
+			return CredentialValidationResult::rate_limited();
 		}
 
 		if ( $status < 200 || $status >= 300 ) {
@@ -57,7 +57,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 			|| ! is_array( $body->values )
 			|| ! array_is_list( $body->values )
 		) {
-			return CredentialValidationResult::invalidResponse();
+			return CredentialValidationResult::invalid_response();
 		}
 
 		return CredentialValidationResult::valid();

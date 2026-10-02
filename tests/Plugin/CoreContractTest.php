@@ -20,15 +20,15 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entryFile );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentationFile );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*11\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*14\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*16\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*17\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION',\\s*2\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION',\\s*3\\s*\\)/",
 			$core
 		);
 		self::assertStringNotContainsString( 'RAN_BOOSTER_LOGGING_API_VERSION', $core );
@@ -36,11 +36,29 @@ final class CoreContractTest extends TestCase {
 
 		$certification = $this->certification();
 		$commit        = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' rev-parse HEAD' );
-		$tag           = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' describe --tags --exact-match HEAD' );
 		self::assertIsString( $commit );
-		self::assertIsString( $tag );
-		self::assertSame( $certification['commit'], trim( $commit ) );
-		self::assertSame( $certification['tag'], trim( $tag ) );
+		if ( 'candidate' === getenv( 'RAN_BOOSTER_CORE_TEST_MODE' ) ) {
+			$composer = json_decode( (string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local candidate identity.
+			self::assertSame( $composer['extra']['ran-booster-core-candidate']['commit'], trim( $commit ) );
+		} else {
+			$tag = shell_exec( 'git -C ' . escapeshellarg( $coreRoot ) . ' describe --tags --exact-match HEAD' );
+			self::assertIsString( $tag );
+			self::assertSame( $certification['commit'], trim( $commit ) );
+			self::assertSame( $certification['tag'], trim( $tag ) );
+		}
+	}
+
+	public function testCandidateModeRejectsAnUnrelatedCheckoutAndUnknownMode(): void {
+		$root = dirname( __DIR__, 2 );
+		foreach ( array( 'candidate' => 'requires the exact configured Core checkout', 'unknown' => 'Unsupported Core test mode' ) as $mode => $message ) {
+			$program = 'require ' . var_export( $root . '/tests/fixtures/certified-core-checkout.php', true ) . '; try { ran_booster_bitbucket_certified_core_root(); echo "unexpected success"; } catch (RuntimeException $error) { echo $error->getMessage(); }';
+			$command = 'RAN_BOOSTER_CORE_TEST_MODE=' . escapeshellarg( $mode )
+				. ' RAN_BOOSTER_CORE_PATH=' . escapeshellarg( $root )
+				. ' ' . escapeshellarg( PHP_BINARY ) . ' -r ' . escapeshellarg( $program );
+			$output = shell_exec( $command );
+			self::assertIsString( $output );
+			self::assertStringContainsString( $message, $output );
+		}
 	}
 
 	public function testInstalledProofSeparatesTagTargetFromArchiveSource(): void {
@@ -57,13 +75,37 @@ final class CoreContractTest extends TestCase {
 		);
 	}
 
-	public function testQualityPinsTheExactReleasedCoreAndCurrentSetupPhpAction(): void {
+	public function testSourceQualificationCannotBypassInstalledReleaseAdmission(): void {
+		$installed = $this->workflow( 'installed-proof.yml' );
+		$release   = $this->workflow( 'release-please.yml' );
+
+		self::assertStringContainsString( "  workflow_call:\n    inputs:\n      source-sha:", $installed );
+		self::assertStringContainsString( 'required: true', $installed );
+		self::assertStringContainsString( 'workflow_dispatch:', $installed );
+		self::assertStringNotContainsString( 'pull_request:', $installed );
+		self::assertStringNotContainsString( '  push:', $installed );
+		self::assertStringContainsString( 'ref: ${{ inputs.source-sha || github.sha }}', $installed );
+		self::assertStringContainsString( 'test "$source_commit" = "$expected_source"', $installed );
+		self::assertStringContainsString( '.immutable == true and .draft == false', $installed );
+		self::assertStringContainsString( 'run: bash tests/WordPress/bitbucket-installed-proof.sh', $installed );
+		self::assertStringContainsString( 'uses: ./.github/workflows/installed-proof.yml', $release );
+		self::assertStringContainsString( 'source-sha: ${{ github.event.workflow_run.head_sha }}', $release );
+		self::assertStringContainsString( "  release:\n    needs: certified-core\n", $release );
+		foreach ( array( "conclusion == 'success'", "event == 'push'", "head_branch == 'main'", "path == '.github/workflows/quality.yml'", 'head_repository.id == github.repository_id', 'head_repository.full_name == github.repository' ) as $guard ) {
+			self::assertStringContainsString( 'github.event.workflow_run.' . $guard, $release );
+		}
+		self::assertStringNotContainsString( 'continue-on-error:', $release . $installed );
+		self::assertStringNotContainsString( 'always()', $release );
+		self::assertStringNotContainsString( 'workflow_dispatch:', $release );
+	}
+
+	public function testQualityPinsExactCandidateSourceWithoutClaimingReleasedCertification(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
-		self::assertStringContainsString( '.extra["ran-booster-core-certification"].tag', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-candidate"].commit', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
 		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
-		self::assertStringContainsString( 'git describe --tags --exact-match HEAD', $workflow );
+		self::assertStringNotContainsString( 'git describe --tags --exact-match HEAD', $workflow );
 		self::assertStringContainsString( 'composer validate --strict --no-check-all --no-check-publish', $workflow );
 		self::assertStringContainsString( 'shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2', $workflow );
 	}

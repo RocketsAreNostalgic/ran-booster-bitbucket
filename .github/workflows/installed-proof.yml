@@ -1,15 +1,17 @@
 name: Certified Core installed proof
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      source-sha:
+        description: Exact successful main Quality source to certify
+        required: true
+        type: string
   workflow_dispatch:
 
 concurrency:
-  group: installed-proof-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: installed-proof-${{ github.workflow }}-${{ inputs.source-sha || github.sha }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -36,7 +38,7 @@ jobs:
       - name: Check out exact add-on source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ inputs.source-sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -53,7 +55,8 @@ jobs:
         run: |
           set -euo pipefail
           source_commit="$(git rev-parse HEAD)"
-          expected_source='${{ github.event.pull_request.head.sha || github.sha }}'
+          expected_source='${{ inputs.source-sha || github.sha }}'
+          [[ "$expected_source" =~ ^[0-9a-f]{40}$ ]]
           test "$source_commit" = "$expected_source"
           version="$(sed -nE 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*([^[:space:]]+).*/\1/p' ran-booster-bitbucket.php)"
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]
