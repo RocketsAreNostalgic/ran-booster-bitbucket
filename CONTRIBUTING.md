@@ -12,7 +12,7 @@ composer check:host
 composer analyze
 ```
 
-The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These candidate checks do not replace certification against a matching immutable Core release or installed proof. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
+The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These candidate checks qualify source merges after independent review; they do not replace certification against a matching immutable Core release or installed proof. The release caller requires that proof against the exact successful main Quality SHA before shared Profile B admission. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 

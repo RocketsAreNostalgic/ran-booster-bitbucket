@@ -75,7 +75,8 @@ Set `RAN_BOOSTER_CORE_PATH` if the exact candidate Core checkout is elsewhere an
 The default test mode uses the historical `ran-booster-core-certification` tuple;
 that API 11 release cannot qualify this API 14 branch. Keep candidate mode enabled
 for both host checks and focused analysis. Follow [RELEASE.md](RELEASE.md) for the
-separate matching-release and installed-proof requirements before merge/publication.
+separate matching-release and installed-proof requirements before release admission/publication.
+Source merges require exact candidate-source Quality and independent review.
 Do not import Core-owned test fixtures into this repository. The add-on owns its
 PHP tools in its local `vendor/`, but never packages a vendor tree or Core code
 in the release artifact. PHPStan is a blocking, Bitbucket-only host gate; read

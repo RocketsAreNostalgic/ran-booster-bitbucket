@@ -75,6 +75,30 @@ final class CoreContractTest extends TestCase {
 		);
 	}
 
+	public function testSourceQualificationCannotBypassInstalledReleaseAdmission(): void {
+		$installed = $this->workflow( 'installed-proof.yml' );
+		$release   = $this->workflow( 'release-please.yml' );
+
+		self::assertStringContainsString( "  workflow_call:\n    inputs:\n      source-sha:", $installed );
+		self::assertStringContainsString( 'required: true', $installed );
+		self::assertStringContainsString( 'workflow_dispatch:', $installed );
+		self::assertStringNotContainsString( 'pull_request:', $installed );
+		self::assertStringNotContainsString( '  push:', $installed );
+		self::assertStringContainsString( 'ref: ${{ inputs.source-sha || github.sha }}', $installed );
+		self::assertStringContainsString( 'test "$source_commit" = "$expected_source"', $installed );
+		self::assertStringContainsString( '.immutable == true and .draft == false', $installed );
+		self::assertStringContainsString( 'run: bash tests/WordPress/bitbucket-installed-proof.sh', $installed );
+		self::assertStringContainsString( 'uses: ./.github/workflows/installed-proof.yml', $release );
+		self::assertStringContainsString( 'source-sha: ${{ github.event.workflow_run.head_sha }}', $release );
+		self::assertStringContainsString( "  release:\n    needs: certified-core\n", $release );
+		foreach ( array( "conclusion == 'success'", "event == 'push'", "head_branch == 'main'", "path == '.github/workflows/quality.yml'", 'head_repository.id == github.repository_id', 'head_repository.full_name == github.repository' ) as $guard ) {
+			self::assertStringContainsString( 'github.event.workflow_run.' . $guard, $release );
+		}
+		self::assertStringNotContainsString( 'continue-on-error:', $release . $installed );
+		self::assertStringNotContainsString( 'always()', $release );
+		self::assertStringNotContainsString( 'workflow_dispatch:', $release );
+	}
+
 	public function testQualityPinsExactCandidateSourceWithoutClaimingReleasedCertification(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 

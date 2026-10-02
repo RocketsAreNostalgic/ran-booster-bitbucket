@@ -1,5 +1,9 @@
 # Bitbucket Provider API 13 integration handoff
 
+Historical API 13 handoff: source-merge sequencing below is superseded by the
+API 14 source/release separation in `RELEASE.md`. Immutable release certification
+remains required for publication.
+
 Status: implemented and locally candidate-qualified. Ben explicitly approved
 branch push and successor draft PR creation after the initial automatic approval
 block. Native CI, hosted review and actual-published-tuple evidence are recorded

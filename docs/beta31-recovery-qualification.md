@@ -31,3 +31,19 @@ Canonical checks after retrying existing fixtures outside the sandbox:
   Portability 3 / Admin Interaction 3 surface. Its source-candidate level 6 proof
   passes. The canonical released-host gate remains held until matching immutable
   Core recertification; no fallback, baseline, or suppression was introduced.
+
+## Source merge and release admission separation
+
+The source PR is qualified against exact Core
+`ae4de158e3ae02d99162b9b8d0babdc9269a36da`; independent review and native
+candidate-source Quality authorize source readiness, not immutable certification.
+After the workflow separation, fresh `composer check:host` passes on PHP 8.3.6,
+including level 8 analysis, 203 tests / 2,394 assertions, release-candidate controls,
+syntax, production standards and coverage/naming negative controls.
+
+The former standalone PR installed proof is now a reusable release-admission gate.
+After successful same-repository main push Quality, the release caller supplies its
+exact head SHA to the unchanged immutable-Core download and disposable WordPress
+proof. The shared Profile B job depends on success. Historical beta.29 cannot pass
+that gate; no certification marker, archive identity or dependency pin is changed.
+Manual proof dispatch remains diagnostic and cannot publish a release.
