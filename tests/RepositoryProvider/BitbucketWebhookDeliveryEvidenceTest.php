@@ -41,17 +41,17 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 
 	public function testUnavailableDeliveryEvidenceFailsClosedWithoutExceptionText(): void {
 		$profiles = new class() implements ProviderWebhookProfileReader {
-			public function hasWebhookProfile(): bool {
+			public function has_webhook_profile(): bool {
 				return true;
 			}
 		};
 		$evidence = new class() implements AuthenticatedWebhookDeliveryEvidenceReader {
-			public function latestAuthenticatedDelivery(): ?AuthenticatedWebhookDeliveryEvidence {
+			public function latest_authenticated_delivery(): ?AuthenticatedWebhookDeliveryEvidence {
 				throw new \RuntimeException( 'private-delivery-evidence-canary' );
 			}
 		};
 		$result = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnose_webhook_readiness();
-		$output = implode( ' ', $result->toArray() );
+		$output = implode( ' ', $result->to_array() );
 
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );
 		self::assertSame( 'bb.webhook.delivery_evidence_unavailable', $result->code );
@@ -60,14 +60,14 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 
 	private function normalizer( ?AuthenticatedWebhookDeliveryEvidence $delivery ): BitbucketWebhookNormalizer {
 		$profiles = new class() implements ProviderWebhookProfileReader {
-			public function hasWebhookProfile(): bool {
+			public function has_webhook_profile(): bool {
 				return true;
 			}
 		};
 		$evidence = new class( $delivery ) implements AuthenticatedWebhookDeliveryEvidenceReader {
 			public function __construct( private ?AuthenticatedWebhookDeliveryEvidence $delivery ) {}
 
-			public function latestAuthenticatedDelivery(): ?AuthenticatedWebhookDeliveryEvidence {
+			public function latest_authenticated_delivery(): ?AuthenticatedWebhookDeliveryEvidence {
 				return $this->delivery;
 			}
 		};

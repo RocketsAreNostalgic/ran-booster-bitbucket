@@ -151,8 +151,8 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 		return $this->webhooks->diagnose_webhook_readiness();
 	}
 
-	public function validate_credential( string $credentialId ): CredentialValidationResult { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
-		return $this->credential_validator->validate_credential( $credentialId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+	public function validate_credential( string $credential_id ): CredentialValidationResult {
+		return $this->credential_validator->validate_credential( $credential_id );
 	}
 
 	public function browse_repositories( RepositoryBrowseRequest $request ): RepositoryBrowseResult {
@@ -166,8 +166,8 @@ final readonly class BitbucketProvider implements RepositoryProvider, Credential
 	public function resolve_repository( RepositoryLookupRequest $request ): RepositoryDescriptor {
 		return $this->browser->repository(
 			$request->locator,
-			$request->credentialId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryLookupRequest field; migrate with Core #167.
-			public_only: $request->publicOnly // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryLookupRequest field; migrate with Core #167.
+			$request->credential_id,
+			public_only: $request->public_only
 		);
 	}
 

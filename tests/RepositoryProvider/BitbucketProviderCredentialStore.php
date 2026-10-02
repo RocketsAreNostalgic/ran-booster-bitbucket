@@ -13,15 +13,15 @@ final readonly class BitbucketProviderCredentialStore implements ProviderCredent
 	public function __construct( private SecretsFile $secrets ) {
 	}
 
-	public function credentialProfiles(): array {
-		return $this->secrets->credentialProfiles( 'bb' );
+	public function credential_profiles(): array {
+		return $this->secrets->credential_profiles( 'bb' );
 	}
 
-	public function credentialMaterial( ?string $id = null ): ?array {
-		return $this->secrets->credentialMaterial( 'bb', $id );
+	public function credential_material( ?string $id = null ): ?array {
+		return $this->secrets->credential_material( 'bb', $id );
 	}
 
-	public function hasWebhookProfile(): bool {
+	public function has_webhook_profile(): bool {
 		return array() !== $this->secrets->webhookMaterials( 'bb' );
 	}
 }

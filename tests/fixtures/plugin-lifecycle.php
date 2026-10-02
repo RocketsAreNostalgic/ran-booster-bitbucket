@@ -206,19 +206,19 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public int $reads = 0;
 
-		public function credentialProfiles(): array {
+		public function credential_profiles(): array {
 			++$this->reads;
 
 			return array();
 		}
 
-		public function credentialMaterial( ?string $id = null ): ?array {
+		public function credential_material( ?string $id = null ): ?array {
 			++$this->reads;
 
 			return null;
 		}
 
-		public function hasWebhookProfile(): bool {
+		public function has_webhook_profile(): bool {
 			++$this->reads;
 
 			return false;
@@ -236,7 +236,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 			$result['delivery_evidence_was_scoped'] = 'bb' === $code->value;
 
 			return new class() implements \RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
-				public function latestAuthenticatedDelivery(): ?\RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+				public function latest_authenticated_delivery(): ?\RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
 					return null;
 				}
 			};
@@ -250,7 +250,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		$provider                             = $registry->get( 'bb' );
 		$metadata                             = $provider->get_metadata();
 		$result['provider_code']              = $metadata->code->value;
-		$result['owner_requires_managed_target'] = $metadata->admin?->getWebhookScope( 'owner' )?->requiresManagedTarget ?? false;
+		$result['owner_requires_managed_target'] = $metadata->admin?->get_webhook_scope( 'owner' )?->requires_managed_target ?? false;
 		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
 		$result['implements_release_capabilities'] = array(
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseMetadata,

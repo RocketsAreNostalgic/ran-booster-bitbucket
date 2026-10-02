@@ -26,13 +26,13 @@ final readonly class BitbucketRepositoryBrowser {
 	}
 
 	public function browse( RepositoryBrowseRequest $request ): RepositoryBrowseResult {
-		if ( RepositoryBrowseMode::PUBLIC_OWNER === $request->getMode() ) {
-			$workspace  = $this->validate_workspace( (string) $request->getOwner() );
+		if ( RepositoryBrowseMode::PUBLIC_OWNER === $request->get_mode() ) {
+			$workspace  = $this->validate_workspace( (string) $request->get_owner() );
 			$credential = null;
 
-			if ( null !== $request->getCredentialId() ) {
+			if ( null !== $request->get_credential_id() ) {
 				try {
-					$credential = $this->credentials->load( $request->getCredentialId() );
+					$credential = $this->credentials->load( $request->get_credential_id() );
 				} catch ( BitbucketCredentialException ) {
 					throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
 				}
@@ -47,7 +47,7 @@ final readonly class BitbucketRepositoryBrowser {
 			);
 		}
 
-		$credential_id = (string) $request->getCredentialId();
+		$credential_id = (string) $request->get_credential_id();
 		try {
 			$credential = $this->credentials->load( $credential_id );
 		} catch ( BitbucketCredentialException ) {
@@ -152,7 +152,7 @@ final readonly class BitbucketRepositoryBrowser {
 		$repositories      = array();
 
 		for ( $page = 1; ; ++$page ) {
-			if ( ! $browse_request->hasCapacity() ) {
+			if ( ! $browse_request->has_capacity() ) {
 				return $this->partial_browse_result( $repositories, 503 );
 			}
 
@@ -174,12 +174,12 @@ final readonly class BitbucketRepositoryBrowser {
 					$url,
 					$credential,
 					'Bitbucket could not find that workspace.',
-					$browse_request->claimRemoteCall(),
-					$browse_request->getResponseSizeLimit(),
+					$browse_request->claim_remote_call(),
+					$browse_request->get_response_size_limit(),
 					504,
 					422
 				);
-				$browse_request->acceptResponseBody( $response->get_body() );
+				$browse_request->accept_response_body( $response->get_body() );
 			} catch ( RuntimeException | InvalidArgumentException $exception ) {
 				if ( $public_only
 					&& null !== $credential
@@ -368,7 +368,7 @@ final readonly class BitbucketRepositoryBrowser {
 		$seen_names = array();
 
 		foreach ( $repositories as $repository ) {
-			$id_key   = strtolower( $repository->providerRepositoryId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryDescriptor field; coordinated migration remains with Core #167.
+			$id_key   = strtolower( $repository->provider_repository_id );
 			$name_key = strtolower( $repository->locator );
 
 			if ( isset( $seen_ids[ $id_key ] ) || isset( $seen_names[ $name_key ] ) ) {
@@ -394,11 +394,11 @@ final readonly class BitbucketRepositoryBrowser {
 					return $order;
 				}
 
-				$order = strcmp( $left->providerRepositoryId, $right->providerRepositoryId ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryDescriptor field; coordinated migration remains with Core #167.
+				$order = strcmp( $left->provider_repository_id, $right->provider_repository_id );
 
 				return 0 !== $order
 					? $order
-					: strcmp( $left->credentialId ?? '', $right->credentialId ?? '' ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Certified Core RepositoryDescriptor field; coordinated migration remains with Core #167.
+					: strcmp( $left->credential_id ?? '', $right->credential_id ?? '' );
 			}
 		);
 

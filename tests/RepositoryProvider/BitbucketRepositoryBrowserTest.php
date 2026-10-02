@@ -60,7 +60,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
-		self::assertNull( $repositories[0]->credentialId );
+		self::assertNull( $repositories[0]->credential_id );
 	}
 
 	public function testProviderSupportsAGlobalCredentialedPublicBrowseDefault(): void {
@@ -76,7 +76,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		);
 
 		self::assertInstanceOf( CredentialedPublicRepositoryBrowser::class, $provider );
-		self::assertTrue( $provider->get_public_repository_browse_metadata()->supportsProviderDefaultProfile );
+		self::assertTrue( $provider->get_public_repository_browse_metadata()->supports_provider_default_profile );
 	}
 
 	public function testSelectedPublicLookupCredentialAuthenticatesAcrossWorkspacesAndKeepsResultsCredentialFree(): void {
@@ -106,7 +106,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		);
 
 		$result   = $this->browser( $secrets )->browse(
-			RepositoryBrowseRequest::publicOwner( 'acme', 'public_lookup' )
+			RepositoryBrowseRequest::public_owner( 'acme', 'public_lookup' )
 		);
 		$requests = $this->requests();
 
@@ -129,7 +129,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 	public function testMissingPublicLookupCredentialFailsBeforeHttp(): void {
 		try {
 			$this->browser()->browse(
-				RepositoryBrowseRequest::publicOwner( 'acme', 'missing_profile' )
+				RepositoryBrowseRequest::public_owner( 'acme', 'missing_profile' )
 			);
 			self::fail( 'An unavailable public lookup credential must fail closed.' );
 		} catch ( RuntimeException $exception ) {
@@ -152,7 +152,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 			try {
 				$this->browser( $secrets )->browse(
-					RepositoryBrowseRequest::publicOwner( 'acme', 'public_lookup' )
+					RepositoryBrowseRequest::public_owner( 'acme', 'public_lookup' )
 				);
 				self::fail( 'A rejected public lookup credential must not retry anonymously.' );
 			} catch ( RuntimeException $exception ) {
@@ -190,7 +190,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 			try {
 				$this->browser( $secrets )->browse(
-					RepositoryBrowseRequest::publicOwner( 'acme', 'public_lookup' )
+					RepositoryBrowseRequest::public_owner( 'acme', 'public_lookup' )
 				);
 				self::fail( 'A later authenticated public lookup failure must not return partial rows.' );
 			} catch ( RuntimeException $exception ) {
@@ -217,7 +217,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		$repositories = $this->accessibleRepositories( $this->browser( $secrets ), 'primary' );
 		$requests     = $this->requests();
 
-		self::assertSame( 'primary', $repositories[0]->credentialId );
+		self::assertSame( 'primary', $repositories[0]->credential_id );
 		self::assertTrue( $repositories[0]->private );
 		self::assertSame( array( array( 'bb', 'primary' ) ), $secrets->materialLookups );
 		self::assertSame(
@@ -268,9 +268,9 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		$requests = $this->requests();
 
 		self::assertFalse( $public->private );
-		self::assertNull( $public->credentialId );
+		self::assertNull( $public->credential_id );
 		self::assertTrue( $private->private );
-		self::assertSame( 'primary', $private->credentialId );
+		self::assertSame( 'primary', $private->credential_id );
 		self::assertSame(
 			'https://api.bitbucket.org/2.0/repositories/acme/public-plugin?fields=uuid%2Cfull_name%2Cis_private%2Cmainbranch.name',
 			$requests[0]['url']
@@ -328,7 +328,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		);
 
 		self::assertFalse( $repository->private );
-		self::assertSame( 'public_lookup', $repository->credentialId );
+		self::assertSame( 'public_lookup', $repository->credential_id );
 		self::assertArrayHasKey( 'Authorization', $this->requests()[0]['arguments']['headers'] );
 	}
 
@@ -396,10 +396,10 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$result = $this->browser()->browse( RepositoryBrowseRequest::publicOwner( 'acme' ) );
+		$result = $this->browser()->browse( RepositoryBrowseRequest::public_owner( 'acme' ) );
 
-		self::assertTrue( $result->isPartial() );
-		self::assertSame( RepositoryBrowseResult::RATE_LIMIT, $result->partialReason );
+		self::assertTrue( $result->is_partial() );
+		self::assertSame( RepositoryBrowseResult::RATE_LIMIT, $result->partial_reason );
 		self::assertSame( array( 'acme/one' ), array_column( $this->rows( $result->repositories ), 'locator' ) );
 		self::assertCount( 2, $this->requests() );
 	}
@@ -419,10 +419,10 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		}
 		$this->queue( $responses );
 
-		$result = $this->browser()->browse( RepositoryBrowseRequest::publicOwner( 'acme' ) );
+		$result = $this->browser()->browse( RepositoryBrowseRequest::public_owner( 'acme' ) );
 
-		self::assertTrue( $result->isPartial() );
-		self::assertSame( RepositoryBrowseResult::LIMIT, $result->partialReason );
+		self::assertTrue( $result->is_partial() );
+		self::assertSame( RepositoryBrowseResult::LIMIT, $result->partial_reason );
 		self::assertCount( 1, $result->repositories );
 		self::assertCount( RepositoryBrowseRequest::MAX_REMOTE_CALLS, $this->requests() );
 	}
@@ -545,12 +545,12 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 	/** @return list<\RAN\RepositoryProvider\RepositoryDescriptor> */
 	private function publicRepositories( BitbucketRepositoryBrowser $browser, string $workspace ): array {
-		return $browser->browse( RepositoryBrowseRequest::publicOwner( $workspace ) )->repositories;
+		return $browser->browse( RepositoryBrowseRequest::public_owner( $workspace ) )->repositories;
 	}
 
 	/** @return list<\RAN\RepositoryProvider\RepositoryDescriptor> */
-	private function accessibleRepositories( BitbucketRepositoryBrowser $browser, string $credentialId ): array {
-		return $browser->browse( RepositoryBrowseRequest::accessible( $credentialId ) )->repositories;
+	private function accessibleRepositories( BitbucketRepositoryBrowser $browser, string $credential_id ): array {
+		return $browser->browse( RepositoryBrowseRequest::accessible( $credential_id ) )->repositories;
 	}
 
 	/** @param array<string, array<string, mixed>> $materials */
@@ -615,7 +615,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 	/** @param list<\RAN\RepositoryProvider\RepositoryDescriptor> $repositories */
 	private function rows( array $repositories ): array {
-		return array_map( static fn ( $repository ): array => $repository->toArray(), $repositories );
+		return array_map( static fn ( $repository ): array => $repository->to_array(), $repositories );
 	}
 
 	private function assertSafeMessage( string $message ): void {

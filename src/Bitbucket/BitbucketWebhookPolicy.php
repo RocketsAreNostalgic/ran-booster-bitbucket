@@ -68,22 +68,22 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 
 	public function authorize_webhook(
 		SignedWebhookVerification $verification,
-		string $repositoryAuthorityId, // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+		string $repository_authority_id,
 		string $repository
 	): bool {
-		if ( '' === $repositoryAuthorityId || ! $verification->getProvider()->equals( $this->get_provider() ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+		if ( '' === $repository_authority_id || ! $verification->get_provider()->equals( $this->get_provider() ) ) {
 			return false;
 		}
 
 		$repository = strtolower( trim( $repository, '/' ) );
 		$workspace  = explode( '/', $repository, 2 )[0];
-		foreach ( $verification->getProfiles() as $profile ) {
+		foreach ( $verification->get_profiles() as $profile ) {
 			$scope  = strtolower( trim( $profile['scope'] ) );
 			$target = strtolower( trim( $profile['target'], " \t\n\r\0\x0B/" ) );
 			if ( ( 'owner' === $scope && '' !== $target && $target === $workspace )
 				|| ( 'repository' === $scope
 					&& '' !== $profile['authority_id']
-					&& hash_equals( $profile['authority_id'], $repositoryAuthorityId ) ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+					&& hash_equals( $profile['authority_id'], $repository_authority_id ) )
 			) {
 				return true;
 			}
@@ -92,8 +92,8 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		return false;
 	}
 
-	public function repository_target_matches( string $target, string $repositoryLocator ): bool { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
-		return 0 === strcasecmp( trim( $target, '/' ), trim( $repositoryLocator, '/' ) ); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase -- Provider API 13 preserves public parameter and named-argument contracts.
+	public function repository_target_matches( string $target, string $repository_locator ): bool {
+		return 0 === strcasecmp( trim( $target, '/' ), trim( $repository_locator, '/' ) );
 	}
 
 	private function assert_secret( string $secret ): void {

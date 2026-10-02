@@ -24,7 +24,7 @@ final class Plugin {
 			return;
 		}
 
-		$registry->registerWithCredentialStore(
+		$registry->register_with_credential_store(
 			'bb',
 			static function (
 				ProviderCredentialStore $credentials,

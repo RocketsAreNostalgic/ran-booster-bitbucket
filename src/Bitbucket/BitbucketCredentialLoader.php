@@ -21,7 +21,7 @@ final readonly class BitbucketCredentialLoader {
 		}
 
 		try {
-			$material = $this->credentials->credentialMaterial( $credential_id );
+			$material = $this->credentials->credential_material( $credential_id );
 		} catch ( RuntimeException ) {
 			throw BitbucketCredentialException::unavailable();
 		}

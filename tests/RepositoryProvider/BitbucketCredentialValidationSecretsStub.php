@@ -18,7 +18,7 @@ final class BitbucketCredentialValidationSecretsStub extends SecretsFile {
 	}
 
 	/** @return array<string, mixed>|null */
-	public function credentialMaterial( ProviderCode|string $provider, ?string $id = null ): ?array {
+	public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
 		$provider        = $provider instanceof ProviderCode ? $provider->value : $provider;
 		$this->lookups[] = array( $provider, $id );
 

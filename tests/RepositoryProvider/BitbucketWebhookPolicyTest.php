@@ -29,10 +29,10 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 			)
 		);
 
-		self::assertTrue( $policy->authorize_webhook( verification: $verification, repositoryAuthorityId: 'stable-repository-id', repository: 'workspace/repository' ) );
-		self::assertFalse( $policy->authorize_webhook( verification: $verification, repositoryAuthorityId: 'other-repository-id', repository: 'workspace/repository' ) );
-		self::assertTrue( $policy->repository_target_matches( target: '/WORKSPACE/Repository/', repositoryLocator: 'workspace/repository' ) );
-		self::assertFalse( $policy->repository_target_matches( target: 'workspace/repository', repositoryLocator: 'workspace/other' ) );
+		self::assertTrue( $policy->authorize_webhook( verification: $verification, repository_authority_id: 'stable-repository-id', repository: 'workspace/repository' ) );
+		self::assertFalse( $policy->authorize_webhook( verification: $verification, repository_authority_id: 'other-repository-id', repository: 'workspace/repository' ) );
+		self::assertTrue( $policy->repository_target_matches( target: '/WORKSPACE/Repository/', repository_locator: 'workspace/repository' ) );
+		self::assertFalse( $policy->repository_target_matches( target: 'workspace/repository', repository_locator: 'workspace/other' ) );
 	}
 
 	/** @return iterable<string, array{string, string, string}> */
