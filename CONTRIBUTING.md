@@ -2,7 +2,7 @@
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 14 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`36ea3fcee380b0869c8ca8bd83270408f4c6f2d3`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 14 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`ae4de158e3ae02d99162b9b8d0babdc9269a36da`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
 
 ```sh
 export RAN_BOOSTER_CORE_TEST_MODE=candidate

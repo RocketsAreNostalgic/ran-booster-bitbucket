@@ -5,11 +5,16 @@ boundary guards and consumer fixtures for Provider 14 / Add-on 17 / Admin Intera
 Core keeps Portability 3 and its existing hash domain. Prospective Release 8 remains
 Core-owned; these satellite runtime guards do not claim that capability.
 
-Source qualification on PHP 8.3.6 against Core local checkpoint
-`80cb1569a1f595518bd53fbb8780adae272f77df`: 202 tests / 2,371 assertions; PHPStan level 8 and composer check pass.
-The coordinator published the identical Core tree at
-`36ea3fcee380b0869c8ca8bd83270408f4c6f2d3`. This is candidate-source evidence only. Final Core changes
-require renewed exact-pair qualification before landing.
+Final source qualification uses published Core
+`ae4de158e3ae02d99162b9b8d0babdc9269a36da` (Core draft PR #224),
+whose tree `f5ad8aa484fbe63b7d966eeef96ae9afd5d78a94` exactly matches
+local checkpoint `fa5265731f50dad658d1c1bda63ad3cca7168a42`.
+On PHP 8.3.6, Provider has 432 passing tests / 3,354 assertions and PHPStan;
+Bitbucket has 202 passing tests / 2,371 assertions and level 8 PHPStan;
+Migrator has 128 passing tests / 1,462 assertions, level 6 exact-source analysis,
+and behavior output identical to the previous source checkpoint, including
+fingerprints, nonce strings and cleanup outcomes. This is candidate-source
+evidence only; the final published pair remains subject to hosted matrix/review.
 
 The historical released-Core certification tuples remain unchanged. Neither these
 source proofs nor this recovery grant installed-site acceptance, release certification,

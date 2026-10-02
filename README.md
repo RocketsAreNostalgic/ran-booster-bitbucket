@@ -44,7 +44,7 @@ installation records or credential storage to remove.
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
 use the exact API 14 candidate in `extra.ran-booster-core-candidate.commit`
-(currently `36ea3fcee380b0869c8ca8bd83270408f4c6f2d3`) as their contract fixture.
+(currently `ae4de158e3ae02d99162b9b8d0babdc9269a36da`) as their contract fixture.
 Check out that commit in a separate Core checkout at `../ran-booster`. The suite
 loads Core's shipped `autoload.php` and public production contracts, which require
 that checkout's locked production Composer dependencies. Do not install Core
