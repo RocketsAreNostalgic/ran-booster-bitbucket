@@ -2,13 +2,13 @@
 
 RAN Booster Bitbucket Cloud is the free Bitbucket provider for RAN Booster. It
 registers the `bb` provider and adds the Bitbucket settings tab through Provider
-API 13. The add-on requires Add-on API 17 and inserts its operational guide
+API 14. The add-on requires Add-on API 17 and inserts its operational guide
 after Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
 - Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 14 and Add-on API 17.
-- The historical Provider API 11 certification target is RAN Booster `v1.0.0-beta.29`: tag target `ffc11fc8e40618624a785b7fca5193029c6d492e`, with the immutable release archive promoted from qualified candidate `ff35be100a9f5c6cd77a84bcfc3734227106b0b8`. That immutable record is retained for provenance; it does not certify this API 13 candidate. A matching Core release and renewed installed proof are required before release.
+- The historical Provider API 11 certification target is RAN Booster `v1.0.0-beta.29`: tag target `ffc11fc8e40618624a785b7fca5193029c6d492e`, with the immutable release archive promoted from qualified candidate `ff35be100a9f5c6cd77a84bcfc3734227106b0b8`. That immutable record is retained for provenance; it does not certify this API 14 candidate. A matching Core release and renewed installed proof are required before release.
 - `Requires Plugins: ran-booster` declares Core as a package dependency, but WordPress does not check Booster's APIs. The add-on checks `RAN_BOOSTER_PROVIDER_API_VERSION`, `RAN_BOOSTER_ADDON_API_VERSION` and the supported runtime mode; a missing or incompatible API boundary disables provider registration and remote calls.
 - Provider API 14 has no logging capability. Diagnostics return bounded `ProviderDiagnosticResult` values to Core and never send exceptions or vendor text through a logging facade.
 - If Core is missing or incompatible, the add-on displays a compatibility notice only to administrators who can activate plugins.
@@ -43,8 +43,8 @@ installation records or credential storage to remove.
 ## Development
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
-use the exact API 13 candidate in `extra.ran-booster-core-candidate.commit`
-(currently `a9fd5491b69e71a8543c507d097d1b1028bfa196`) as their contract fixture.
+use the exact API 14 candidate in `extra.ran-booster-core-candidate.commit`
+(currently `36ea3fcee380b0869c8ca8bd83270408f4c6f2d3`) as their contract fixture.
 Check out that commit in a separate Core checkout at `../ran-booster`. The suite
 loads Core's shipped `autoload.php` and public production contracts, which require
 that checkout's locked production Composer dependencies. Do not install Core
@@ -73,7 +73,7 @@ release certification or installed proof.
 
 Set `RAN_BOOSTER_CORE_PATH` if the exact candidate Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
 The default test mode uses the historical `ran-booster-core-certification` tuple;
-that API 11 release cannot qualify this API 13 branch. Keep candidate mode enabled
+that API 11 release cannot qualify this API 14 branch. Keep candidate mode enabled
 for both host checks and focused analysis. Follow [RELEASE.md](RELEASE.md) for the
 separate matching-release and installed-proof requirements before merge/publication.
 Do not import Core-owned test fixtures into this repository. The add-on owns its

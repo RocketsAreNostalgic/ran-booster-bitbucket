@@ -56,8 +56,8 @@ Release Please is configured with `draft: true` and `force-tag-creation: true`. 
 
 The `Certified Core installed proof` workflow independently downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact add-on source under review.
 
-## API 13 candidate qualification
+## API 14 candidate qualification
 
-The current branch requires Provider API 13 and Add-on API 16. Run source host checks with `RAN_BOOSTER_CORE_TEST_MODE=candidate`, the exact checkout recorded in `extra.ran-booster-core-candidate.commit`, and its production dependency autoloader. Quality uses that same explicit source identity; it does not certify an immutable Core release.
+The current branch requires Provider API 14 and Add-on API 17. Run source host checks with `RAN_BOOSTER_CORE_TEST_MODE=candidate`, the exact checkout recorded in `extra.ran-booster-core-candidate.commit`, and its production dependency autoloader. Quality uses that same explicit source identity; it does not certify an immutable Core release.
 
-The beta.29 `ran-booster-core-certification` record remains historical API 11 evidence. The certified installed-proof workflow intentionally retains that release-only path and cannot qualify this API 13 candidate. Before merge/publication, obtain a matching approved immutable Core release, update certification to its actual tag/commit/archive identities, restore release-backed host qualification, and pass installed proof. No updater dependency or release version is changed here.
+The beta.29 `ran-booster-core-certification` record remains historical API 11 evidence. The certified installed-proof workflow intentionally retains that release-only path and cannot qualify this API 14 candidate. Before merge/publication, obtain a matching approved immutable Core release, update certification to its actual tag/commit/archive identities, restore release-backed host qualification, and pass installed proof. No updater dependency or release version is changed here.

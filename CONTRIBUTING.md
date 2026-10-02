@@ -66,7 +66,7 @@ pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
 Owned method/variable naming is enforced across all configured product paths,
 including future classes and classes with inherited or implemented contracts.
-Narrow certified Core exceptions remain at the affected declarations/accesses.
+The current API 14 candidate no longer needs certified Core naming exceptions.
 
 ## Production naming enforcement
 
@@ -81,11 +81,12 @@ unused-parameter and reserved-parameter suppressions have been removed.
 Unused-parameter checks follow the shared WPCS baseline, including its upstream
 inherited-signature allowances. The autoloader uses `class_name` for its owned
 callback parameter. PHP magic
-methods retain their required spelling. Precise certified Core exceptions below
-remain temporary connected-contract debt under Core #167; production-wide
-coverage does not mean those contracts have migrated.
+methods retain their required spelling. The historical connected-contract
+exceptions described below have been removed by the API 14 recovery.
 
-Earlier owned-name migrations (before the connected API 13 tranche below):
+Historical owned-name migrations before API 13 and API 14:
+The retained Core names in this table describe those earlier stages only; the
+current API 14 contract below supersedes them.
 
 | Owned scope | Owned-name migration |
 | --- | --- |
@@ -103,56 +104,50 @@ Earlier owned-name migrations (before the connected API 13 tranche below):
 | `BitbucketWebhookNormalizer` | Eight private helpers, two owned properties/constructor parameters and three locals become snake_case. Constructor named arguments are `webhook_profiles` and `delivery_evidence`. Core interface methods and authenticated-delivery evidence fields remain unchanged. |
 | `BitbucketProvider` / `BitbucketCredentialValidator` | Provider properties become `credential_validator` / `credential_policy`, including the owned constructor parameter. Validator's extra optional parameter becomes `response_size`; Core-required `credentialId` stays unchanged. Public interface methods and request fields are retained. |
 
-The browser/archive scope retains nine line-specific
+Historically, the browser/archive scope retained nine line-specific
 `UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
 `RepositoryDescriptor`, `RepositoryReference` and `ArchiveRequest` fields
-(`providerRepositoryId`, `credentialId`, `expectedBranch`). These are temporary
-connected-contract exceptions under Core #167, not exceptions for locally owned
-variables or methods. Remove them with the qualified Core field migration.
+(`providerRepositoryId`, `credentialId`, `expectedBranch`). API 14 migrates these
+fields to snake_case and removes the obsolete suppressions.
 
-## Provider API 14 connected methods
+## Provider API 14 connected naming
 
-The connected Core #167 tranche now migrates 28 interface declarations across
-five Bitbucket classes and their resolved callers to snake_case. The exact
-Core mapping is the interface diff in candidate
-`36ea3fcee380b0869c8ca8bd83270408f4c6f2d3` (47 declarations across 20 interfaces).
-The earlier table records historical stages; its statements retaining public
-method names are superseded by this methods-only tranche.
+The current Core #167 receiver includes the earlier 28 interface method migrations
+and completes owned parameter, DTO property, request/result method and consumer
+naming. The exact candidate comes from `extra.ran-booster-core-candidate.commit`;
+its implementation diff is authoritative for the complete mapping.
 
-All 28 obsolete declaration-specific `NotSnakeCase` waivers are removed.
-`composer test:naming` checks the production scope and deliberately restores
-each old spelling in disposable copies to prove that all 28 declarations are
-blocked by the existing `RANOwnedMethods` gate. `composer check` includes this
-control; configured PHPCS/PHPCBF coverage and the level-8 analysis floor remain.
+All obsolete declaration, variable and property naming waivers have been removed.
+`composer test:naming` retains the earlier 28-method negative controls: each old
+spelling is restored in a disposable copy and rejected by `RANOwnedMethods`.
+The broader production PHPCS scope checks the remaining recovered naming, and
+level-8 host analysis checks the actual candidate contract.
 
-Public parameters remain unchanged, including `credentialId`,
-`repositoryAuthorityId` and `repositoryLocator`; their narrow variable-name
-waivers preserve named-argument compatibility. Core DTO fields and their
-property-name waivers remain outside this tranche, including
-`AuthenticatedWebhookDeliveryEvidence::matchedManagedPackage` and
-`RepositoryLookupRequest::credentialId` / `publicOnly`. The Validator-only
-optional timeout/response-size arguments retain their names, types and defaults.
+Public named arguments now use `credential_id`, `repository_authority_id` and
+`repository_locator`. Core DTO fields include
+`AuthenticatedWebhookDeliveryEvidence::matched_managed_package` and
+`RepositoryLookupRequest::credential_id` / `public_only`. Request/result methods
+include `WebhookRequest::get_provider` and
+`SignedWebhookVerification::get_provider`. Validator optional `timeout` and
+`response_size` retain their names, types and defaults.
 
-No coexistence aliases are provided during beta. Audited callers move with the
-mapped methods; similarly named request/result methods remain unchanged,
-including `WebhookRequest::getProvider` and
-`SignedWebhookVerification::getProvider`. Coordinate validation, authorization,
-case-insensitive matching, response bytes/status, wire keys, URL/path/query
-restrictions, HTTP classification, malformed-response guards, pagination,
-repository/ref/commit identity, archive authentication and cleanup are preserved.
-Provider API advances to 13; Workflow V3 and Add-on API 17 are unchanged.
-Historical immutable Core certification is retained as provenance only.
+No coexistence aliases are provided during beta. Coordinate validation,
+authorization, case-insensitive matching, response bytes/status, wire keys,
+URL/path/query restrictions, HTTP classification, malformed-response guards,
+pagination, repository/ref/commit identity, archive authentication and cleanup
+are preserved. Provider API advances to 14 and Add-on API to 17; Workflow V3 is
+unchanged. Historical immutable Core certification is retained as provenance only.
 
 ## Blocking host analysis
 
 PHPStan level 8 is required by `composer check:host` and the full repository CI
 lane, whose failure feeds terminal `Quality`. The independent `composer check`
 remains usable without Core. The focused command also fails on analysis errors.
-Run it against the exact certified Core production source; Core's own Composer
+Run it in explicit candidate mode against the recorded Core production source; Core's own Composer
 dependencies are optional for this focused command:
 
 ```sh
-RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
+RAN_BOOSTER_CORE_TEST_MODE=candidate RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
 ```
 
 The lockfile currently resolves PHPStan 2.2.8, `phpstan-wordpress` 2.0.3 and
