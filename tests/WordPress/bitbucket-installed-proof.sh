@@ -188,7 +188,7 @@ unset RAN_BOOSTER_BITBUCKET_LOAD_ORDER
 
 export RAN_BOOSTER_BITBUCKET_INERT_MODE=absent
 wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
-for inert_mode in incompatible provider-twelve provider-fourteen addon-fifteen addon-seventeen; do
+for inert_mode in incompatible provider-twelve provider-fifteen addon-sixteen addon-eighteen; do
 	export RAN_BOOSTER_BITBUCKET_INERT_MODE="$inert_mode"
 	wp_cli eval-file "$script_dir/bitbucket-installed-inert.php" --skip-plugins --user=admin
 done

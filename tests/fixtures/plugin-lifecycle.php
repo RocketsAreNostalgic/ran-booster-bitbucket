@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -26,8 +26,8 @@ spl_autoload_register(
 $addOnLoaded                              = false;
 $markersDefinedWhenAddOnLoaded           = null;
 $compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
-$addOnFirstModes                         = array( 'provider-fourteen-addon-sixteen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-sixteen-addon-first', 'provider-eleven-addon-sixteen-addon-first', 'provider-thirteen-addon-fifteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
+$incompatibleModes                       = array( 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
+$addOnFirstModes                         = array( 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
 $coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
 $loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
 	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -134,17 +134,17 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	}
 	require $coreAutoload;
 	$apiVersions = match ( $mode ) {
-		'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first' => array( 14, 16 ),
+		'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first' => array( 15, 17 ),
+		'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first' => array( 14, 18 ),
 		'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first' => array( 13, 17 ),
-		'provider-eleven-addon-sixteen', 'provider-eleven-addon-sixteen-addon-first' => array( 11, 16 ),
-		'provider-thirteen-addon-fifteen', 'provider-thirteen-addon-fifteen-addon-first' => array( 13, 15 ),
+		'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first' => array( 14, 16 ),
 		'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' => array( 11, 15 ),
-		'provider-twelve-addon-sixteen', 'provider-twelve-addon-sixteen-addon-first' => array( 12, 16 ),
-		default => array( 13, 16 ),
+		'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first' => array( 12, 17 ),
+		default => array( 14, 17 ),
 	};
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
-	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
+	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 
 if ( 'unsupported-multisite' === $mode ) {

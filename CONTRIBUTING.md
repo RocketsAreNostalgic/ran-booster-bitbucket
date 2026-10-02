@@ -2,7 +2,7 @@
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 13 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`a9fd5491b69e71a8543c507d097d1b1028bfa196`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. This API 14 branch's source host checks use the exact Core candidate recorded in `extra.ran-booster-core-candidate.commit` (`36ea3fcee380b0869c8ca8bd83270408f4c6f2d3`), not the historical API 11 certified release. Check out that candidate in a separate Core checkout and install only its production dependencies. Set candidate mode, the checkout path and its production autoloader before running both `composer check:host` and `composer analyze`:
 
 ```sh
 export RAN_BOOSTER_CORE_TEST_MODE=candidate
@@ -110,12 +110,12 @@ The browser/archive scope retains nine line-specific
 connected-contract exceptions under Core #167, not exceptions for locally owned
 variables or methods. Remove them with the qualified Core field migration.
 
-## Provider API 13 connected methods
+## Provider API 14 connected methods
 
 The connected Core #167 tranche now migrates 28 interface declarations across
 five Bitbucket classes and their resolved callers to snake_case. The exact
 Core mapping is the interface diff in candidate
-`a9fd5491b69e71a8543c507d097d1b1028bfa196` (47 declarations across 20 interfaces).
+`36ea3fcee380b0869c8ca8bd83270408f4c6f2d3` (47 declarations across 20 interfaces).
 The earlier table records historical stages; its statements retaining public
 method names are superseded by this methods-only tranche.
 
@@ -140,7 +140,7 @@ including `WebhookRequest::getProvider` and
 case-insensitive matching, response bytes/status, wire keys, URL/path/query
 restrictions, HTTP classification, malformed-response guards, pagination,
 repository/ref/commit identity, archive authentication and cleanup are preserved.
-Provider API advances to 13; Workflow V3 and Add-on API 16 are unchanged.
+Provider API advances to 13; Workflow V3 and Add-on API 17 are unchanged.
 Historical immutable Core certification is retained as provenance only.
 
 ## Blocking host analysis

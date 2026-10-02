@@ -20,15 +20,15 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entryFile );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentationFile );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*13\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*14\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*16\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_ADDON_API_VERSION',\\s*17\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION',\\s*2\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION',\\s*3\\s*\\)/",
 			$core
 		);
 		self::assertStringNotContainsString( 'RAN_BOOSTER_LOGGING_API_VERSION', $core );

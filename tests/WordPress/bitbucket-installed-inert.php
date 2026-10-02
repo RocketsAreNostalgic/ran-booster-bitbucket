@@ -8,7 +8,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 $mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fourteen', 'addon-fifteen', 'addon-seventeen' ), true ) ) {
+if ( ! in_array( $mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fifteen', 'addon-sixteen', 'addon-eighteen' ), true ) ) {
 	throw new RuntimeException( 'A supported installed inertness mode is required.' );
 }
 $expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
@@ -26,17 +26,17 @@ if ( $expectedVersion !== ( $pluginData['Version'] ?? null )
 }
 
 $apiVersions = match ( $mode ) {
-	'incompatible' => array( 11, 16 ),
-	'provider-twelve' => array( 12, 16 ),
-	'provider-fourteen' => array( 14, 16 ),
-	'addon-fifteen' => array( 13, 15 ),
-	'addon-seventeen' => array( 13, 17 ),
+	'incompatible' => array( 13, 17 ),
+	'provider-twelve' => array( 12, 17 ),
+	'provider-fifteen' => array( 15, 17 ),
+	'addon-sixteen' => array( 14, 16 ),
+	'addon-eighteen' => array( 14, 18 ),
 	default => null,
 };
 if ( null !== $apiVersions ) {
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
-	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 2 );
+	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 require $pluginFile;
 
