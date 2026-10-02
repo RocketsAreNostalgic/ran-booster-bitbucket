@@ -16,6 +16,13 @@ source proofs nor this recovery grant installed-site acceptance, release certifi
 merge approval, or beta.31 publication. Matching immutable Core release certification,
 PHP 8.2/8.5 hosted matrix, and existing installed acceptance remain outstanding.
 
-Provider release-control Node tests currently encounter sandbox `spawnSync mkdir EPERM`;
-Migrator ordinary analysis still requires the unchanged historical certified Core and
-must not be relabeled as candidate-source analysis. Those gates are not waived.
+Canonical checks after retrying existing fixtures outside the sandbox:
+
+- Provider `composer check`: PASS, including all 33 Node release-control tests.
+- Bitbucket `composer check`: PASS, including syntax/coverage/naming negatives.
+- Migrator `composer check`: PHP syntax and PHPCS pass; historical Core fetching and
+  exact certification verification pass, then PHPStan correctly reports 13 errors
+  because the historical API 2 declarations do not provide the new snake_case
+  Portability 3 / Admin Interaction 3 surface. Its source-candidate level 6 proof
+  passes. The canonical released-host gate remains held until matching immutable
+  Core recertification; no fallback, baseline, or suppression was introduced.
