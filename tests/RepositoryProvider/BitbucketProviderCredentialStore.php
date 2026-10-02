@@ -22,6 +22,6 @@ final readonly class BitbucketProviderCredentialStore implements ProviderCredent
 	}
 
 	public function has_webhook_profile(): bool {
-		return array() !== $this->secrets->webhookMaterials( 'bb' );
+		return array() !== $this->secrets->webhook_materials( 'bb' );
 	}
 }

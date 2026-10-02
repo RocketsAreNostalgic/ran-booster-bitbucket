@@ -597,11 +597,14 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 
 	public function testWebhookReadinessSafelyReportsUnreadableConfiguration(): void {
 		$secrets = new class() extends SecretsFile {
+			public int $reads = 0;
+
 			public function __construct() {
 				parent::__construct( '/unused/test-secrets.php', array() );
 			}
 
-			public function webhookProfiles( ProviderCode|string $provider ): array {
+			public function webhook_materials( ProviderCode|string $provider ): array {
+				++$this->reads;
 				throw new \RuntimeException( 'bitbucket-webhook-secret-canary' );
 			}
 		};
@@ -609,6 +612,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		$output  = implode( ' ', $result->to_array() );
 
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );
+		self::assertSame( 1, $secrets->reads, 'The current Core override must throw; an undefined adapter method must not satisfy this test.' );
 		self::assertSame( 'bb.webhook.configuration_unavailable', $result->code );
 		self::assertStringNotContainsString( 'bitbucket-webhook-secret-canary', $output );
 	}
@@ -631,7 +635,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			/**
 			 * @return list<array<string, mixed>>
 			 */
-			public function webhookMaterials( ProviderCode|string $provider ): array {
+			public function webhook_materials( ProviderCode|string $provider ): array {
 				try {
 					$provider = $provider instanceof ProviderCode ? $provider : ProviderCode::parse( $provider );
 				} catch ( \RAN\RepositoryProvider\InvalidProviderCode ) {
