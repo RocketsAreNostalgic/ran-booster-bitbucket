@@ -71,8 +71,10 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( '.target_commitish == $commit', $workflow );
 		// Tag and archive source are independent identities, but may legitimately coincide.
 		$proof = (string) file_get_contents( dirname( __DIR__ ) . '/WordPress/bitbucket-installed-proof.sh' );
-		self::assertStringContainsString( '$expected_core_archive_source_commit', $proof );
-		self::assertStringContainsString( '$provided_core_commit', $proof );
+		self::assertStringContainsString( '"$provided_core_commit" == "$expected_core_commit"', $proof );
+		self::assertStringContainsString( '"$provided_core_archive_source_commit" == "$expected_core_archive_source_commit"', $proof );
+		self::assertStringContainsString( "' \"\$expected_core_tag\" \"\$expected_core_archive_source_commit\"; then", $proof );
+		self::assertStringContainsString( '$commit !== ( $document["commit"] ?? null )', $proof );
 	}
 
 	public function testSourceQualificationCannotBypassInstalledReleaseAdmission(): void {
