@@ -8,7 +8,7 @@ after Core's Bitbucket provider documentation.
 ## Compatibility and safety
 
 - Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 14 and Add-on API 17.
-- The historical Provider API 11 certification target is RAN Booster `v1.0.0-beta.29`: tag target `ffc11fc8e40618624a785b7fca5193029c6d492e`, with the immutable release archive promoted from qualified candidate `ff35be100a9f5c6cd77a84bcfc3734227106b0b8`. That immutable record is retained for provenance; it does not certify this API 14 candidate. A matching Core release and renewed installed proof are required before release.
+- Released-host qualification uses immutable Core `v1.0.0-beta.31`, tag target and archive-source commit `8a3ed5a8acdb3875f498e2f44bf9eba89fddbbaf`. Its archive SHA-256 is `cf0ebbd306fa9086a9f885974f490b0cacb4a172c20f6b290dde13d2f3a7b2c5`. Final release admission still requires installed proof against this genuine archive.
 - `Requires Plugins: ran-booster` declares Core as a package dependency, but WordPress does not check Booster's APIs. The add-on checks `RAN_BOOSTER_PROVIDER_API_VERSION`, `RAN_BOOSTER_ADDON_API_VERSION` and the supported runtime mode; a missing or incompatible API boundary disables provider registration and remote calls.
 - Provider API 14 has no logging capability. Diagnostics return bounded `ProviderDiagnosticResult` values to Core and never send exceptions or vendor text through a logging facade.
 - If Core is missing or incompatible, the add-on displays a compatibility notice only to administrators who can activate plugins.
@@ -43,19 +43,16 @@ installation records or credential storage to remove.
 ## Development
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
-use the exact API 14 candidate in `extra.ran-booster-core-candidate.commit`
-(currently `ae4de158e3ae02d99162b9b8d0babdc9269a36da`) as their contract fixture.
-Check out that commit in a separate Core checkout at `../ran-booster`. The suite
-loads Core's shipped `autoload.php` and public production contracts, which require
-that checkout's locked production Composer dependencies. Do not install Core
-development dependencies. Candidate mode is explicit and verifies the checkout's
-exact commit; it does not certify a Core release. From this add-on checkout:
+use the exact Core beta.31 release in `extra.ran-booster-core-certification`.
+Check out its tag in a separate Core checkout at `../ran-booster` and install
+only its locked production dependencies. The suite loads Core's shipped
+`autoload.php` and public production contracts. Leave candidate mode unset:
 
 ```sh
 composer install
 composer check
 (cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
-export RAN_BOOSTER_CORE_TEST_MODE=candidate
+unset RAN_BOOSTER_CORE_TEST_MODE
 export RAN_BOOSTER_CORE_PATH=../ran-booster
 export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
 composer check:host
@@ -68,15 +65,15 @@ shared PHP provider. It also checks that maintained product PHP remains directly
 selected by PHPStan and PHPCS/PHPCBF, including future root files.
 `composer check:host` adds blocking level-8 PHPStan analysis,
 the Core-backed unit and release-candidate contracts and is required for the
-source handoff when the exact candidate Core is available. It does not replace
+source handoff against the exact certified Core release. It does not replace
 release certification or installed proof.
 
-Set `RAN_BOOSTER_CORE_PATH` if the exact candidate Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
-The default test mode uses the historical `ran-booster-core-certification` tuple;
-that API 11 release cannot qualify this API 14 branch. Keep candidate mode enabled
-for both host checks and focused analysis. Follow [RELEASE.md](RELEASE.md) for the
-separate matching-release and installed-proof requirements before release admission/publication.
-Source merges require exact candidate-source Quality and independent review.
+Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
+The default test mode uses the current `ran-booster-core-certification` tuple;
+leave candidate mode unset for both host checks and focused analysis. Follow
+[RELEASE.md](RELEASE.md) for the separate installed-proof requirement before
+release admission/publication. Source merges require exact released-host Quality
+and independent review.
 Do not import Core-owned test fixtures into this repository. The add-on owns its
 PHP tools in its local `vendor/`, but never packages a vendor tree or Core code
 in the release artifact. PHPStan is a blocking, Bitbucket-only host gate; read

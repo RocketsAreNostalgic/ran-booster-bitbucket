@@ -69,10 +69,10 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_COMMIT', $workflow );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT', $workflow );
 		self::assertStringContainsString( '.target_commitish == $commit', $workflow );
-		self::assertNotSame(
-			$this->certification()['commit'],
-			$this->certification()['archive_source_commit']
-		);
+		// Tag and archive source are independent identities, but may legitimately coincide.
+		$proof = (string) file_get_contents( dirname( __DIR__ ) . '/WordPress/bitbucket-installed-proof.sh' );
+		self::assertStringContainsString( '$expected_core_archive_source_commit', $proof );
+		self::assertStringContainsString( '$provided_core_commit', $proof );
 	}
 
 	public function testSourceQualificationCannotBypassInstalledReleaseAdmission(): void {
@@ -99,11 +99,11 @@ final class CoreContractTest extends TestCase {
 		self::assertStringNotContainsString( 'workflow_dispatch:', $release );
 	}
 
-	public function testQualityPinsExactCandidateSourceWithoutClaimingReleasedCertification(): void {
+	public function testQualityPinsExactCertifiedReleaseWithoutReplacingInstalledProof(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertStringContainsString( '.extra["ran-booster-core-candidate"].commit', $workflow );
-		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
+		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
 		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
 		self::assertStringNotContainsString( 'git describe --tags --exact-match HEAD', $workflow );
 		self::assertStringContainsString( 'composer validate --strict --no-check-all --no-check-publish', $workflow );
