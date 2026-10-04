@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PluginCompatibilityTest extends TestCase {
 
-	public function testPluginHeaderDeclaresBoosterAsItsNativeDependency(): void {
+	public function test_plugin_header_declares_booster_as_its_native_dependency(): void {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
 
 		self::assertIsString( $plugin );
@@ -16,7 +16,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $plugin );
 	}
 
-	public function testExtensionRecordMatchesThePluginIdentityAndExactApiTuple(): void {
+	public function test_extension_record_matches_the_plugin_identity_and_exact_api_tuple(): void {
 		$root       = dirname( __DIR__, 2 );
 		$composer   = json_decode(
 			(string) file_get_contents( $root . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local extension record contract.
@@ -32,21 +32,27 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertIsString( $plugin );
 		self::assertSame(
 			array(
-				'schema'            => 1,
-				'id'                => 'ran-booster-bitbucket',
-				'name'              => 'RAN Booster Bitbucket Cloud',
-				'plugin-basename'   => 'ran-booster-bitbucket/ran-booster-bitbucket.php',
-				'repository'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
-				'update-uri'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
-				'availability'      => 'free',
+				'schema'             => 1,
+				'id'                 => 'ran-booster-bitbucket',
+				'name'               => 'RAN Booster Bitbucket Cloud',
+				'plugin-basename'    => 'ran-booster-bitbucket/ran-booster-bitbucket.php',
+				'repository'         => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
+				'update-uri'         => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
+				'availability'       => 'free',
 				'requires-wordpress' => '7.0',
-				'requires-php'      => '8.2',
-				'booster-apis'      => array( 'required' => array( 'provider' => 14, 'addon' => 17 ), 'optional' => array() ),
-				'maturity'          => 'beta',
-				'documentation-uri' => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
-				'support-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
-				'security-uri'      => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/security/policy',
-				'readiness'         => 'public-release-required',
+				'requires-php'       => '8.2',
+				'booster-apis'       => array(
+					'required' => array(
+						'provider' => 14,
+						'addon'    => 17,
+					),
+					'optional' => array(),
+				),
+				'maturity'           => 'beta',
+				'documentation-uri'  => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket#readme',
+				'support-uri'        => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues',
+				'security-uri'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/security/policy',
+				'readiness'          => 'public-release-required',
 			),
 			$composer['extra']['ran-booster-extension'] ?? null
 		);
@@ -59,7 +65,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'security/advisories/new', $security );
 	}
 
-	public function testEntrypointBootsOneFinalStatelessCompositionRoot(): void {
+	public function test_entrypoint_boots_one_final_stateless_composition_root(): void {
 		$root       = dirname( __DIR__, 2 );
 		$entrypoint = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local architecture contract.
 		require_once $root . '/autoload.php';
@@ -71,7 +77,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( array(), $plugin->getProperties() );
 	}
 
-	public function testReleasePleaseOwnsEveryPluginVersionSource(): void {
+	public function test_release_please_owns_every_plugin_version_source(): void {
 		$root     = dirname( __DIR__, 2 );
 		$plugin   = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
 		$readme   = file_get_contents( $root . '/readme.txt' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local release metadata contract.
@@ -101,16 +107,16 @@ final class PluginCompatibilityTest extends TestCase {
 			$readme
 		);
 
-		preg_match( '/\\* Version: ([^\\s]+)/', $plugin, $pluginVersion );
-		preg_match( '/Stable tag: ([^\\s]+)/', $readme, $readmeVersion );
+		preg_match( '/\\* Version: ([^\\s]+)/', $plugin, $plugin_version );
+		preg_match( '/Stable tag: ([^\\s]+)/', $readme, $readme_version );
 
-		self::assertSame( $manifest['.'], $pluginVersion[1] ?? null );
-		self::assertSame( $manifest['.'], $readmeVersion[1] ?? null );
+		self::assertSame( $manifest['.'], $plugin_version[1] ?? null );
+		self::assertSame( $manifest['.'], $readme_version[1] ?? null );
 		self::assertArrayNotHasKey( 'version', $composer );
 	}
 
-	public function testItFailsClosedWithoutBooster(): void {
-		$result = $this->runFixture( 'absent' );
+	public function test_it_fails_closed_without_booster(): void {
+		$result = $this->run_fixture( 'absent' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_filters'] );
@@ -122,40 +128,40 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
-	public function testCompatibilityNoticeRequiresPluginActivationCapability(): void {
-		$result = $this->runFixture( 'absent-unprivileged' );
+	public function test_compatibility_notice_requires_plugin_activation_capability(): void {
+		$result = $this->run_fixture( 'absent-unprivileged' );
 
 		self::assertSame( '', $result['compatibility_notice'] );
 		self::assertFalse( $result['registered'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
-	public function testItFailsClosedWithProviderApiThirteenAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-thirteen-addon-seventeen' );
+	public function test_it_fails_closed_with_provider_api_thirteen_and_current_add_on_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-thirteen-addon-seventeen' );
 	}
 
-	public function testItFailsClosedWithProviderApiTwelveAndCurrentAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-twelve-addon-seventeen' );
+	public function test_it_fails_closed_with_provider_api_twelve_and_current_add_on_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-twelve-addon-seventeen' );
 	}
 
-	public function testItFailsClosedWithCurrentProviderAndImmediateOldAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-fourteen-addon-sixteen' );
+	public function test_it_fails_closed_with_current_provider_and_immediate_old_add_on_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fourteen-addon-sixteen' );
 	}
 
-	public function testItFailsClosedWithTheImmediateOldProviderAndAddOnTuple(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-eleven-addon-fifteen' );
+	public function test_it_fails_closed_with_the_immediate_old_provider_and_add_on_tuple(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-eleven-addon-fifteen' );
 	}
 
-	public function testItFailsClosedWithNewerProviderApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-fifteen-addon-seventeen' );
+	public function test_it_fails_closed_with_newer_provider_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fifteen-addon-seventeen' );
 	}
 
-	public function testItFailsClosedWithNewerAddOnApi(): void {
-		$this->assertTupleFailsClosedInBothLoadOrders( 'provider-fourteen-addon-eighteen' );
+	public function test_it_fails_closed_with_newer_add_on_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fourteen-addon-eighteen' );
 	}
 
-	public function testItRegistersOnlyAgainstProviderApiFourteenWithoutClaimingOptionalCapabilities(): void {
-		$result = $this->runFixture( 'compatible-core-first' );
+	public function test_it_registers_only_against_provider_api_fourteen_without_claiming_optional_capabilities(): void {
+		$result = $this->run_fixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
@@ -179,8 +185,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( '', $result['compatibility_notice'] );
 	}
 
-	public function testItRegistersWhenTheAddOnLoadsBeforeCompatibleCoreMarkers(): void {
-		$result = $this->runFixture( 'compatible-addon-first' );
+	public function test_it_registers_when_the_add_on_loads_before_compatible_core_markers(): void {
+		$result = $this->run_fixture( 'compatible-addon-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 1, $result['documentation_sections'] );
@@ -204,8 +210,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( '', $result['compatibility_notice'] );
 	}
 
-	public function testUnsupportedMultisiteCallbacksStayInertDespiteCompatibleApis(): void {
-		$result = $this->runFixture( 'unsupported-multisite' );
+	public function test_unsupported_multisite_callbacks_stay_inert_despite_compatible_apis(): void {
+		$result = $this->run_fixture( 'unsupported-multisite' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
 		self::assertSame( 0, $result['documentation_sections'] );
@@ -217,8 +223,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'] );
 	}
 
-	public function testCompatibleGenerationRendersOneCompleteNonInteractiveGuide(): void {
-		$result = $this->runFixture( 'compatible' );
+	public function test_compatible_generation_renders_one_complete_non_interactive_guide(): void {
+		$result = $this->run_fixture( 'compatible' );
 		$guide  = $result['documentation'];
 
 		self::assertIsString( $guide );
@@ -243,8 +249,8 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringNotContainsString( 'admin_post_', $guide );
 	}
 
-	public function testDeactivatedAddOnDoesNotContributeAProviderHook(): void {
-		$result = $this->runFixture( 'inactive' );
+	public function test_deactivated_add_on_does_not_contribute_aprovider_hook(): void {
+		$result = $this->run_fixture( 'inactive' );
 
 		self::assertSame( 0, $result['provider_callbacks'] );
 		self::assertSame( 0, $result['documentation_filters'] );
@@ -253,35 +259,36 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 	}
 
-	private function assertTupleFailsClosedInBothLoadOrders( string $mode ): void {
+	private function assert_tuple_fails_closed_in_both_load_orders( string $mode ): void {
 		foreach (
 			array(
-				$mode                   => true,
+				$mode                  => true,
 				$mode . '-addon-first' => false,
-			) as $fixtureMode => $markersDefinedWhenLoaded
+			) as $fixture_mode => $markers_defined_when_loaded
 		) {
-			$result = $this->runFixture( $fixtureMode );
+			$result = $this->run_fixture( $fixture_mode );
 
-			self::assertSame( 1, $result['provider_callbacks'], $fixtureMode );
-			self::assertSame( 0, $result['documentation_sections'], $fixtureMode );
-			self::assertSame( '', $result['documentation'], $fixtureMode );
-			self::assertSame( $markersDefinedWhenLoaded, $result['markers_defined_when_loaded'], $fixtureMode );
-			self::assertFalse( $result['provider_loaded'], $fixtureMode );
-			self::assertSame( 0, $result['implementation_load_attempts'], $fixtureMode );
-			self::assertFalse( $result['credential_store_was_scoped'], $fixtureMode );
-			self::assertFalse( $result['delivery_evidence_was_scoped'], $fixtureMode );
-			self::assertFalse( $result['registered'], $fixtureMode );
-			self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'], $fixtureMode );
-			self::assertSame( 0, $result['credential_store_reads'], $fixtureMode );
-			self::assertSame( 0, $result['remote_calls'], $fixtureMode );
+			self::assertSame( 1, $result['provider_callbacks'], $fixture_mode );
+			self::assertSame( 0, $result['documentation_sections'], $fixture_mode );
+			self::assertSame( '', $result['documentation'], $fixture_mode );
+			self::assertSame( $markers_defined_when_loaded, $result['markers_defined_when_loaded'], $fixture_mode );
+			self::assertFalse( $result['provider_loaded'], $fixture_mode );
+			self::assertSame( 0, $result['implementation_load_attempts'], $fixture_mode );
+			self::assertFalse( $result['credential_store_was_scoped'], $fixture_mode );
+			self::assertFalse( $result['delivery_evidence_was_scoped'], $fixture_mode );
+			self::assertFalse( $result['registered'], $fixture_mode );
+			self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'], $fixture_mode );
+			self::assertSame( 0, $result['credential_store_reads'], $fixture_mode );
+			self::assertSame( 0, $result['remote_calls'], $fixture_mode );
 		}
 	}
 
 	/** @return array<string, bool|int|string|null|list<bool>> */
-	private function runFixture( string $mode ): array {
+	private function run_fixture( string $mode ): array {
 		$fixture = dirname( __DIR__ ) . '/fixtures/plugin-lifecycle.php';
 		$command = escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $fixture ) . ' ' . escapeshellarg( $mode );
-		$output  = shell_exec( $command );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec -- Isolated CLI contract executes repository tooling in a disposable subprocess, outside WordPress runtime.
+		$output = shell_exec( $command );
 
 		self::assertIsString( $output );
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.json_decode_json_decode -- Fixture output is local, structured test data.

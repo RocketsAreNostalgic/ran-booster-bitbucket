@@ -19,6 +19,7 @@ final class BitbucketApiClientTest extends TestCase {
 	private const EMAIL = 'deploy@example.test';
 	private const TOKEN = 'bitbucket-api-client-token-canary';
 
+	// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Preserve the PHPUnit lifecycle override signature.
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -27,7 +28,7 @@ final class BitbucketApiClientTest extends TestCase {
 		);
 	}
 
-	public function testAnonymousRepositoryRequestUsesTheBoundedTransportWithoutAuthorization(): void {
+	public function test_anonymous_repository_request_uses_the_bounded_transport_without_authorization(): void {
 		$response = ( new BitbucketApiClient() )->get(
 			'https://api.bitbucket.org/2.0/repositories/rockets-are-nostalgic?pagelen=10'
 		);
@@ -42,7 +43,7 @@ final class BitbucketApiClientTest extends TestCase {
 		self::assertTrue( $requests[0]['arguments']['reject_unsafe_urls'] );
 	}
 
-	public function testOpaqueRepositoryPaginationUrlPassesThroughTheSamePolicyAndCredential(): void {
+	public function test_opaque_repository_pagination_url_passes_through_the_same_policy_and_credential(): void {
 		$url        = 'https://api.bitbucket.org/2.0/repositories/rockets-are-nostalgic/repo.name?after=opaque%3Acursor&pagelen=10';
 		$credential = $this->credential();
 
@@ -61,7 +62,7 @@ final class BitbucketApiClientTest extends TestCase {
 		);
 	}
 
-	public function testRejectsNonRepositoryAndHostileUrlsBeforeSendingCredentials(): void {
+	public function test_rejects_non_repository_and_hostile_urls_before_sending_credentials(): void {
 		$urls = array(
 			'http://api.bitbucket.org/2.0/repositories/workspace',
 			'https://api.bitbucket.org./2.0/repositories/workspace',
@@ -108,7 +109,7 @@ final class BitbucketApiClientTest extends TestCase {
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 	}
 
-	public function testTransportAndMalformedResponsesBecomeFixedSafeExceptions(): void {
+	public function test_transport_and_malformed_responses_become_fixed_safe_exceptions(): void {
 		$fixtures = array(
 			array(
 				'response' => new BitbucketCredentialValidationTransportError( '' ),
@@ -145,7 +146,22 @@ final class BitbucketApiClientTest extends TestCase {
 			),
 		);
 
-		foreach ( array( null, false, 42, self::TOKEN, new \stdClass(), array(), array( 'response' => 42, 'body' => '' ), array( 'response' => array( 'code' => '200' ), 'body' => '' ) ) as $malformed ) {
+		foreach ( array(
+			null,
+			false,
+			42,
+			self::TOKEN,
+			new \stdClass(),
+			array(),
+			array(
+				'response' => 42,
+				'body'     => '',
+			),
+			array(
+				'response' => array( 'code' => '200' ),
+				'body'     => '',
+			),
+		) as $malformed ) {
 			$fixtures[] = array(
 				'response' => $malformed,
 				'reason'   => BitbucketApiException::INVALID_RESPONSE,
@@ -170,7 +186,7 @@ final class BitbucketApiClientTest extends TestCase {
 		}
 	}
 
-	public function testCredentialExposesOnlyWorkspaceAndAuthorizationApplication(): void {
+	public function test_credential_exposes_only_workspace_and_authorization_application(): void {
 		$credential = $this->credential();
 		$reflection = new \ReflectionClass( $credential );
 		$methods    = array_map(

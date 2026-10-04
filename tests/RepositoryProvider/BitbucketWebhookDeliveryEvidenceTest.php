@@ -13,7 +13,7 @@ use RAN\RepositoryProvider\ProviderDiagnosticResult;
 use RAN\RepositoryProvider\ProviderWebhookProfileReader;
 
 final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
-	public function testMatchedAuthenticatedDeliveryPassesReadiness(): void {
+	public function test_matched_authenticated_delivery_passes_readiness(): void {
 		$result = $this->normalizer(
 			new AuthenticatedWebhookDeliveryEvidence(
 				ProviderCode::parse( 'bb' ),
@@ -26,7 +26,7 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 		self::assertSame( 'bb.webhook.delivery_verified', $result->code );
 	}
 
-	public function testAuthenticatedDeliveryWithoutManagedPackageMatchRemainsWarning(): void {
+	public function test_authenticated_delivery_without_managed_package_match_remains_warning(): void {
 		$result = $this->normalizer(
 			new AuthenticatedWebhookDeliveryEvidence(
 				ProviderCode::parse( 'bb' ),
@@ -39,7 +39,7 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 		self::assertSame( 'bb.webhook.delivery_unmatched', $result->code );
 	}
 
-	public function testUnavailableDeliveryEvidenceFailsClosedWithoutExceptionText(): void {
+	public function test_unavailable_delivery_evidence_fails_closed_without_exception_text(): void {
 		$profiles = new class() implements ProviderWebhookProfileReader {
 			public function has_webhook_profile(): bool {
 				return true;
@@ -50,8 +50,8 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 				throw new \RuntimeException( 'private-delivery-evidence-canary' );
 			}
 		};
-		$result = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnose_webhook_readiness();
-		$output = implode( ' ', $result->to_array() );
+		$result   = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnose_webhook_readiness();
+		$output   = implode( ' ', $result->to_array() );
 
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );
 		self::assertSame( 'bb.webhook.delivery_evidence_unavailable', $result->code );

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ruleset name="RAN Booster Bitbucket Coding Standards">
-	<description>Product-source standards for the RAN Booster Bitbucket add-on.</description>
+	<description>Maintained PHP standards for the RAN Booster Bitbucket add-on.</description>
 
 	<config name="minimum_supported_wp_version" value="7.0"/>
 	<config name="testVersion" value="8.2-"/>
@@ -10,6 +10,8 @@
 	<file>index.php</file>
 	<file>src</file>
 	<file>views</file>
+	<file>tests</file>
+	<file>scripts</file>
 
 	<arg name="basepath" value="."/>
 	<arg name="colors"/>
@@ -36,5 +38,40 @@
 				<element value="ran-booster-bitbucket"/>
 			</property>
 		</properties>
+	</rule>
+
+	<!-- Isolated PHPUnit namespaces follow the test autoload contract; product namespaces remain prefixed. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound">
+		<exclude-pattern>/tests/</exclude-pattern>
+	</rule>
+
+	<!-- CLI entry points and disposable installed probes own their process-local variables; local snake_case checks remain active. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>/tests/bootstrap.php</exclude-pattern>
+		<exclude-pattern>/tests/phpstan-bootstrap.php</exclude-pattern>
+		<exclude-pattern>/tests/fixtures/plugin-lifecycle.php</exclude-pattern>
+		<exclude-pattern>/tests/WordPress/</exclude-pattern>
+		<exclude-pattern>/scripts/</exclude-pattern>
+	</rule>
+
+	<!-- Isolated harnesses define foreign host constants; standalone archive tooling does not load into WordPress. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound">
+		<exclude-pattern>/tests/bootstrap.php</exclude-pattern>
+		<exclude-pattern>/tests/phpstan-bootstrap.php</exclude-pattern>
+		<exclude-pattern>/tests/fixtures/plugin-lifecycle.php</exclude-pattern>
+		<exclude-pattern>/tests/WordPress/bitbucket-installed-inert.php</exclude-pattern>
+		<exclude-pattern>/scripts/verify-release.php</exclude-pattern>
+	</rule>
+
+	<!-- Harnesses reproduce native WordPress functions; verifier functions are process-local CLI helpers with snake_case enforcement. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound">
+		<exclude-pattern>/tests/bootstrap.php</exclude-pattern>
+		<exclude-pattern>/tests/fixtures/plugin-lifecycle.php</exclude-pattern>
+		<exclude-pattern>/scripts/verify-release.php</exclude-pattern>
+	</rule>
+
+	<!-- Installed probes exercise existing WordPress hooks and must use their exact foreign names. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound">
+		<exclude-pattern>/tests/WordPress/</exclude-pattern>
 	</rule>
 </ruleset>

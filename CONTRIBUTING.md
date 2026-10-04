@@ -261,8 +261,28 @@ actual output escaping remain unchanged. All other locked packages, the
 required PHPStan level 8 gate and immutable Core beta.31 certification remain
 unchanged.
 
-This bounded adoption is not full organisation #128 acceptance. Product PHP
-retains its existing coverage proof. Tests and standalone scripts still need
-their agreed profiles, removal of inactive blanket directives and suppression
-protection; retained product exceptions still need grouped disposition. Those
-remaining tasks must be qualified separately before next-beta acceptance.
+The follow-up development profile now checks all 48 maintained PHP files: the
+20 product files plus 28 tests, installed probes and CLI helpers. Analysis remains
+PHPStan level 8 over the same 20 product files; development standards coverage
+does not claim development-file static analysis.
+
+Owned test/helper methods and local variables use snake_case, including inherited
+PHPUnit test methods. PHPUnit lifecycle overrides, native DOM/ZipArchive fields,
+and the ProviderCredentialStore test-double signature retain exact inline
+exceptions. The three former blanket suppressions are removed. Standalone CLI
+filesystem/process operations and inert WordPress fixture behavior have named,
+explained diagnostic exceptions. Five prefix diagnostic exceptions are limited
+to the concrete PHPUnit namespace, CLI process, foreign function/constant, and
+installed foreign-hook paths documented in `.phpcs.xml`; they do not disable
+owned local/method naming or product prefix checking.
+
+`check:coverage` rejects new unselected development PHP and blanket PHPCS comments
+using PHP tokens. It still rejects product exclusions and unsupported analysis
+configuration; only the reviewed diagnostic-specific development prefix paths
+are allowed. `test:naming` exercises the real standards commands on future test
+and CLI files, inherited methods, removed development scope, and line/block/doc
+blanket annotations. Two clean fixer passes must preserve tracked bytes.
+
+This does not by itself declare full organisation #128 acceptance: retained
+product exceptions still require grouped disposition. Runtime PHP, dependency
+locks, API identities and genuine released-Core certification are unchanged.

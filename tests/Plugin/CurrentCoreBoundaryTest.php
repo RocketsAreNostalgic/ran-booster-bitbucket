@@ -11,7 +11,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 final class CurrentCoreBoundaryTest extends TestCase {
-	public function testRuntimeUsesTheRequiredApiTupleAndProviderRegistrationContract(): void {
+	public function test_runtime_uses_the_required_api_tuple_and_provider_registration_contract(): void {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
@@ -23,7 +23,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringNotContainsString( 'class_exists( ProviderRegistrationContext::class )', $plugin );
 	}
 
-	public function testRepositoryTestsUseOnlyThePinnedCoreProductionAutoloader(): void {
+	public function test_repository_tests_use_only_the_pinned_core_production_autoloader(): void {
 		$root = dirname( __DIR__, 2 );
 
 		foreach ( array( 'tests/bootstrap.php', 'tests/phpstan-bootstrap.php', 'tests/fixtures/plugin-lifecycle.php' ) as $path ) {
@@ -40,10 +40,10 @@ final class CurrentCoreBoundaryTest extends TestCase {
 			self::assertStringContainsString( 'ran_booster_bitbucket_certified_core_root()', $bootstrap, $path );
 		}
 
-		$certifiedCore = file_get_contents( $root . '/tests/fixtures/certified-core-checkout.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
-		self::assertIsString( $certifiedCore );
-		self::assertStringContainsString( 'ran-booster-core-certification', $certifiedCore );
-		self::assertStringContainsString( 'rev-parse HEAD', $certifiedCore );
+		$certified_core = file_get_contents( $root . '/tests/fixtures/certified-core-checkout.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local certification contract.
+		self::assertIsString( $certified_core );
+		self::assertStringContainsString( 'ran-booster-core-certification', $certified_core );
+		self::assertStringContainsString( 'rev-parse HEAD', $certified_core );
 
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
@@ -61,9 +61,10 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		self::assertStringContainsString( 'run: composer check:host', $workflow );
 	}
 
-	public function testCertifiedCoreResolverRejectsDifferentGitCheckout(): void {
+	public function test_certified_core_resolver_rejects_different_git_checkout(): void {
 		$root     = dirname( __DIR__, 2 );
 		$previous = getenv( 'RAN_BOOSTER_CORE_PATH' );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_putenv -- Test the certified-host environment override and restore the previous process value.
 		putenv( 'RAN_BOOSTER_CORE_PATH=' . $root );
 
 		try {
@@ -72,18 +73,22 @@ final class CurrentCoreBoundaryTest extends TestCase {
 			\ran_booster_bitbucket_certified_core_root();
 		} finally {
 			if ( false === $previous ) {
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_putenv -- Test the certified-host environment override and restore the previous process value.
 				putenv( 'RAN_BOOSTER_CORE_PATH' );
 			} else {
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_putenv -- Test the certified-host environment override and restore the previous process value.
 				putenv( 'RAN_BOOSTER_CORE_PATH=' . $previous );
 			}
 		}
 	}
 
-	public function testNoRepositoryTestImportsCoreOwnedTestFixtures(): void {
-		$root                 = dirname( __DIR__, 2 );
-		$coreContainerFixture = 'core-container-' . 'fixture.php';
-		$archiveFixture       = '/tests/RepositoryProvider/AuthenticatedPreparedArchive' . 'WordPressFunctions.php';
-		$files                = new RecursiveIteratorIterator(
+	public function test_no_repository_test_imports_core_owned_test_fixtures(): void {
+		$root = dirname( __DIR__, 2 );
+		// phpcs:ignore Generic.Strings.UnnecessaryStringConcat.Found -- Split a forbidden-fixture sentinel so the recursive source scan does not match its own test.
+		$core_container_fixture = 'core-container-' . 'fixture.php';
+		// phpcs:ignore Generic.Strings.UnnecessaryStringConcat.Found -- Split a forbidden-fixture sentinel so the recursive source scan does not match its own test.
+		$archive_fixture = '/tests/RepositoryProvider/AuthenticatedPreparedArchive' . 'WordPressFunctions.php';
+		$files           = new RecursiveIteratorIterator(
 			new RecursiveDirectoryIterator( $root . '/tests', FilesystemIterator::SKIP_DOTS )
 		);
 
@@ -95,12 +100,12 @@ final class CurrentCoreBoundaryTest extends TestCase {
 
 			$content = file_get_contents( $file->getPathname() ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local fixture-boundary contract.
 			self::assertIsString( $content );
-			self::assertStringNotContainsString( $coreContainerFixture, $content, $file->getPathname() );
-			self::assertStringNotContainsString( $archiveFixture, $content, $file->getPathname() );
+			self::assertStringNotContainsString( $core_container_fixture, $content, $file->getPathname() );
+			self::assertStringNotContainsString( $archive_fixture, $content, $file->getPathname() );
 		}
 	}
 
-	public function testInstalledProofBindsCoreArchiveToCanonicalCertification(): void {
+	public function test_installed_proof_binds_core_archive_to_canonical_certification(): void {
 		$root  = dirname( __DIR__, 2 );
 		$smoke = file_get_contents( $root . '/tests/WordPress/bitbucket-installed-smoke.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local installed-proof contract.
 		$proof = file_get_contents( $root . '/tests/WordPress/bitbucket-installed-proof.sh' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local installed-proof contract.

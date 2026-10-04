@@ -25,6 +25,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 	private const TOKEN           = 'bitbucket-validation-token-canary';
 	private const RESPONSE_CANARY = 'bitbucket-response-body-canary';
 
+	// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Preserve the PHPUnit lifecycle override signature.
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -33,7 +34,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		);
 	}
 
-	public function testProviderDelegatesValidationUsingAnExactScopedBasicAuthRequest(): void {
+	public function test_provider_delegates_validation_using_an_exact_scoped_basic_auth_request(): void {
 		$secrets  = new BitbucketCredentialValidationSecretsStub( array( 'profile' => $this->credential() ) );
 		$store    = new BitbucketProviderCredentialStore( $secrets );
 		$loader   = new BitbucketCredentialLoader( $store );
@@ -70,7 +71,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		self::assertStringNotContainsString( self::TOKEN, $requests[0]['url'] );
 	}
 
-	public function testValidatorForwardsNamedRequestBudgets(): void {
+	public function test_validator_forwards_named_request_budgets(): void {
 		$result   = $this->validator( $this->secrets() )->validate_credential( credential_id: 'profile', timeout: 3.5, response_size: 12345 );
 		$requests = \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 
@@ -80,7 +81,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		self::assertSame( 12345, $requests[0]['arguments']['limit_response_size'] );
 	}
 
-	public function testMissingExplicitCredentialNeverFallsBackOrMakesARequest(): void {
+	public function test_missing_explicit_credential_never_falls_back_or_makes_arequest(): void {
 		$secrets   = new BitbucketCredentialValidationSecretsStub( array() );
 		$validator = $this->validator( $secrets );
 
@@ -97,7 +98,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		);
 	}
 
-	public function testMalformedStoredCredentialExceptionBecomesAFixedSafeResult(): void {
+	public function test_malformed_stored_credential_exception_becomes_afixed_safe_result(): void {
 		$secrets = new SecretsFile(
 			sys_get_temp_dir() . '/ran-booster-validator-missing-' . bin2hex( random_bytes( 8 ) ) . '.php',
 			array(
@@ -114,12 +115,12 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			'The repository provider rejected this credential.',
 			$result->get_display_message()
 		);
-		$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message() );
+		$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message() );
 		self::assertStringNotContainsString( 'credential-material-canary', (string) $result->get_display_message() );
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 	}
 
-	public function testProgrammingErrorsFromCredentialStorageAreNotHidden(): void {
+	public function test_programming_errors_from_credential_storage_are_not_hidden(): void {
 		$secrets = new class( null, array() ) extends SecretsFile {
 			/** @return array<string, mixed>|null */
 			public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
@@ -133,7 +134,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$this->validator( $secrets )->validate_credential( 'profile' );
 	}
 
-	public function testMalformedCredentialRecordsFailBeforeAnyRequest(): void {
+	public function test_malformed_credential_records_fail_before_any_request(): void {
 		$fixtures = array(
 			'wrong provider'   => array_replace( $this->credential(), array( 'provider' => 'gh' ) ),
 			'wrong kind'       => array_replace( $this->credential(), array( 'kind' => 'app-password' ) ),
@@ -168,7 +169,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		}
 	}
 
-	public function testTransportAndStatusFailuresUseOnlyFixedSafeMessages(): void {
+	public function test_transport_and_status_failures_use_only_fixed_safe_messages(): void {
 		$fixtures = array(
 			'transport' => array(
 				'response' => new BitbucketCredentialValidationTransportError(),
@@ -202,11 +203,11 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 			self::assertFalse( $result->is_valid(), (string) $name );
 			self::assertSame( $fixture['message'], $result->get_display_message(), (string) $name );
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message(), (string) $name );
+			$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message(), (string) $name );
 		}
 	}
 
-	public function testMalformedHttpResponsesFailSafely(): void {
+	public function test_malformed_http_responses_fail_safely(): void {
 		$responses = array(
 			null,
 			false,
@@ -236,11 +237,11 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 				'The repository provider returned an invalid credential-validation response.',
 				$result->get_display_message()
 			);
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message() );
+			$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message() );
 		}
 	}
 
-	public function testSuccessfulStatusRequiresARepositoryListJsonShape(): void {
+	public function test_successful_status_requires_arepository_list_json_shape(): void {
 		$fixtures = array(
 			'',
 			'not-json-' . self::RESPONSE_CANARY,
@@ -260,7 +261,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 				$result->get_display_message(),
 				$body
 			);
-			$this->assertMessageDoesNotContainCredentialOrResponseMaterial( $result->get_display_message(), $body );
+			$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message(), $body );
 		}
 	}
 
@@ -300,7 +301,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		);
 	}
 
-	private function assertMessageDoesNotContainCredentialOrResponseMaterial( ?string $message, string $context = '' ): void {
+	private function assert_message_does_not_contain_credential_or_response_material( ?string $message, string $context = '' ): void {
 		self::assertNotNull( $message, $context );
 
 		self::assertStringNotContainsString( self::TOKEN, $message, $context );

@@ -24,10 +24,10 @@ function authenticated_archive_actions( string $hook ): array {
 }
 
 /** @return list<array{hook: string, callback: callable, priority: int, accepted_args: int}> */
-function authenticated_archive_hook_records( string $global, string $hook ): array {
+function authenticated_archive_hook_records( string $global_key, string $hook ): array {
 	$matches = array();
 
-	foreach ( $GLOBALS[ $global ] ?? array() as $record ) {
+	foreach ( $GLOBALS[ $global_key ] ?? array() as $record ) {
 		if ( $hook === $record['hook'] ) {
 			$matches[] = $record;
 		}
@@ -36,12 +36,12 @@ function authenticated_archive_hook_records( string $global, string $hook ): arr
 	return $matches;
 }
 
-function add_filter( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): bool {
+function add_filter( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): bool {
 	$GLOBALS['ran_booster_bitbucket_archive_filters'][] = array(
 		'hook'          => $hook,
 		'callback'      => $callback,
 		'priority'      => $priority,
-		'accepted_args' => $acceptedArgs,
+		'accepted_args' => $accepted_args,
 	);
 
 	return true;
@@ -51,12 +51,12 @@ function remove_filter( string $hook, callable $callback, int $priority = 10 ): 
 	return authenticated_archive_remove_hook( 'ran_booster_bitbucket_archive_filters', $hook, $callback, $priority );
 }
 
-function add_action( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): bool {
+function add_action( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): bool {
 	$GLOBALS['ran_booster_bitbucket_archive_actions'][] = array(
 		'hook'          => $hook,
 		'callback'      => $callback,
 		'priority'      => $priority,
-		'accepted_args' => $acceptedArgs,
+		'accepted_args' => $accepted_args,
 	);
 
 	return true;
@@ -66,10 +66,10 @@ function remove_action( string $hook, callable $callback, int $priority = 10 ): 
 	return authenticated_archive_remove_hook( 'ran_booster_bitbucket_archive_actions', $hook, $callback, $priority );
 }
 
-function authenticated_archive_remove_hook( string $global, string $hook, callable $callback, int $priority ): bool {
-	foreach ( $GLOBALS[ $global ] ?? array() as $index => $record ) {
+function authenticated_archive_remove_hook( string $global_key, string $hook, callable $callback, int $priority ): bool {
+	foreach ( $GLOBALS[ $global_key ] ?? array() as $index => $record ) {
 		if ( $hook === $record['hook'] && $callback === $record['callback'] && $priority === $record['priority'] ) {
-			unset( $GLOBALS[ $global ][ $index ] );
+			unset( $GLOBALS[ $global_key ][ $index ] );
 
 			return true;
 		}

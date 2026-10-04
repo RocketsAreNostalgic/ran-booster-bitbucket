@@ -1,35 +1,34 @@
 <?php
 
 // Executed by WP-CLI inside an explicitly marked disposable WordPress installation.
-// phpcs:disable
 
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	throw new RuntimeException( 'The installed Bitbucket proof is restricted to WP-CLI.' );
 }
 
-$expectedOrder = getenv( 'RAN_BOOSTER_BITBUCKET_LOAD_ORDER' );
-if ( ! in_array( $expectedOrder, array( 'addon-first', 'core-first' ), true ) ) {
+$expected_order = getenv( 'RAN_BOOSTER_BITBUCKET_LOAD_ORDER' );
+if ( ! in_array( $expected_order, array( 'addon-first', 'core-first' ), true ) ) {
 	throw new RuntimeException( 'A supported installed load order is required.' );
 }
 
-$expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
-if ( false === $expectedVersion || '' === $expectedVersion ) {
+$expected_version = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
+if ( false === $expected_version || '' === $expected_version ) {
 	throw new RuntimeException( 'The expected installed Bitbucket version is required.' );
 }
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
-$pluginFile = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
-$pluginData = get_plugin_data( $pluginFile, false, false );
-$expected   = array(
+$plugin_file = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
+$plugin_data = get_plugin_data( $plugin_file, false, false );
+$expected    = array(
 	'Name'            => 'RAN Booster Bitbucket Cloud',
-	'Version'         => $expectedVersion,
+	'Version'         => $expected_version,
 	'UpdateURI'       => 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket',
 	'RequiresPlugins' => 'ran-booster',
 	'RequiresWP'      => '7.0',
 	'RequiresPHP'     => '8.2',
 );
 foreach ( $expected as $key => $value ) {
-	if ( ( $pluginData[ $key ] ?? null ) !== $value ) {
+	if ( ( $plugin_data[ $key ] ?? null ) !== $value ) {
 		throw new RuntimeException( 'Unexpected installed Bitbucket header: ' . $key );
 	}
 }
@@ -38,8 +37,8 @@ $active = array_values( get_option( 'active_plugins', array() ) );
 $addon  = array_search( 'ran-booster-bitbucket/ran-booster-bitbucket.php', $active, true );
 $core   = array_search( 'ran-booster/ran-booster.php', $active, true );
 if ( false === $addon || false === $core
-	|| ( 'addon-first' === $expectedOrder && $addon >= $core )
-	|| ( 'core-first' === $expectedOrder && $core >= $addon )
+	|| ( 'addon-first' === $expected_order && $addon >= $core )
+	|| ( 'core-first' === $expected_order && $core >= $addon )
 ) {
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
@@ -52,30 +51,31 @@ if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 14 !== RAN_BOOSTER_PROVI
 	throw new RuntimeException( 'The required Core provider contract is unavailable.' );
 }
 
-$registrationHook      = $GLOBALS['wp_filter']['ran_booster_register_providers'] ?? null;
-$registrationCallbacks = array();
-foreach ( is_object( $registrationHook ) && is_array( $registrationHook->callbacks ?? null ) ? $registrationHook->callbacks : array() as $callbacks ) {
+$registration_hook      = $GLOBALS['wp_filter']['ran_booster_register_providers'] ?? null;
+$registration_callbacks = array();
+foreach ( is_object( $registration_hook ) && is_array( $registration_hook->callbacks ?? null ) ? $registration_hook->callbacks : array() as $callbacks ) {
 	foreach ( is_array( $callbacks ) ? $callbacks : array() as $registered ) {
 		$callback = is_array( $registered ) ? ( $registered['function'] ?? null ) : null;
 		if ( is_array( $callback )
 			&& ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin
 			&& 'register_provider' === ( $callback[1] ?? null )
 		) {
-			$registrationCallbacks[] = $callback;
+			$registration_callbacks[] = $callback;
 		}
 	}
 }
-if ( 1 !== count( $registrationCallbacks ) ) {
+if ( 1 !== count( $registration_callbacks ) ) {
 	throw new RuntimeException( 'The installed Bitbucket provider callback did not register exactly once.' );
 }
 
-$credentialStoreScoped = false;
-$deliveryEvidenceScoped = false;
-$store = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
+$credential_store_scoped  = false;
+$delivery_evidence_scoped = false;
+$store                    = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
 	public function credential_profiles(): array {
 		return array();
 	}
 
+	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Preserve the ProviderCredentialStore foreign credential_material parameter signature in this inert test double.
 	public function credential_material( ?string $id = null ): ?array {
 		return null;
 	}
@@ -84,16 +84,16 @@ $store = new class() implements RAN\RepositoryProvider\ProviderCredentialStore {
 		return true;
 	}
 };
-$registry = new RAN\RepositoryProvider\ProviderRegistry(
+$registry                 = new RAN\RepositoryProvider\ProviderRegistry(
 	array(),
 	new RAN\RepositoryProvider\ProviderSecretPolicyCatalog(),
-	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( $store, &$credentialStoreScoped ): RAN\RepositoryProvider\ProviderCredentialStore {
-		$credentialStoreScoped = 'bb' === $code->value;
+	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( $store, &$credential_store_scoped ): RAN\RepositoryProvider\ProviderCredentialStore {
+		$credential_store_scoped = 'bb' === $code->value;
 
 		return $store;
 	},
-	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( &$deliveryEvidenceScoped ): RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
-		$deliveryEvidenceScoped = 'bb' === $code->value;
+	static function ( RAN\RepositoryProvider\ProviderCode $code ) use ( &$delivery_evidence_scoped ): RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
+		$delivery_evidence_scoped = 'bb' === $code->value;
 
 		return new class() implements RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
 			public function latest_authenticated_delivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
@@ -107,9 +107,9 @@ $registry = new RAN\RepositoryProvider\ProviderRegistry(
 	},
 	new RAN\RepositoryProvider\ProviderRegistrationContext( static fn (): int => 52_428_800 )
 );
-$registrationCallbacks[0]( $registry );
+$registration_callbacks[0]( $registry );
 $registry->seal();
-if ( ! $credentialStoreScoped || ! $deliveryEvidenceScoped || ! $registry->is_sealed() ) {
+if ( ! $credential_store_scoped || ! $delivery_evidence_scoped || ! $registry->is_sealed() ) {
 	throw new RuntimeException( 'The installed provider registration did not receive provider-bound Core readers.' );
 }
 
@@ -138,34 +138,34 @@ if ( RAN\RepositoryProvider\ProviderDiagnosticResult::PASSED !== $diagnostic->st
 	throw new RuntimeException( 'The installed Bitbucket authenticated-delivery diagnostic is unavailable.' );
 }
 
-$allowedHooks = array(
+$allowed_hooks = array(
 	'ran_booster_register_providers',
 	'ran_booster_documentation_sections_after_provider_bb',
 	'admin_notices',
 );
-$ownedHooks   = array();
-foreach ( $GLOBALS['wp_filter'] as $hookName => $hook ) {
+$owned_hooks   = array();
+foreach ( $GLOBALS['wp_filter'] as $hook_name => $hook ) {
 	foreach ( is_object( $hook ) && is_array( $hook->callbacks ?? null ) ? $hook->callbacks : array() as $callbacks ) {
 		foreach ( is_array( $callbacks ) ? $callbacks : array() as $registered ) {
 			$callback = is_array( $registered ) ? ( $registered['function'] ?? null ) : null;
 			if ( is_array( $callback ) && ( $callback[0] ?? null ) instanceof RAN\Booster\Bitbucket\Plugin ) {
-				$ownedHooks[] = (string) $hookName;
+				$owned_hooks[] = (string) $hook_name;
 			}
 		}
 	}
 }
-sort( $ownedHooks );
-$expectedHooks = $allowedHooks;
-sort( $expectedHooks );
-if ( $ownedHooks !== $expectedHooks ) {
+sort( $owned_hooks );
+$expected_hooks = $allowed_hooks;
+sort( $expected_hooks );
+if ( $owned_hooks !== $expected_hooks ) {
 	throw new RuntimeException( 'The installed Bitbucket add-on owns an unexpected WordPress hook.' );
 }
 
-$requests = 0;
+$requests  = 0;
 $transport = static function ( mixed $response, array $arguments, string $url ) use ( &$requests ): array {
 	unset( $response );
-	$expectedUrl = 'https://api.bitbucket.org/2.0/repositories/rocketsarenostalgic/ran-booster-fixture-public-plugin?fields=uuid%2Cfull_name%2Cis_private%2Cmainbranch.name';
-	if ( $url !== $expectedUrl
+	$expected_url = 'https://api.bitbucket.org/2.0/repositories/rocketsarenostalgic/ran-booster-fixture-public-plugin?fields=uuid%2Cfull_name%2Cis_private%2Cmainbranch.name';
+	if ( $url !== $expected_url
 		|| 0 !== ( $arguments['redirection'] ?? null )
 		|| 262144 !== ( $arguments['limit_response_size'] ?? null )
 		|| true !== ( $arguments['reject_unsafe_urls'] ?? null )
@@ -187,7 +187,10 @@ $transport = static function ( mixed $response, array $arguments, string $url ) 
 				'mainbranch' => array( 'name' => 'main' ),
 			)
 		),
-		'response' => array( 'code' => 200, 'message' => 'OK' ),
+		'response' => array(
+			'code'    => 200,
+			'message' => 'OK',
+		),
 		'cookies'  => array(),
 		'filename' => null,
 	);
