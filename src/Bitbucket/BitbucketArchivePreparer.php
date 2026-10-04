@@ -332,27 +332,22 @@ final readonly class BitbucketArchivePreparer {
 		$action = 'commit' === $kind ? 'verifying' : 'resolving';
 
 		if ( 400 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Kind is an internal fixed value.
 			throw new RuntimeException( 'Bitbucket rejected the repository ' . $kind . '.', 400 );
 		}
 
 		if ( 401 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Action and kind are internal fixed values.
 			throw new RuntimeException( 'Bitbucket rejected the selected credential while ' . $action . ' the repository ' . $kind . '.', 401 );
 		}
 
 		if ( 403 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Action and kind are internal fixed values.
 			throw new RuntimeException( 'Bitbucket denied access while ' . $action . ' the repository ' . $kind . '.', 403 );
 		}
 
 		if ( 404 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Kind is an internal fixed value.
 			throw new RuntimeException( 'Bitbucket could not find that repository ' . $kind . ', or the selected credential cannot access it.', 404 );
 		}
 
 		if ( 410 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Kind is an internal fixed value.
 			throw new RuntimeException( 'The requested Bitbucket repository ' . $kind . ' is no longer available.', 410 );
 		}
 
@@ -365,7 +360,6 @@ final readonly class BitbucketArchivePreparer {
 		}
 
 		if ( $status < 200 || $status >= 300 ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Kind is an internal fixed value.
 			throw new RuntimeException( 'Bitbucket could not resolve the repository ' . $kind . '.', 502 );
 		}
 	}
@@ -393,7 +387,6 @@ final readonly class BitbucketArchivePreparer {
 			throw new RuntimeException( 'Bitbucket returned an invalid commit-verification response.', 502 );
 		}
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Kind is an internal fixed value.
 		throw new RuntimeException( 'Bitbucket returned an invalid ' . $kind . '-resolution response.', 502 );
 	}
 
