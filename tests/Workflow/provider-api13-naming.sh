@@ -110,6 +110,18 @@ for pass in 1 2; do
 	cmp -s "$work_root/before" "$work_root/after" || fail 'clean fixer changed tracked bytes'
 done
 
+# Development-role exceptions must never leak to same-named product subdirectories.
+for directory in tests scripts; do
+	mkdir -p "$fixture/src/$directory"
+	printf '<?php\nnamespace UnprefixedProbe;\n$unprefixed_probe = 1;\n' > "$fixture/src/$directory/PrefixProbe.php"
+	if run standards; then fail 'product subdirectory escaped prefix checking'; fi
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/src/$directory/PrefixProbe.php" >> "$work_root/command.log" 2>&1 || true
+	grep -q 'NonPrefixedNamespaceFound' "$work_root/command.log" || fail 'product namespace prefix diagnostic was suppressed'
+	grep -q 'NonPrefixedVariableFound' "$work_root/command.log" || fail 'product variable prefix diagnostic was suppressed'
+	rm "$fixture/src/$directory/PrefixProbe.php"
+	rmdir "$fixture/src/$directory"
+done
+
 printf '<?php\nnamespace Tests;\nclass DevelopmentProbe extends \\PHPUnit\\Framework\\TestCase { public function ownedBadName(): void {} }\n' > "$fixture/tests/DevelopmentProbe.php"
 if run standards; then fail 'new inherited owned test method escaped the real checker'; fi
 "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/tests/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true

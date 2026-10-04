@@ -1,4 +1,5 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone CLI process owns these globals; this file is never loaded as product PHP. Local names remain checked.
 
 declare(strict_types=1);
 
@@ -66,27 +67,8 @@ if ( ! @$xml->load( $root . '/.phpcs.xml', LIBXML_NONET ) ) {
 	throw new RuntimeException( 'Cannot parse the PHPCS ruleset.' );
 }
 $xpath = new DOMXPath( $xml );
-// Only the reviewed diagnostic-specific development prefix exceptions are allowed.
-// Production exclusions, whole-file exclusions and unrelated rule exclusions fail.
-$prefix_exceptions = array(
-	'NonPrefixedNamespaceFound' => array( '/tests/' ),
-	'NonPrefixedVariableFound'  => array( '/tests/bootstrap.php', '/tests/phpstan-bootstrap.php', '/tests/fixtures/plugin-lifecycle.php', '/tests/WordPress/', '/scripts/' ),
-	'NonPrefixedConstantFound'  => array( '/tests/bootstrap.php', '/tests/phpstan-bootstrap.php', '/tests/fixtures/plugin-lifecycle.php', '/tests/WordPress/bitbucket-installed-inert.php', '/scripts/verify-release.php' ),
-	'NonPrefixedFunctionFound'  => array( '/tests/bootstrap.php', '/tests/fixtures/plugin-lifecycle.php', '/scripts/verify-release.php' ),
-	'NonPrefixedHooknameFound'  => array( '/tests/WordPress/' ),
-);
-if ( 0 !== $xpath->query( '//arg[@name="ignore"]' )->length ) {
+if ( $xpath->query( '//exclude-pattern | //arg[@name="ignore"]' )->length !== 0 ) {
 	throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
-}
-foreach ( $xpath->query( '//exclude-pattern' ) as $exclusion ) {
-	// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Native DOM property spelling.
-	$parent = $exclusion->parentNode;
-	$rule   = $parent instanceof DOMElement ? $parent->getAttribute( 'ref' ) : '';
-	$code   = str_starts_with( $rule, 'WordPress.NamingConventions.PrefixAllGlobals.' ) ? substr( $rule, strlen( 'WordPress.NamingConventions.PrefixAllGlobals.' ) ) : '';
-	// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Native DOM property spelling.
-	if ( ! in_array( trim( $exclusion->textContent ), $prefix_exceptions[ $code ] ?? array(), true ) ) {
-		throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
-	}
 }
 $standards = array();
 foreach ( $xpath->query( '/ruleset/file' ) as $node ) {

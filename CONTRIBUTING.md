@@ -56,7 +56,8 @@ extension case variants fail before they can evade the lowercase PHP tools. The
 `composer test:coverage` disposable fixture proves that the required `check`
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release
-verifier and purpose-built test fixtures retain their separate scopes.
+verifier and purpose-built test fixtures now share the PHPCS/PHPCBF profile
+with the documented role-specific exceptions; PHPStan remains product-only.
 
 ## Condition-style enforcement
 
@@ -75,8 +76,9 @@ The current API 14 candidate no longer needs certified Core naming exceptions.
 `RANOwnedMethods` and the shared WordPress naming rules cover `src/`, `views/`,
 `autoload.php`, `ran-booster-bitbucket.php` and `index.php`: all 20 currently
 shipped PHP files. Check and fix use this same scope; new PHP files under the
-configured directories are included automatically. Tests and purpose-built
-fixtures keep their existing separate scope.
+configured directories are included automatically. The same profile also
+covers all 28 development PHP files under `tests/` and `scripts/`, with the
+diagnostic-specific foreign-signature and CLI exceptions described below.
 
 The former per-class allowlist and blanket method-name, namespace-prefix,
 unused-parameter and reserved-parameter suppressions have been removed.
@@ -271,15 +273,14 @@ PHPUnit test methods. PHPUnit lifecycle overrides, native DOM/ZipArchive fields,
 and the ProviderCredentialStore test-double signature retain exact inline
 exceptions. The three former blanket suppressions are removed. Standalone CLI
 filesystem/process operations and inert WordPress fixture behavior have named,
-explained diagnostic exceptions. Five prefix diagnostic exceptions are limited
-to the concrete PHPUnit namespace, CLI process, foreign function/constant, and
-installed foreign-hook paths documented in `.phpcs.xml`; they do not disable
-owned local/method naming or product prefix checking.
+explained diagnostic exceptions. Prefix diagnostics have concrete inline or file-scoped annotations for PHPUnit
+namespaces, CLI processes, foreign functions/constants and installed foreign
+hooks. They cannot leak into similarly named product subdirectories and do not
+disable owned local/method naming or product prefix checking.
 
 `check:coverage` rejects new unselected development PHP and blanket PHPCS comments
 using PHP tokens. It still rejects product exclusions and unsupported analysis
-configuration; only the reviewed diagnostic-specific development prefix paths
-are allowed. `test:naming` exercises the real standards commands on future test
+configuration; all PHPCS configuration exclusions are rejected. `test:naming` exercises the real standards commands on future test
 and CLI files, inherited methods, removed development scope, and line/block/doc
 blanket annotations. Two clean fixer passes must preserve tracked bytes.
 
