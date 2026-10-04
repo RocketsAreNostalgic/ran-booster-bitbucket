@@ -132,7 +132,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertStringContainsString( 'exit 1', $unsupported );
 	}
 
-	public function test_profile_brelease_caller_and_promotion_manifest_are_pinned(): void {
+	public function test_profile_b_release_caller_and_promotion_manifest_are_pinned(): void {
 		$root    = dirname( __DIR__, 2 );
 		$release = (string) file_get_contents( $root . '/.github/workflows/release-please.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		$quality = (string) file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.

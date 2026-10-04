@@ -65,7 +65,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertNull( $repositories[0]->credential_id );
 	}
 
-	public function test_provider_supports_aglobal_credentialed_public_browse_default(): void {
+	public function test_provider_supports_a_global_credentialed_public_browse_default(): void {
 		$secrets  = $this->secrets();
 		$store    = new BitbucketProviderCredentialStore( $secrets );
 		$loader   = new BitbucketCredentialLoader( $store );
@@ -264,15 +264,15 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$browser    = $this->browser( $secrets );
-		$public     = $browser->repository( '  acme/public-plugin  ' );
-		$is_private = $browser->repository( full_name: 'acme/private-plugin', credential_id: 'primary', timeout: 15, response_size: 262144, public_only: false );
-		$requests   = $this->requests();
+		$browser            = $this->browser( $secrets );
+		$public             = $browser->repository( '  acme/public-plugin  ' );
+		$private_repository = $browser->repository( full_name: 'acme/private-plugin', credential_id: 'primary', timeout: 15, response_size: 262144, public_only: false );
+		$requests           = $this->requests();
 
 		self::assertFalse( $public->private );
 		self::assertNull( $public->credential_id );
-		self::assertTrue( $is_private->private );
-		self::assertSame( 'primary', $is_private->credential_id );
+		self::assertTrue( $private_repository->private );
+		self::assertSame( 'primary', $private_repository->credential_id );
 		self::assertSame(
 			'https://api.bitbucket.org/2.0/repositories/acme/public-plugin?fields=uuid%2Cfull_name%2Cis_private%2Cmainbranch.name',
 			$requests[0]['url']
@@ -301,7 +301,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		}
 	}
 
-	public function test_exact_private_lookup_rejects_acredential_from_another_workspace_before_http(): void {
+	public function test_exact_private_lookup_rejects_a_credential_from_another_workspace_before_http(): void {
 		$secrets = $this->secrets( array( 'other' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 
 		try {
@@ -315,7 +315,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertSame( array(), $this->requests() );
 	}
 
-	public function test_exact_public_lookup_uses_acredential_from_another_workspace(): void {
+	public function test_exact_public_lookup_uses_a_credential_from_another_workspace(): void {
 		$secrets = $this->secrets( array( 'public_lookup' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(
@@ -334,7 +334,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertArrayHasKey( 'Authorization', $this->requests()[0]['arguments']['headers'] );
 	}
 
-	public function test_exact_public_lookup_rejects_aprivate_repository_after_authenticated_verification(): void {
+	public function test_exact_public_lookup_rejects_a_private_repository_after_authenticated_verification(): void {
 		$secrets = $this->secrets( array( 'public_lookup' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(

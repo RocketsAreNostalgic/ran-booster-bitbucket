@@ -82,7 +82,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		self::assertSame( 12345, $requests[0]['arguments']['limit_response_size'] );
 	}
 
-	public function test_missing_explicit_credential_never_falls_back_or_makes_arequest(): void {
+	public function test_missing_explicit_credential_never_falls_back_or_makes_a_request(): void {
 		$secrets   = new BitbucketCredentialValidationSecretsStub( array() );
 		$validator = $this->validator( $secrets );
 
@@ -99,7 +99,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		);
 	}
 
-	public function test_malformed_stored_credential_exception_becomes_afixed_safe_result(): void {
+	public function test_malformed_stored_credential_exception_becomes_a_fixed_safe_result(): void {
 		$secrets = new SecretsFile(
 			sys_get_temp_dir() . '/ran-booster-validator-missing-' . bin2hex( random_bytes( 8 ) ) . '.php',
 			array(
@@ -242,7 +242,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		}
 	}
 
-	public function test_successful_status_requires_arepository_list_json_shape(): void {
+	public function test_successful_status_requires_a_repository_list_json_shape(): void {
 		$fixtures = array(
 			'',
 			'not-json-' . self::RESPONSE_CANARY,

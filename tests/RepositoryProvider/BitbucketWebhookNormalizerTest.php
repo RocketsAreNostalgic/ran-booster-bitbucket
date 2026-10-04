@@ -559,7 +559,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		yield 'unknown scope' => array( 'project', 'RocketsAreNostalgic' );
 	}
 
-	public function test_asecond_request_cannot_reuse_the_first_requests_matched_profile(): void {
+	public function test_a_second_request_cannot_reuse_the_first_requests_matched_profile(): void {
 		$profiles   = array(
 			$this->profile( self::OWNER_SECRET, 'owner', 'RocketsAreNostalgic' ),
 			$this->profile( self::OTHER_SECRET, 'owner', 'ProtestsAndSuffragettes' ),

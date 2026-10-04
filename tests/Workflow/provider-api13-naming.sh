@@ -110,6 +110,14 @@ for pass in 1 2; do
 	cmp -s "$work_root/before" "$work_root/after" || fail 'clean fixer changed tracked bytes'
 done
 
+# Ordinary PHPCS suppression syntax must not bypass the independent coverage guard.
+for suppression in '<rule ref="RANWordPressPlugin"><exclude name="WordPress.PHP.YodaConditions"/></rule>' '<rule ref="WordPress.PHP.YodaConditions"><severity>0</severity></rule>'; do
+	sed '/<\/ruleset>/i\'"$suppression" "$repo_root/.phpcs.xml" > "$fixture/.phpcs.xml"
+	if run check:coverage; then fail 'ruleset diagnostic suppression escaped the guard'; fi
+	grep -q 'Review PHPCS exclusions' "$work_root/command.log" || fail 'ruleset suppression failed for an unrelated reason'
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
 # Development-role exceptions must never leak to same-named product subdirectories.
 for directory in tests scripts; do
 	mkdir -p "$fixture/src/$directory"

@@ -250,7 +250,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertStringNotContainsString( 'admin_post_', $guide );
 	}
 
-	public function test_deactivated_add_on_does_not_contribute_aprovider_hook(): void {
+	public function test_deactivated_add_on_does_not_contribute_a_provider_hook(): void {
 		$result = $this->run_fixture( 'inactive' );
 
 		self::assertSame( 0, $result['provider_callbacks'] );

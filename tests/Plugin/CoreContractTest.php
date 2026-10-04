@@ -121,7 +121,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2', $workflow );
 	}
 
-	public function test_quality_builds_exact_profile_bpromotion_evidence(): void {
+	public function test_quality_builds_exact_profile_b_promotion_evidence(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
 		self::assertSame( 1, substr_count( $workflow, 'composer build:release -- "$source_commit"' ) );
@@ -157,7 +157,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringContainsString( 'diff -qr "$expected_root/ran-booster-bitbucket" "$plugin_root"', $workflow );
 	}
 
-	public function test_release_caller_pins_shared_profile_bwith_exact_local_inputs(): void {
+	public function test_release_caller_pins_shared_profile_b_with_exact_local_inputs(): void {
 		$workflow = $this->workflow( 'release-please.yml' );
 
 		self::assertStringContainsString( 'workflow_run:', $workflow );
@@ -176,7 +176,7 @@ final class CoreContractTest extends TestCase {
 		self::assertStringNotContainsString( 'runs-on:', $workflow );
 	}
 
-	public function test_release_please_configuration_uses_draft_profile_bpublication(): void {
+	public function test_release_please_configuration_uses_draft_profile_b_publication(): void {
 		$config = json_decode(
 			(string) file_get_contents( dirname( __DIR__, 2 ) . '/release-please-config.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 			true,
