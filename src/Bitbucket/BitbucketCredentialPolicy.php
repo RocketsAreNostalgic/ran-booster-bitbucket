@@ -96,7 +96,6 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 
 	private function required_string( mixed $value, string $name ): string {
 		if ( ! is_string( $value ) || '' === trim( $value ) ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Provider policy errors are mapped at the admin boundary.
 			throw new RuntimeException( $name . ' must be a non-empty string.' );
 		}
 

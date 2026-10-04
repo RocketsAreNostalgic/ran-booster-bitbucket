@@ -24,8 +24,8 @@ in an issue or pull request.
 
 ## Published coding standard
 
-Development tooling uses `ran/coding-standards` `^1.0`, locked to published
-v1.0.0 (`6af816a02b7d1108ad5c990e9d0fda0af0a13de7`). Install from the lockfile;
+Development tooling uses `ran/coding-standards` `^1.0.1`, locked to published
+v1.0.1 (`0248066be3f4f9476ef7095d888657001488a3de`). Install from the lockfile;
 upgrades require their own dependency diff and retained local/native proof.
 The shared profile makes assignment/array alignment blocking even when PHPCS
 warnings are hidden. `standards` and `standards:fix` remain the same authority.
@@ -250,3 +250,19 @@ evidence-led decision.
 The full repository lane now runs the host aggregate without an advisory
 `continue-on-error` bypass. Release-candidate lanes retain their existing
 exact-successful-main admission and installed-proof requirements.
+
+## Next-beta standards adoption
+
+The v1.0.1 development-only upgrade adopts the shared exception-message policy:
+`WordPress.Security.EscapeOutput.ExceptionNotEscaped` is intentionally disabled
+by the shared profile because throwing an exception is not rendering output.
+Thirteen redundant local directives are removed; provider error mapping and
+actual output escaping remain unchanged. All other locked packages, the
+required PHPStan level 8 gate and immutable Core beta.31 certification remain
+unchanged.
+
+This bounded adoption is not full organisation #128 acceptance. Product PHP
+retains its existing coverage proof. Tests and standalone scripts still need
+their agreed profiles, removal of inactive blanket directives and suppression
+protection; retained product exceptions still need grouped disposition. Those
+remaining tasks must be qualified separately before next-beta acceptance.

@@ -236,7 +236,6 @@ final readonly class BitbucketRepositoryBrowser {
 	/** @param list<RepositoryDescriptor> $repositories */
 	private function partial_browse_result( array $repositories, int $status ): RepositoryBrowseResult {
 		if ( array() === $repositories ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Status is an internal fixed integer; the message is fixed and redacted.
 			throw new RuntimeException( 'Bitbucket repository browsing could not continue safely.', $status );
 		}
 
@@ -263,11 +262,9 @@ final readonly class BitbucketRepositoryBrowser {
 			$response = $this->api->get( $url, $credential, $timeout, $response_size );
 		} catch ( BitbucketApiException $exception ) {
 			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
-				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal fixed status selected by the call site; message is fixed.
 				throw new RuntimeException( 'Bitbucket could not be reached. Please try again.', $transport_status );
 			}
 
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Internal fixed status selected by the call site; message is fixed.
 			throw new RuntimeException( 'Bitbucket returned an invalid API response.', $invalid_status );
 		}
 
@@ -282,7 +279,6 @@ final readonly class BitbucketRepositoryBrowser {
 		}
 
 		if ( 404 === $status ) {
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Fixed internal message selected by the caller.
 			throw new RuntimeException( $not_found_message, 404 );
 		}
 
