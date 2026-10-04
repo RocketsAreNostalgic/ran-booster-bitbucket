@@ -1,31 +1,31 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
 
 // Executed by WP-CLI inside an explicitly marked disposable WordPress installation.
-// phpcs:disable
 
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	throw new RuntimeException( 'The installed Bitbucket inertness proof is restricted to WP-CLI.' );
 }
 
-$mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
-if ( ! in_array( $mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fifteen', 'addon-sixteen', 'addon-eighteen' ), true ) ) {
+$fixture_mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
+if ( ! in_array( $fixture_mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fifteen', 'addon-sixteen', 'addon-eighteen' ), true ) ) {
 	throw new RuntimeException( 'A supported installed inertness mode is required.' );
 }
-$expectedVersion = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
-if ( false === $expectedVersion || '' === $expectedVersion ) {
+$expected_version = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
+if ( false === $expected_version || '' === $expected_version ) {
 	throw new RuntimeException( 'The expected installed Bitbucket version is required.' );
 }
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
-$pluginFile = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
-$pluginData = get_plugin_data( $pluginFile, false, false );
-if ( $expectedVersion !== ( $pluginData['Version'] ?? null )
-	|| 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket' !== ( $pluginData['UpdateURI'] ?? null )
+$plugin_file = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
+$plugin_data = get_plugin_data( $plugin_file, false, false );
+if ( ( $plugin_data['Version'] ?? null ) !== $expected_version
+	|| 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket' !== ( $plugin_data['UpdateURI'] ?? null )
 ) {
 	throw new RuntimeException( 'The inertness lane did not retain the exact installed Bitbucket candidate.' );
 }
 
-$apiVersions = match ( $mode ) {
+$api_versions = match ( $fixture_mode ) {
 	'incompatible' => array( 13, 17 ),
 	'provider-twelve' => array( 12, 17 ),
 	'provider-fifteen' => array( 15, 17 ),
@@ -33,15 +33,15 @@ $apiVersions = match ( $mode ) {
 	'addon-eighteen' => array( 14, 18 ),
 	default => null,
 };
-if ( null !== $apiVersions ) {
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
+if ( null !== $api_versions ) {
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $api_versions[0] );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', $api_versions[1] );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
-require $pluginFile;
+require $plugin_file;
 
-$callbackPriority = has_action( 'ran_booster_register_providers' );
-if ( false === $callbackPriority ) {
+$callback_priority = has_action( 'ran_booster_register_providers' );
+if ( false === $callback_priority ) {
 	throw new RuntimeException( 'The installed Bitbucket dependency/load contract is invalid.' );
 }
 
@@ -67,9 +67,9 @@ try {
 if ( 0 !== $requests || array() !== $sections || class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ) ) {
 	throw new RuntimeException( 'The installed Bitbucket candidate was not inert without exact Core.' );
 }
-if ( null !== $apiVersions
-	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || $apiVersions[0] !== RAN_BOOSTER_PROVIDER_API_VERSION
-		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || $apiVersions[1] !== RAN_BOOSTER_ADDON_API_VERSION )
+if ( null !== $api_versions
+	&& ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || RAN_BOOSTER_PROVIDER_API_VERSION !== $api_versions[0]
+		|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || RAN_BOOSTER_ADDON_API_VERSION !== $api_versions[1] )
 ) {
 	throw new RuntimeException( 'The incompatible installed Core fixture is invalid.' );
 }

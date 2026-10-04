@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\RepositoryProvider;
 
 require_once __DIR__ . '/BitbucketCredentialValidatorWordPressFunctions.php';
@@ -27,13 +28,14 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 	private const TOKEN_CANARY    = 'bitbucket-browser-token-canary';
 	private const RESPONSE_CANARY = 'bitbucket-browser-response-canary';
 
+	// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Preserve the PHPUnit lifecycle override signature.
 	protected function setUp(): void {
 		parent::setUp();
 
 		$this->queue( array() );
 	}
 
-	public function testAnonymousWorkspaceBrowseUsesExactUrlWithoutAuthAndFiltersPrivateRows(): void {
+	public function test_anonymous_workspace_browse_uses_exact_url_without_auth_and_filters_private_rows(): void {
 		$this->queue(
 			array(
 				$this->response(
@@ -51,7 +53,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$repositories = $this->publicRepositories( $this->browser(), 'acme' );
+		$repositories = $this->public_repositories( $this->browser(), 'acme' );
 		$requests     = $this->requests();
 
 		self::assertSame( array( 'acme/public-plugin' ), array_column( $this->rows( $repositories ), 'locator' ) );
@@ -63,7 +65,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertNull( $repositories[0]->credential_id );
 	}
 
-	public function testProviderSupportsAGlobalCredentialedPublicBrowseDefault(): void {
+	public function test_provider_supports_a_global_credentialed_public_browse_default(): void {
 		$secrets  = $this->secrets();
 		$store    = new BitbucketProviderCredentialStore( $secrets );
 		$loader   = new BitbucketCredentialLoader( $store );
@@ -79,7 +81,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertTrue( $provider->get_public_repository_browse_metadata()->supports_provider_default_profile );
 	}
 
-	public function testSelectedPublicLookupCredentialAuthenticatesAcrossWorkspacesAndKeepsResultsCredentialFree(): void {
+	public function test_selected_public_lookup_credential_authenticates_across_workspaces_and_keeps_results_credential_free(): void {
 		$next    = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=opaque%3Acursor';
 		$secrets = $this->secrets(
 			array( 'public_lookup' => $this->credential( 'another-workspace', self::TOKEN_CANARY ) )
@@ -112,7 +114,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 		self::assertSame( array( 'acme/one', 'acme/two' ), array_column( $this->rows( $result->repositories ), 'locator' ) );
 		self::assertSame( array( null, null ), array_column( $this->rows( $result->repositories ), 'credential_id' ) );
-		self::assertSame( array( array( 'bb', 'public_lookup' ) ), $secrets->materialLookups );
+		self::assertSame( array( array( 'bb', 'public_lookup' ) ), $secrets->material_lookups );
 		self::assertCount( 2, $requests );
 
 		foreach ( $requests as $request ) {
@@ -126,7 +128,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		}
 	}
 
-	public function testMissingPublicLookupCredentialFailsBeforeHttp(): void {
+	public function test_missing_public_lookup_credential_fails_before_http(): void {
 		try {
 			$this->browser()->browse(
 				RepositoryBrowseRequest::public_owner( 'acme', 'missing_profile' )
@@ -134,13 +136,13 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			self::fail( 'An unavailable public lookup credential must fail closed.' );
 		} catch ( RuntimeException $exception ) {
 			self::assertSame( 400, $exception->getCode() );
-			$this->assertSafeMessage( $exception->getMessage() );
+			$this->assert_safe_message( $exception->getMessage() );
 		}
 
 		self::assertSame( array(), $this->requests() );
 	}
 
-	public function testRejectedPublicLookupCredentialNeverRetriesAnonymously(): void {
+	public function test_rejected_public_lookup_credential_never_retries_anonymously(): void {
 		$secrets = $this->secrets(
 			array( 'public_lookup' => $this->credential( 'acme', self::TOKEN_CANARY ) )
 		);
@@ -157,7 +159,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 				self::fail( 'A rejected public lookup credential must not retry anonymously.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $status, $exception->getCode() );
-				$this->assertSafeMessage( $exception->getMessage() );
+				$this->assert_safe_message( $exception->getMessage() );
 			}
 
 			$requests = $this->requests();
@@ -166,7 +168,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		}
 	}
 
-	public function testLaterPublicLookupAuthorizationFailureDoesNotReturnPartialRows(): void {
+	public function test_later_public_lookup_authorization_failure_does_not_return_partial_rows(): void {
 		$next    = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=next';
 		$secrets = $this->secrets(
 			array( 'public_lookup' => $this->credential( 'acme', self::TOKEN_CANARY ) )
@@ -195,7 +197,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 				self::fail( 'A later authenticated public lookup failure must not return partial rows.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $status, $exception->getCode() );
-				$this->assertSafeMessage( $exception->getMessage() );
+				$this->assert_safe_message( $exception->getMessage() );
 			}
 
 			$requests = $this->requests();
@@ -206,7 +208,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		}
 	}
 
-	public function testSelectedCredentialUsesItsWorkspaceBasicAuthAndIdentity(): void {
+	public function test_selected_credential_uses_its_workspace_basic_auth_and_identity(): void {
 		$secrets = $this->secrets( array( 'primary' => $this->credential( 'acme', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(
@@ -214,12 +216,12 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$repositories = $this->accessibleRepositories( $this->browser( $secrets ), 'primary' );
+		$repositories = $this->accessible_repositories( $this->browser( $secrets ), 'primary' );
 		$requests     = $this->requests();
 
 		self::assertSame( 'primary', $repositories[0]->credential_id );
 		self::assertTrue( $repositories[0]->private );
-		self::assertSame( array( array( 'bb', 'primary' ) ), $secrets->materialLookups );
+		self::assertSame( array( array( 'bb', 'primary' ) ), $secrets->material_lookups );
 		self::assertSame(
 			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Assert Bitbucket's required Basic wire value.
 			'Basic ' . base64_encode( 'deploy@example.test:' . self::TOKEN_CANARY ),
@@ -228,7 +230,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertStringNotContainsString( self::TOKEN_CANARY, $requests[0]['url'] );
 	}
 
-	public function testLiteralAllCredentialIdLoadsOnlyThatProfile(): void {
+	public function test_literal_all_credential_id_loads_only_that_profile(): void {
 		$secrets = $this->secrets(
 			array(
 				'all'   => $this->credential( 'selected', self::TOKEN_CANARY ),
@@ -244,16 +246,16 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$repositories = $this->accessibleRepositories( $this->browser( $secrets ), 'all' );
+		$repositories = $this->accessible_repositories( $this->browser( $secrets ), 'all' );
 
 		self::assertSame( array( 'selected/repository' ), array_column( $this->rows( $repositories ), 'locator' ) );
 		self::assertSame( array( 'all' ), array_column( $this->rows( $repositories ), 'credential_id' ) );
-		self::assertSame( array( array( 'bb', 'all' ) ), $secrets->materialLookups );
-		self::assertSame( array(), $secrets->profileLookups );
+		self::assertSame( array( array( 'bb', 'all' ) ), $secrets->material_lookups );
+		self::assertSame( array(), $secrets->profile_lookups );
 		self::assertCount( 1, $this->requests() );
 	}
 
-	public function testExactLookupSupportsAnonymousPublicAndSelectedPrivateRepositories(): void {
+	public function test_exact_lookup_supports_anonymous_public_and_selected_private_repositories(): void {
 		$secrets = $this->secrets( array( 'primary' => $this->credential( 'acme', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(
@@ -262,15 +264,15 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$browser  = $this->browser( $secrets );
-		$public   = $browser->repository( '  acme/public-plugin  ' );
-		$private  = $browser->repository( full_name: 'acme/private-plugin', credential_id: 'primary', timeout: 15, response_size: 262144, public_only: false );
-		$requests = $this->requests();
+		$browser            = $this->browser( $secrets );
+		$public             = $browser->repository( '  acme/public-plugin  ' );
+		$private_repository = $browser->repository( full_name: 'acme/private-plugin', credential_id: 'primary', timeout: 15, response_size: 262144, public_only: false );
+		$requests           = $this->requests();
 
 		self::assertFalse( $public->private );
 		self::assertNull( $public->credential_id );
-		self::assertTrue( $private->private );
-		self::assertSame( 'primary', $private->credential_id );
+		self::assertTrue( $private_repository->private );
+		self::assertSame( 'primary', $private_repository->credential_id );
 		self::assertSame(
 			'https://api.bitbucket.org/2.0/repositories/acme/public-plugin?fields=uuid%2Cfull_name%2Cis_private%2Cmainbranch.name',
 			$requests[0]['url']
@@ -279,27 +281,27 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertArrayHasKey( 'Authorization', $requests[1]['arguments']['headers'] );
 	}
 
-	public function testExactLookupRejectsWorkspaceMismatchMalformedRowsAndEmptyBranches(): void {
+	public function test_exact_lookup_rejects_workspace_mismatch_malformed_rows_and_empty_branches(): void {
 		$fixtures = array(
 			array( $this->item( '{mismatch}', 'other/repository', false, '' ), 502 ),
 			array( array( 'uuid' => '{missing-fields}' ), 502 ),
 			array( $this->item( '{empty-branch}', 'acme/repository', false, '' ), 400 ),
 		);
 
-		foreach ( $fixtures as [$fixture, $expectedStatus] ) {
+		foreach ( $fixtures as [$fixture, $expected_status] ) {
 			$this->queue( array( $this->response( 200, $this->json( $fixture ) ) ) );
 
 			try {
 				$this->browser()->repository( 'acme/repository' );
 				self::fail( 'Expected an invalid exact Bitbucket repository response.' );
 			} catch ( RuntimeException $exception ) {
-				self::assertSame( $expectedStatus, $exception->getCode() );
-				$this->assertSafeMessage( $exception->getMessage() );
+				self::assertSame( $expected_status, $exception->getCode() );
+				$this->assert_safe_message( $exception->getMessage() );
 			}
 		}
 	}
 
-	public function testExactPrivateLookupRejectsACredentialFromAnotherWorkspaceBeforeHttp(): void {
+	public function test_exact_private_lookup_rejects_a_credential_from_another_workspace_before_http(): void {
 		$secrets = $this->secrets( array( 'other' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 
 		try {
@@ -307,13 +309,13 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			self::fail( 'Expected a differently scoped Bitbucket credential to be rejected.' );
 		} catch ( RuntimeException $exception ) {
 			self::assertSame( 400, $exception->getCode() );
-			$this->assertSafeMessage( $exception->getMessage() );
+			$this->assert_safe_message( $exception->getMessage() );
 		}
 
 		self::assertSame( array(), $this->requests() );
 	}
 
-	public function testExactPublicLookupUsesACredentialFromAnotherWorkspace(): void {
+	public function test_exact_public_lookup_uses_a_credential_from_another_workspace(): void {
 		$secrets = $this->secrets( array( 'public_lookup' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(
@@ -332,7 +334,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertArrayHasKey( 'Authorization', $this->requests()[0]['arguments']['headers'] );
 	}
 
-	public function testExactPublicLookupRejectsAPrivateRepositoryAfterAuthenticatedVerification(): void {
+	public function test_exact_public_lookup_rejects_a_private_repository_after_authenticated_verification(): void {
 		$secrets = $this->secrets( array( 'public_lookup' => $this->credential( 'other', self::TOKEN_CANARY ) ) );
 		$this->queue(
 			array(
@@ -349,14 +351,14 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			self::fail( 'Public-only exact verification must reject private repositories.' );
 		} catch ( RuntimeException $exception ) {
 			self::assertSame( 400, $exception->getCode() );
-			$this->assertSafeMessage( $exception->getMessage() );
+			$this->assert_safe_message( $exception->getMessage() );
 		}
 
 		self::assertCount( 1, $this->requests() );
 		self::assertArrayHasKey( 'Authorization', $this->requests()[0]['arguments']['headers'] );
 	}
 
-	public function testPaginationFollowsOnlyOpaqueNextUrlsForTheSameCollection(): void {
+	public function test_pagination_follows_only_opaque_next_urls_for_the_same_collection(): void {
 		$next = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=opaque%3Acursor';
 		$this->queue(
 			array(
@@ -373,13 +375,13 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			)
 		);
 
-		$repositories = $this->publicRepositories( $this->browser(), 'acme' );
+		$repositories = $this->public_repositories( $this->browser(), 'acme' );
 
 		self::assertSame( array( 'acme/one', 'acme/two' ), array_column( $this->rows( $repositories ), 'locator' ) );
 		self::assertSame( $next, $this->requests()[1]['url'] );
 	}
 
-	public function testLaterRateLimitReturnsEarlierRepositoriesAsPartial(): void {
+	public function test_later_rate_limit_returns_earlier_repositories_as_partial(): void {
 		$next = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=next';
 		$this->queue(
 			array(
@@ -404,7 +406,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertCount( 2, $this->requests() );
 	}
 
-	public function testPaginationStopsAfterFiveCallsAndReturnsAnExplicitPartialResult(): void {
+	public function test_pagination_stops_after_five_calls_and_returns_an_explicit_partial_result(): void {
 		$responses = array();
 		for ( $page = 1; $page <= RepositoryBrowseRequest::MAX_REMOTE_CALLS; ++$page ) {
 			$responses[] = $this->response(
@@ -427,8 +429,8 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertCount( RepositoryBrowseRequest::MAX_REMOTE_CALLS, $this->requests() );
 	}
 
-	public function testPaginationRejectsOtherCollectionsLoopsAndThePageCap(): void {
-		$hostileNext = 'https://api.bitbucket.org/2.0/repositories/other?pagelen=100&after=cursor';
+	public function test_pagination_rejects_other_collections_loops_and_the_page_cap(): void {
+		$hostile_next = 'https://api.bitbucket.org/2.0/repositories/other?pagelen=100&after=cursor';
 		$this->queue(
 			array(
 				$this->response(
@@ -436,13 +438,13 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 					$this->json(
 						array(
 							'values' => array(),
-							'next'   => $hostileNext,
+							'next'   => $hostile_next,
 						)
 					)
 				),
 			)
 		);
-		$this->expectBrowseFailureAfterRequests( 1 );
+		$this->expect_browse_failure_after_requests( 1 );
 
 		$initial = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&fields=values.uuid%2Cvalues.full_name%2Cvalues.is_private%2Cvalues.mainbranch.name%2Cnext';
 		$this->queue(
@@ -458,7 +460,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 				),
 			)
 		);
-		$this->expectBrowseFailureAfterRequests( 1 );
+		$this->expect_browse_failure_after_requests( 1 );
 
 		$responses = array();
 		for ( $page = 1; $page <= 10; ++$page ) {
@@ -473,19 +475,19 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			);
 		}
 		$this->queue( $responses );
-		$this->expectBrowseFailureAfterRequests( 5, 503 );
+		$this->expect_browse_failure_after_requests( 5, 503 );
 	}
 
-	public function testMalformedListsFailAndMalformedRowsAreSkipped(): void {
+	public function test_malformed_lists_fail_and_malformed_rows_are_skipped(): void {
 		foreach ( array( '', 'not-json', '{}', '{"values":"invalid"}' ) as $body ) {
 			$this->queue( array( $this->response( 200, $body ) ) );
 
 			try {
-				$this->publicRepositories( $this->browser(), 'acme' );
+				$this->public_repositories( $this->browser(), 'acme' );
 				self::fail( 'Expected a malformed Bitbucket list to fail.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( 422, $exception->getCode() );
-				$this->assertSafeMessage( $exception->getMessage() );
+				$this->assert_safe_message( $exception->getMessage() );
 			}
 		}
 
@@ -508,11 +510,11 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 		self::assertSame(
 			array( 'acme/valid' ),
-			array_column( $this->rows( $this->publicRepositories( $this->browser(), 'acme' ) ), 'locator' )
+			array_column( $this->rows( $this->public_repositories( $this->browser(), 'acme' ) ), 'locator' )
 		);
 	}
 
-	public function testTransportAndStatusesUseFixedRedactedErrors(): void {
+	public function test_transport_and_statuses_use_fixed_redacted_errors(): void {
 		$fixtures = array(
 			array( new BitbucketCredentialValidationTransportError(), 504 ),
 			array( $this->response( 401, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 401 ),
@@ -527,11 +529,11 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			$this->queue( array( $response ) );
 
 			try {
-				$this->publicRepositories( $this->browser(), 'acme' );
+				$this->public_repositories( $this->browser(), 'acme' );
 				self::fail( 'Expected a safe Bitbucket request failure.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $code, $exception->getCode() );
-				$this->assertSafeMessage( $exception->getMessage() );
+				$this->assert_safe_message( $exception->getMessage() );
 			}
 		}
 	}
@@ -544,12 +546,12 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 	}
 
 	/** @return list<\RAN\RepositoryProvider\RepositoryDescriptor> */
-	private function publicRepositories( BitbucketRepositoryBrowser $browser, string $workspace ): array {
+	private function public_repositories( BitbucketRepositoryBrowser $browser, string $workspace ): array {
 		return $browser->browse( RepositoryBrowseRequest::public_owner( $workspace ) )->repositories;
 	}
 
 	/** @return list<\RAN\RepositoryProvider\RepositoryDescriptor> */
-	private function accessibleRepositories( BitbucketRepositoryBrowser $browser, string $credential_id ): array {
+	private function accessible_repositories( BitbucketRepositoryBrowser $browser, string $credential_id ): array {
 		return $browser->browse( RepositoryBrowseRequest::accessible( $credential_id ) )->repositories;
 	}
 
@@ -577,11 +579,11 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 	}
 
 	/** @return array<string, mixed> */
-	private function item( string $uuid, string $fullName, bool $private = false, string $branch = 'main' ): array {
+	private function item( string $uuid, string $full_name, bool $is_private = false, string $branch = 'main' ): array {
 		return array(
 			'uuid'       => $uuid,
-			'full_name'  => $fullName,
-			'is_private' => $private,
+			'full_name'  => $full_name,
+			'is_private' => $is_private,
 			'mainbranch' => array( 'name' => $branch ),
 		);
 	}
@@ -618,21 +620,21 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		return array_map( static fn ( $repository ): array => $repository->to_array(), $repositories );
 	}
 
-	private function assertSafeMessage( string $message ): void {
+	private function assert_safe_message( string $message ): void {
 		self::assertNotSame( '', trim( $message ) );
 		self::assertStringNotContainsString( self::TOKEN_CANARY, $message );
 		self::assertStringNotContainsString( self::RESPONSE_CANARY, $message );
 	}
 
-	private function expectBrowseFailureAfterRequests( int $requestCount, int $status = 422 ): void {
+	private function expect_browse_failure_after_requests( int $request_count, int $status = 422 ): void {
 		try {
-			$this->publicRepositories( $this->browser(), 'acme' );
+			$this->public_repositories( $this->browser(), 'acme' );
 			self::fail( 'Expected unsafe Bitbucket pagination to fail.' );
 		} catch ( RuntimeException $exception ) {
 			self::assertSame( $status, $exception->getCode() );
-			$this->assertSafeMessage( $exception->getMessage() );
+			$this->assert_safe_message( $exception->getMessage() );
 		}
 
-		self::assertCount( $requestCount, $this->requests() );
+		self::assertCount( $request_count, $this->requests() );
 	}
 }

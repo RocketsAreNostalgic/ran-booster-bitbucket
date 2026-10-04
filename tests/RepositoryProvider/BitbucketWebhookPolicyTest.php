@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\RepositoryProvider;
 
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -15,15 +16,15 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 
 	private const SECRET = 'bitbucket-webhook-policy-secret-0001';
 
-	public function testNamedArgumentsPreserveRepositoryAuthorityAndLocatorBoundaries(): void {
-		$policy = new BitbucketWebhookPolicy();
+	public function test_named_arguments_preserve_repository_authority_and_locator_boundaries(): void {
+		$policy       = new BitbucketWebhookPolicy();
 		$verification = new SignedWebhookVerification(
 			ProviderCode::parse( 'bb' ),
 			array(
 				array(
-					'id' => 'test-profile',
-					'scope' => 'repository',
-					'target' => 'workspace/repository',
+					'id'           => 'test-profile',
+					'scope'        => 'repository',
+					'target'       => 'workspace/repository',
 					'authority_id' => 'stable-repository-id',
 				),
 			)
@@ -36,7 +37,7 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 	}
 
 	/** @return iterable<string, array{string, string, string}> */
-	public static function invalidTargets(): iterable {
+	public static function invalid_targets(): iterable {
 		yield 'owner' => array(
 			'owner',
 			'invalid workspace',
@@ -49,8 +50,8 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 		);
 	}
 
-	#[DataProvider( 'invalidTargets' )]
-	public function testInvalidTargetsUseBitbucketWorkspaceTerminology( string $scope, string $target, string $message ): void {
+	#[DataProvider( 'invalid_targets' )]
+	public function test_invalid_targets_use_bitbucket_workspace_terminology( string $scope, string $target, string $message ): void {
 		$policy = new BitbucketWebhookPolicy();
 
 		$this->expectException( RuntimeException::class );
@@ -68,13 +69,13 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 	}
 
 	/** @return iterable<string, array{string}> */
-	public static function unsupportedScopes(): iterable {
+	public static function unsupported_scopes(): iterable {
 		yield 'removed global scope' => array( 'global' );
 		yield 'provider label is not a logical scope' => array( 'workspace' );
 	}
 
-	#[DataProvider( 'unsupportedScopes' )]
-	public function testOnlyUniversalLogicalScopesAreAccepted( string $scope ): void {
+	#[DataProvider( 'unsupported_scopes' )]
+	public function test_only_universal_logical_scopes_are_accepted( string $scope ): void {
 		$policy = new BitbucketWebhookPolicy();
 
 		$this->expectException( RuntimeException::class );
@@ -91,7 +92,7 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 		);
 	}
 
-	public function testLegacyGlobalConstantIsNotDeclaredOrRead(): void {
+	public function test_legacy_global_constant_is_not_declared_or_read(): void {
 		$policy = new BitbucketWebhookPolicy();
 
 		self::assertSame( array(), $policy->get_constant_names() );

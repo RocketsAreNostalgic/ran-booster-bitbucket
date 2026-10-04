@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ruleset name="RAN Booster Bitbucket Coding Standards">
-	<description>Product-source standards for the RAN Booster Bitbucket add-on.</description>
+	<description>Maintained PHP standards for the RAN Booster Bitbucket add-on.</description>
 
 	<config name="minimum_supported_wp_version" value="7.0"/>
 	<config name="testVersion" value="8.2-"/>
@@ -10,6 +10,8 @@
 	<file>index.php</file>
 	<file>src</file>
 	<file>views</file>
+	<file>tests</file>
+	<file>scripts</file>
 
 	<arg name="basepath" value="."/>
 	<arg name="colors"/>

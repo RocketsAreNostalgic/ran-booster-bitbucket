@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\RepositoryProvider;
 
 use InvalidArgumentException;
@@ -11,7 +12,7 @@ use RAN\Booster\Bitbucket\BitbucketRepositoryCoordinates;
 
 final class BitbucketRepositoryCoordinatesTest extends TestCase {
 
-	public function testValidCoordinatesPreserveTrimmedCaseAndAllowRepositoryDots(): void {
+	public function test_valid_coordinates_preserve_trimmed_case_and_allow_repository_dots(): void {
 		$coordinates = BitbucketRepositoryCoordinates::from_full_name( full_name: '  RocketsAreNostalgic/RAN.Booster  ' );
 
 		self::assertSame( 'RocketsAreNostalgic', $coordinates->get_workspace() );
@@ -19,7 +20,7 @@ final class BitbucketRepositoryCoordinatesTest extends TestCase {
 		self::assertSame( 'RocketsAreNostalgic/RAN.Booster', $coordinates->get_full_name() );
 	}
 
-	public function testValidatedFullNameMatchingIsCaseInsensitive(): void {
+	public function test_validated_full_name_matching_is_case_insensitive(): void {
 		$coordinates = BitbucketRepositoryCoordinates::from_full_name( 'RocketsAreNostalgic/RAN.Booster' );
 
 		self::assertTrue( $coordinates->matches_full_name( full_name: 'rocketsarenostalgic/ran.booster' ) );
@@ -29,17 +30,17 @@ final class BitbucketRepositoryCoordinatesTest extends TestCase {
 		self::assertFalse( $coordinates->matches_full_name( 'RocketsAreNostalgic/..' ) );
 	}
 
-	#[DataProvider( 'validFullNameProvider' )]
-	public function testBoundaryValidCoordinatesAreAccepted( string $fullName ): void {
-		$coordinates = BitbucketRepositoryCoordinates::from_full_name( $fullName );
+	#[DataProvider( 'valid_full_name_provider' )]
+	public function test_boundary_valid_coordinates_are_accepted( string $full_name ): void {
+		$coordinates = BitbucketRepositoryCoordinates::from_full_name( $full_name );
 
-		self::assertSame( trim( $fullName ), $coordinates->get_full_name() );
+		self::assertSame( trim( $full_name ), $coordinates->get_full_name() );
 	}
 
 	/**
 	 * @return iterable<string, array{string}>
 	 */
-	public static function validFullNameProvider(): iterable {
+	public static function valid_full_name_provider(): iterable {
 		yield 'single characters' => array( 'a/b' );
 		yield 'workspace punctuation' => array( 'workspace_slug-1/repository' );
 		yield 'repository punctuation' => array( 'workspace/repository.name_v1-final' );
@@ -47,17 +48,17 @@ final class BitbucketRepositoryCoordinatesTest extends TestCase {
 		yield 'maximum lengths' => array( str_repeat( 'w', 64 ) . '/' . str_repeat( 'r', 100 ) );
 	}
 
-	#[DataProvider( 'invalidFullNameProvider' )]
-	public function testMalformedAndHostileCoordinatesAreRejected( string $fullName ): void {
+	#[DataProvider( 'invalid_full_name_provider' )]
+	public function test_malformed_and_hostile_coordinates_are_rejected( string $full_name ): void {
 		$this->expectException( InvalidArgumentException::class );
 
-		BitbucketRepositoryCoordinates::from_full_name( $fullName );
+		BitbucketRepositoryCoordinates::from_full_name( $full_name );
 	}
 
 	/**
 	 * @return iterable<string, array{string}>
 	 */
-	public static function invalidFullNameProvider(): iterable {
+	public static function invalid_full_name_provider(): iterable {
 		yield 'empty' => array( '' );
 		yield 'whitespace' => array( " \t\n" );
 		yield 'workspace only' => array( 'workspace' );

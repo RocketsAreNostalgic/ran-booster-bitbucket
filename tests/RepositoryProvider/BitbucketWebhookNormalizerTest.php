@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\RepositoryProvider;
 
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -17,7 +18,7 @@ use RAN\Secrets\SecretsFile;
 
 final class BitbucketWebhookNormalizerTest extends TestCase {
 
-	private const OWNER_SECRET    = 'owner-bitbucket-webhook-secret';
+	private const OWNER_SECRET     = 'owner-bitbucket-webhook-secret';
 	private const OTHER_SECRET     = 'other-bitbucket-webhook-secret';
 	private const BODY_CANARY      = 'body-canary-private-value';
 	private const REPOSITORY       = 'RocketsAreNostalgic/ran.booster';
@@ -29,10 +30,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	private const MAX_BODY_BYTES   = 262144;
 	private const RETAINED_HEADERS = array( 'x-event-key', 'x-request-uuid', 'x-hub-signature' );
 
-	public function testMultiChangePushProducesExactOrderedNeutralEventsSharingTheRawDeliveryId(): void {
-		$payload                    = $this->validPushPayload();
+	public function test_multi_change_push_produces_exact_ordered_neutral_events_sharing_the_raw_delivery_id(): void {
+		$payload                    = $this->valid_push_payload();
 		$payload['push']['changes'] = array(
-			$this->branchChange(
+			$this->branch_change(
 				'main',
 				strtoupper( self::COMMIT_A ),
 				array(
@@ -41,7 +42,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 					'commits'   => array( array( 'hash' => '0123456789ab' ) ),
 				)
 			),
-			$this->branchChange(
+			$this->branch_change(
 				'release/alpha',
 				self::COMMIT_B,
 				array(
@@ -77,17 +78,17 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
-	public function testPushChangesAreBoundedBeforeEventNormalization(): void {
-		$payload                    = $this->validPushPayload();
-		$payload['push']['changes'] = array_fill( 0, 33, $this->branchChange( 'main', self::COMMIT_A ) );
+	public function test_push_changes_are_bounded_before_event_normalization(): void {
+		$payload                    = $this->valid_push_payload();
+		$payload['push']['changes'] = array_fill( 0, 33, $this->branch_change( 'main', self::COMMIT_A ) );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook( $this->request( $this->encode( $payload ) ) )
 		);
 	}
 
-	public function testOfficialAtlassianHmacVectorIsAccepted(): void {
+	public function test_official_atlassian_hmac_vector_is_accepted(): void {
 		$secret     = "It's a Secret to Everybody";
 		$body       = 'Hello World!';
 		$signature  = 'sha256=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9';
@@ -107,19 +108,19 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertTrue( $normalizer->normalize_webhook( $request )->is_ignored() );
 	}
 
-	public function testVerifiedWhitespaceAndUnicodeBodyBytesAreParsedUntouched(): void {
-		$payload          = $this->validPushPayload();
+	public function test_verified_whitespace_and_unicode_body_bytes_are_parsed_untouched(): void {
+		$payload          = $this->valid_push_payload();
 		$payload['actor'] = array( 'display_name' => self::BODY_CANARY . ' José 🚀' );
 		$body             = $this->encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
 		$signature        = $this->signature( $body );
-		$request          = $this->requestWithSignature( $body, $signature );
+		$request          = $this->request_with_signature( $body, $signature );
 
 		self::assertTrue( $this->normalizer()->normalize_webhook( $request )->has_events() );
 	}
 
-	#[DataProvider( 'invalidSignatureProvider' )]
-	public function testMissingInvalidUppercaseAndUnsupportedSignaturesAreRejected( ?string $signature ): void {
-		$body    = $this->encode( $this->validPushPayload() );
+	#[DataProvider( 'invalid_signature_provider' )]
+	public function test_missing_invalid_uppercase_and_unsupported_signatures_are_rejected( ?string $signature ): void {
+		$body    = $this->encode( $this->valid_push_payload() );
 		$headers = array(
 			'X-Event-Key'    => 'repo:push',
 			'X-Request-UUID' => self::DELIVERY_ID,
@@ -129,7 +130,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			$headers['X-Hub-Signature'] = $signature;
 		}
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			401,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook(
 				new WebhookRequest( ProviderCode::parse( 'bb' ), $body, $headers, self::RETAINED_HEADERS )
@@ -140,7 +141,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return iterable<string, array{?string}>
 	 */
-	public static function invalidSignatureProvider(): iterable {
+	public static function invalid_signature_provider(): iterable {
 		yield 'missing' => array( null );
 		yield 'wrong digest' => array( 'sha256=' . str_repeat( 'a', 64 ) );
 		yield 'uppercase digest' => array( 'sha256=' . str_repeat( 'A', 64 ) );
@@ -149,10 +150,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		yield 'invalid encoding' => array( 'sha256=not-hex' );
 	}
 
-	public function testMissingProcessorVerificationIsRejectedWithoutLeaks(): void {
+	public function test_missing_processor_verification_is_rejected_without_leaks(): void {
 		$normalizer = $this->normalizer( array() );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			401,
 			static fn (): WebhookEnvelope => $normalizer->normalize_webhook(
 				new WebhookRequest(
@@ -168,10 +169,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
-	public function testOversizedBodyIsRejectedBeforeHmacWhileTheExactLimitIsAccepted(): void {
+	public function test_oversized_body_is_rejected_before_hmac_while_the_exact_limit_is_accepted(): void {
 		$oversized = str_repeat( 'x', self::MAX_BODY_BYTES + 1 );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			413,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook(
 				new WebhookRequest(
@@ -183,15 +184,15 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			)
 		);
 
-		$base = $this->encode( $this->validPushPayload() );
+		$base = $this->encode( $this->valid_push_payload() );
 		$body = $base . str_repeat( ' ', self::MAX_BODY_BYTES - strlen( $base ) );
 
 		self::assertSame( self::MAX_BODY_BYTES, strlen( $body ) );
 		self::assertTrue( $this->normalizer()->normalize_webhook( $this->request( $body ) )->has_events() );
 	}
 
-	public function testProviderMismatchIsRejected(): void {
-		$body    = $this->encode( $this->validPushPayload() );
+	public function test_provider_mismatch_is_rejected(): void {
+		$body    = $this->encode( $this->valid_push_payload() );
 		$request = new WebhookRequest(
 			ProviderCode::parse( 'gh' ),
 			$body,
@@ -203,13 +204,13 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			self::RETAINED_HEADERS
 		);
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook( $request )
 		);
 	}
 
-	public function testSignedUnrelatedEventIsIgnoredWithoutDeliveryOrJsonParsing(): void {
+	public function test_signed_unrelated_event_is_ignored_without_delivery_or_json_parsing(): void {
 		$body    = 'not-json-' . self::BODY_CANARY;
 		$request = ( new WebhookRequest(
 			ProviderCode::parse( 'bb' ),
@@ -224,16 +225,16 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertTrue( $this->normalizer()->normalize_webhook( $request )->is_ignored() );
 	}
 
-	#[DataProvider( 'invalidEventProvider' )]
-	public function testEventKeyIsRequiredAndBounded( ?string $event ): void {
-		$body    = $this->encode( $this->validPushPayload() );
+	#[DataProvider( 'invalid_event_provider' )]
+	public function test_event_key_is_required_and_bounded( ?string $event ): void {
+		$body    = $this->encode( $this->valid_push_payload() );
 		$headers = array( 'X-Hub-Signature' => $this->signature( $body ) );
 
 		if ( null !== $event ) {
 			$headers['X-Event-Key'] = $event;
 		}
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook(
 				new WebhookRequest( ProviderCode::parse( 'bb' ), $body, $headers, self::RETAINED_HEADERS )
@@ -244,16 +245,16 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return iterable<string, array{?string}>
 	 */
-	public static function invalidEventProvider(): iterable {
+	public static function invalid_event_provider(): iterable {
 		yield 'missing' => array( null );
 		yield 'embedded space' => array( 'repo: push' );
 		yield 'control byte' => array( "repo:\npush" );
 		yield 'too long' => array( str_repeat( 'e', 129 ) );
 	}
 
-	#[DataProvider( 'invalidDeliveryProvider' )]
-	public function testPushDeliveryIdIsRequiredAndBounded( ?string $delivery ): void {
-		$body    = $this->encode( $this->validPushPayload() );
+	#[DataProvider( 'invalid_delivery_provider' )]
+	public function test_push_delivery_id_is_required_and_bounded( ?string $delivery ): void {
+		$body    = $this->encode( $this->valid_push_payload() );
 		$headers = array(
 			'X-Event-Key'     => 'repo:push',
 			'X-Hub-Signature' => $this->signature( $body ),
@@ -263,7 +264,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			$headers['X-Request-UUID'] = $delivery;
 		}
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook(
 				new WebhookRequest( ProviderCode::parse( 'bb' ), $body, $headers, self::RETAINED_HEADERS )
@@ -274,15 +275,15 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return iterable<string, array{?string}>
 	 */
-	public static function invalidDeliveryProvider(): iterable {
+	public static function invalid_delivery_provider(): iterable {
 		yield 'missing' => array( null );
 		yield 'embedded space' => array( 'request uuid' );
 		yield 'control byte' => array( "request\x7f" );
 		yield 'too long' => array( str_repeat( 'd', 129 ) );
 	}
 
-	public function testTrimmedBoundaryHeadersAreAcceptedAndTheDeliveryIdIsPreserved(): void {
-		$body     = $this->encode( $this->validPushPayload() );
+	public function test_trimmed_boundary_headers_are_accepted_and_the_delivery_id_is_preserved(): void {
+		$body     = $this->encode( $this->valid_push_payload() );
 		$event    = 'repo:push';
 		$delivery = str_repeat( 'd', 128 );
 		$request  = ( new WebhookRequest(
@@ -301,7 +302,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertSame( $delivery, $normalized->delivery_id );
 	}
 
-	public function testMaximumLengthEventKeyIsAcceptedBeforeAnUnrelatedEventIsIgnored(): void {
+	public function test_maximum_length_event_key_is_accepted_before_an_unrelated_event_is_ignored(): void {
 		$body    = 'not-json-and-not-needed';
 		$event   = str_repeat( 'e', 128 );
 		$request = ( new WebhookRequest(
@@ -317,20 +318,20 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertTrue( $this->normalizer()->normalize_webhook( $request )->is_ignored() );
 	}
 
-	public function testMalformedJsonFailsClosedWithoutBodyOrSecretCanaries(): void {
+	public function test_malformed_json_fails_closed_without_body_or_secret_canaries(): void {
 		$body = '{"private":"' . self::BODY_CANARY . '"';
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook( $this->request( $body ) )
 		);
 	}
 
-	#[DataProvider( 'malformedPayloadProvider' )]
-	public function testMalformedRepositoryUuidPushAndChangesFailClosed( array $payload ): void {
+	#[DataProvider( 'malformed_payload_provider' )]
+	public function test_malformed_repository_uuid_push_and_changes_fail_closed( array $payload ): void {
 		$body = $this->encode( $payload );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook( $this->request( $body ) )
 		);
@@ -339,8 +340,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return iterable<string, array{array<string, mixed>}>
 	 */
-	public static function malformedPayloadProvider(): iterable {
-		$valid = self::staticValidPushPayload();
+	public static function malformed_payload_provider(): iterable {
+		$valid = self::static_valid_push_payload();
 
 		$payload = $valid;
 		unset( $payload['repository'] );
@@ -395,16 +396,16 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		yield 'empty changes' => array( $payload );
 	}
 
-	#[DataProvider( 'malformedBranchChangeProvider' )]
-	public function testMalformedBranchEntriesFailTheWholeDeliveryClosed( mixed $change ): void {
-		$payload                    = $this->validPushPayload();
+	#[DataProvider( 'malformed_branch_change_provider' )]
+	public function test_malformed_branch_entries_fail_the_whole_delivery_closed( mixed $change ): void {
+		$payload                    = $this->valid_push_payload();
 		$payload['push']['changes'] = array(
-			$this->branchChange( 'first', self::COMMIT_A ),
+			$this->branch_change( 'first', self::COMMIT_A ),
 			$change,
 		);
 		$body                       = $this->encode( $payload );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			400,
 			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook( $this->request( $body ) )
 		);
@@ -413,8 +414,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return iterable<string, array{mixed}>
 	 */
-	public static function malformedBranchChangeProvider(): iterable {
-		$valid = self::staticBranchChange( 'main', self::COMMIT_A );
+	public static function malformed_branch_change_provider(): iterable {
+		$valid = self::static_branch_change( 'main', self::COMMIT_A );
 
 		yield 'non-array change' => array( 'change' );
 
@@ -475,8 +476,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		yield 'non-hex target hash' => array( $change );
 	}
 
-	public function testTagsDeletionsClosedBranchesAndZeroHashesAreIgnoredPerChange(): void {
-		$payload                    = $this->validPushPayload();
+	public function test_tags_deletions_closed_branches_and_zero_hashes_are_ignored_per_change(): void {
+		$payload                    = $this->valid_push_payload();
 		$payload['push']['changes'] = array(
 			array(
 				'closed' => false,
@@ -488,10 +489,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			),
 			array(
 				'closed' => true,
-				'new'    => self::staticBranchReference( 'closed', self::COMMIT_A ),
+				'new'    => self::static_branch_reference( 'closed', self::COMMIT_A ),
 			),
-			$this->branchChange( 'zero', self::ZERO_COMMIT ),
-			$this->branchChange( 'deploy', self::COMMIT_B ),
+			$this->branch_change( 'zero', self::ZERO_COMMIT ),
+			$this->branch_change( 'deploy', self::COMMIT_B ),
 		);
 		$body                       = $this->encode( $payload );
 		$events                     = $this->normalizer()->normalize_webhook( $this->request( $body ) )->get_events();
@@ -501,8 +502,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertSame( self::COMMIT_B, $events[0]->commit );
 	}
 
-	public function testAllFilteredChangesReturnAnIgnoredEnvelope(): void {
-		$payload                    = $this->validPushPayload();
+	public function test_all_filtered_changes_return_an_ignored_envelope(): void {
+		$payload                    = $this->valid_push_payload();
 		$payload['push']['changes'] = array(
 			array(
 				'closed' => true,
@@ -512,7 +513,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 				'closed' => false,
 				'new'    => array( 'type' => 'tag' ),
 			),
-			$this->branchChange( 'zero', self::ZERO_COMMIT ),
+			$this->branch_change( 'zero', self::ZERO_COMMIT ),
 		);
 		$body                       = $this->encode( $payload );
 		$envelope                   = $this->normalizer()->normalize_webhook( $this->request( $body ) );
@@ -521,69 +522,69 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertSame( array(), $envelope->get_events() );
 	}
 
-	#[DataProvider( 'authorizedScopeProvider' )]
-	public function testMatchedProfilesAuthorizeOnlyTheirConfiguredScope( string $scope, string $target ): void {
-		$body       = $this->encode( $this->validPushPayload() );
+	#[DataProvider( 'authorized_scope_provider' )]
+	public function test_matched_profiles_authorize_only_their_configured_scope( string $scope, string $target ): void {
+		$body       = $this->encode( $this->valid_push_payload() );
 		$normalizer = $this->normalizer( array( $this->profile( self::OWNER_SECRET, $scope, $target ) ) );
 
-		self::assertTrue( $normalizer->normalize_webhook( $this->verifiedRequest( $body, $scope, $target ) )->has_events() );
+		self::assertTrue( $normalizer->normalize_webhook( $this->verified_request( $body, $scope, $target ) )->has_events() );
 	}
 
 	/**
 	 * @return iterable<string, array{string, string}>
 	 */
-	public static function authorizedScopeProvider(): iterable {
+	public static function authorized_scope_provider(): iterable {
 		yield 'owner' => array( 'owner', 'RocketsAreNostalgic' );
 		yield 'workspace case insensitive' => array( 'owner', 'rocketsarenostalgic' );
 		yield 'repository case insensitive' => array( 'repository', 'rocketsarenostalgic/RAN.BOOSTER' );
 	}
 
-	#[DataProvider( 'unauthorizedScopeProvider' )]
-	public function testMatchedSecretOutsideItsConfiguredScopeIsRejected( string $scope, string $target ): void {
-		$body       = $this->encode( $this->validPushPayload() );
+	#[DataProvider( 'unauthorized_scope_provider' )]
+	public function test_matched_secret_outside_its_configured_scope_is_rejected( string $scope, string $target ): void {
+		$body       = $this->encode( $this->valid_push_payload() );
 		$normalizer = $this->normalizer( array( $this->profile( self::OWNER_SECRET, $scope, $target ) ) );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			401,
-			fn (): WebhookEnvelope => $normalizer->normalize_webhook( $this->verifiedRequest( $body, $scope, $target ) )
+			fn (): WebhookEnvelope => $normalizer->normalize_webhook( $this->verified_request( $body, $scope, $target ) )
 		);
 	}
 
 	/**
 	 * @return iterable<string, array{string, string}>
 	 */
-	public static function unauthorizedScopeProvider(): iterable {
+	public static function unauthorized_scope_provider(): iterable {
 		yield 'different workspace' => array( 'owner', 'ProtestsAndSuffragettes' );
 		yield 'different repository' => array( 'repository', 'RocketsAreNostalgic/other-plugin' );
 		yield 'unknown scope' => array( 'project', 'RocketsAreNostalgic' );
 	}
 
-	public function testASecondRequestCannotReuseTheFirstRequestsMatchedProfile(): void {
+	public function test_a_second_request_cannot_reuse_the_first_requests_matched_profile(): void {
 		$profiles   = array(
 			$this->profile( self::OWNER_SECRET, 'owner', 'RocketsAreNostalgic' ),
 			$this->profile( self::OTHER_SECRET, 'owner', 'ProtestsAndSuffragettes' ),
 		);
 		$normalizer = $this->normalizer( $profiles );
-		$body       = $this->encode( $this->validPushPayload() );
+		$body       = $this->encode( $this->valid_push_payload() );
 
 		self::assertTrue( $normalizer->normalize_webhook( $this->request( $body ) )->has_events() );
 
-		$this->assertRejected(
+		$this->assert_rejected(
 			401,
 			fn (): WebhookEnvelope => $normalizer->normalize_webhook(
-				$this->verifiedRequest( $body, 'owner', 'ProtestsAndSuffergettes', self::OTHER_SECRET )
+				$this->verified_request( $body, 'owner', 'ProtestsAndSuffergettes', self::OTHER_SECRET )
 			)
 		);
 	}
 
-	public function testWebhookReadinessReportsMissingConfigurationWithoutReadingDeliveryState(): void {
+	public function test_webhook_readiness_reports_missing_configuration_without_reading_delivery_state(): void {
 		$result = $this->normalizer( array() )->diagnose_webhook_readiness();
 
 		self::assertSame( ProviderDiagnosticResult::NOT_CONFIGURED, $result->status );
 		self::assertSame( 'bb.webhook.not_configured', $result->code );
 	}
 
-	public function testWebhookReadinessReportsConfiguredButDeliveryUnverifiedWithoutSecrets(): void {
+	public function test_webhook_readiness_reports_configured_but_delivery_unverified_without_secrets(): void {
 		$result = $this->normalizer()->diagnose_webhook_readiness();
 		$output = implode( ' ', $result->to_array() );
 
@@ -595,7 +596,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertStringNotContainsString( self::OTHER_SECRET, $output );
 	}
 
-	public function testWebhookReadinessSafelyReportsUnreadableConfiguration(): void {
+	public function test_webhook_readiness_safely_reports_unreadable_configuration(): void {
 		$secrets = new class() extends SecretsFile {
 			public int $reads = 0;
 
@@ -655,10 +656,10 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		string $delivery_id = self::DELIVERY_ID,
 		string $secret = self::OWNER_SECRET
 	): WebhookRequest {
-		return $this->requestWithSignature( $body, $this->signature( $body, $secret ), $event, $delivery_id );
+		return $this->request_with_signature( $body, $this->signature( $body, $secret ), $event, $delivery_id );
 	}
 
-	private function requestWithSignature(
+	private function request_with_signature(
 		string $body,
 		string $signature,
 		string $event = 'repo:push',
@@ -676,7 +677,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		) )->with_verification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 	}
 
-	private function verifiedRequest( string $body, string $scope, string $target, string $secret = self::OWNER_SECRET ): WebhookRequest {
+	private function verified_request( string $body, string $scope, string $target, string $secret = self::OWNER_SECRET ): WebhookRequest {
 		return $this->request( $body, 'repo:push', self::DELIVERY_ID, $secret )
 			->with_verification( $this->verification( $scope, $target ) );
 	}
@@ -700,21 +701,21 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function validPushPayload(): array {
-		return self::staticValidPushPayload();
+	private function valid_push_payload(): array {
+		return self::static_valid_push_payload();
 	}
 
 	/**
 	 * @return array<string, mixed>
 	 */
-	private static function staticValidPushPayload(): array {
+	private static function static_valid_push_payload(): array {
 		return array(
 			'repository' => array(
 				'full_name' => self::REPOSITORY,
 				'uuid'      => self::REPOSITORY_ID,
 			),
 			'push'       => array(
-				'changes' => array( self::staticBranchChange( 'main', self::COMMIT_A ) ),
+				'changes' => array( self::static_branch_change( 'main', self::COMMIT_A ) ),
 			),
 		);
 	}
@@ -723,19 +724,19 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	 * @param array<string, mixed> $extra Additional Bitbucket change fields.
 	 * @return array<string, mixed>
 	 */
-	private function branchChange( string $branch, string $commit, array $extra = array() ): array {
-		return self::staticBranchChange( $branch, $commit, $extra );
+	private function branch_change( string $branch, string $commit, array $extra = array() ): array {
+		return self::static_branch_change( $branch, $commit, $extra );
 	}
 
 	/**
 	 * @param array<string, mixed> $extra Additional Bitbucket change fields.
 	 * @return array<string, mixed>
 	 */
-	private static function staticBranchChange( string $branch, string $commit, array $extra = array() ): array {
+	private static function static_branch_change( string $branch, string $commit, array $extra = array() ): array {
 		return array_merge(
 			array(
 				'closed' => false,
-				'new'    => self::staticBranchReference( $branch, $commit ),
+				'new'    => self::static_branch_reference( $branch, $commit ),
 			),
 			$extra
 		);
@@ -744,7 +745,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @return array<string, mixed>
 	 */
-	private static function staticBranchReference( string $branch, string $commit ): array {
+	private static function static_branch_reference( string $branch, string $commit ): array {
 		return array(
 			'type'   => 'branch',
 			'name'   => $branch,
@@ -789,7 +790,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	/**
 	 * @param callable(): WebhookEnvelope $operation Normalizer operation expected to reject.
 	 */
-	private function assertRejected( int $status_code, callable $operation ): void {
+	private function assert_rejected( int $status_code, callable $operation ): void {
 		try {
 			$operation();
 			self::fail( 'Webhook request should have been rejected.' );

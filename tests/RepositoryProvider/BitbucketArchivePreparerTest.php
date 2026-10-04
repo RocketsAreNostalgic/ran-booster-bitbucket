@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\RepositoryProvider;
 
 require_once __DIR__ . '/BitbucketCredentialValidatorWordPressFunctions.php';
@@ -28,22 +29,24 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	private const OTHER_COMMIT    = '89abcdef0123456789abcdef0123456789abcdef';
 	private const REPOSITORY_UUID = '{repository-uuid}';
 
+	// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Preserve the PHPUnit lifecycle override signature.
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->resetHarness();
+		$this->reset_harness();
 	}
 
+	// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Preserve the PHPUnit lifecycle override signature.
 	protected function tearDown(): void {
-		$this->resetHarness();
+		$this->reset_harness();
 
 		parent::tearDown();
 	}
 
-	public function testPublicImmutableCommitIsVerifiedAnonymouslyWithoutCredentialOrHooks(): void {
+	public function test_public_immutable_commit_is_verified_anonymously_without_credential_or_hooks(): void {
 		$this->queue(
 			array(
-				$this->response( 200, $this->commitBody( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
 		$secrets  = $this->secrets( array( 'profile' => $this->credential() ) );
@@ -62,20 +65,20 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$requests[0]['url']
 		);
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
-		self::assertSame( array(), $secrets->materialLookups );
-		$this->assertNoArchiveHooks();
+		self::assertSame( array(), $secrets->material_lookups );
+		$this->assert_no_archive_hooks();
 
 		$archive->cleanup();
 		$archive->cleanup();
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testPublicSlashBranchResolvesAnImmutableRepositoryBoundCommitWithoutAuth(): void {
+	public function test_public_slash_branch_resolves_an_immutable_repository_bound_commit_without_auth(): void {
 		$this->queue(
 			array(
 				$this->response(
 					200,
-					$this->branchBody( 'feature/candidate', self::COMMIT, 'acme/example', self::REPOSITORY_UUID )
+					$this->branch_body( 'feature/candidate', self::COMMIT, 'acme/example', self::REPOSITORY_UUID )
 				),
 			)
 		);
@@ -90,14 +93,14 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
 		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
 		self::assertSame( self::COMMIT, $archive->get_resolved_ref() );
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testManualTagFallsBackFromBranchAndResolvesAnImmutableCommit(): void {
+	public function test_manual_tag_falls_back_from_branch_and_resolves_an_immutable_commit(): void {
 		$this->queue(
 			array(
-				$this->response( 404, $this->errorBody() ),
-				$this->response( 200, $this->branchBody( 'v1.2.3', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 404, $this->error_body() ),
+				$this->response( 200, $this->branch_body( 'v1.2.3', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
 
@@ -111,10 +114,10 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		self::assertStringEndsWith( '/' . self::COMMIT . '.zip', $archive->get_url() );
 	}
 
-	public function testPrivateBranchResolutionUsesExactBasicAuthThenPreparesImmutableArchiveAuth(): void {
+	public function test_private_branch_resolution_uses_exact_basic_auth_then_prepares_immutable_archive_auth(): void {
 		$this->queue(
 			array(
-				$this->response( 200, $this->branchBody( 'main', strtoupper( self::COMMIT ), 'ACME/EXAMPLE', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->branch_body( 'main', strtoupper( self::COMMIT ), 'ACME/EXAMPLE', self::REPOSITORY_UUID ) ),
 			)
 		);
 		$secrets = $this->secrets( array( 'profile' => $this->credential() ) );
@@ -126,18 +129,18 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			'https://api.bitbucket.org/2.0/repositories/acme/example/refs/branches/main?fields=name%2Ctarget.hash%2Ctarget.repository.uuid%2Ctarget.repository.full_name',
 			$requests[0]['url']
 		);
-		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
 		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
 		self::assertStringNotContainsString( self::TOKEN, $archive->get_url() );
 		self::assertStringNotContainsString( self::EMAIL, $archive->get_url() );
-		self::assertCount( 1, $this->archiveFilters() );
-		self::assertCount( 1, $this->archiveActions() );
+		self::assertCount( 1, $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
 	}
 
-	public function testManualFullCommitWithoutExpectedBranchUsesCommitVerification(): void {
+	public function test_manual_full_commit_without_expected_branch_uses_commit_verification(): void {
 		$this->queue(
 			array(
-				$this->response( 200, $this->commitBody( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
 		$archive  = $this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
@@ -149,19 +152,19 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			'https://api.bitbucket.org/2.0/repositories/acme/example/commit/' . self::COMMIT . '?fields=hash%2Crepository.uuid%2Crepository.full_name',
 			$requests[0]['url']
 		);
-		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
 		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
-		self::assertCount( 1, $this->archiveFilters() );
-		self::assertCount( 1, $this->archiveActions() );
+		self::assertCount( 1, $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
 	}
 
-	public function testWebhookCommitChecksTheConfiguredBranchHeadBeforePreparingArchiveAuthentication(): void {
+	public function test_webhook_commit_checks_the_configured_branch_head_before_preparing_archive_authentication(): void {
 		$branch = 'release/candidate';
 		$this->queue(
 			array(
 				$this->response(
 					200,
-					$this->branchBody( $branch, strtoupper( self::COMMIT ), 'ACME/EXAMPLE', self::REPOSITORY_UUID )
+					$this->branch_body( $branch, strtoupper( self::COMMIT ), 'ACME/EXAMPLE', self::REPOSITORY_UUID )
 				),
 			)
 		);
@@ -174,18 +177,18 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			'https://api.bitbucket.org/2.0/repositories/acme/example/refs/branches/release/candidate?fields=name%2Ctarget.hash%2Ctarget.repository.uuid%2Ctarget.repository.full_name',
 			$requests[0]['url']
 		);
-		self::assertSame( $this->basicAuthorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
 		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
-		self::assertCount( 1, $this->archiveFilters() );
-		self::assertCount( 1, $this->archiveActions() );
+		self::assertCount( 1, $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
 	}
 
-	public function testPublicWebhookCommitChecksTheConfiguredBranchAnonymously(): void {
+	public function test_public_webhook_commit_checks_the_configured_branch_anonymously(): void {
 		$this->queue(
 			array(
 				$this->response(
 					200,
-					$this->branchBody( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID )
+					$this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID )
 				),
 			)
 		);
@@ -201,14 +204,14 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 		self::assertArrayNotHasKey( 'Authorization', $requests[0]['arguments']['headers'] );
 		self::assertSame( 'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip', $archive->get_url() );
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testAutomaticArchiveRechecksTheBranchImmediatelyBeforeMutation(): void {
+	public function test_automatic_archive_rechecks_the_branch_immediately_before_mutation(): void {
 		$this->queue(
 			array(
-				$this->response( 200, $this->branchBody( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
-				$this->response( 200, $this->branchBody( 'main', self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->branch_body( 'main', self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
 		$archive = $this->preparer()->prepare_archive(
@@ -225,7 +228,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		self::assertCount( 2, $this->requests() );
 	}
 
-	public function testExpectedBranchRejectsNonCommitRefBeforeHttpOrArchiveAuthentication(): void {
+	public function test_expected_branch_rejects_non_commit_ref_before_http_or_archive_authentication(): void {
 		try {
 			$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
 				->prepare_archive( $this->request( 'main', true, 'profile', 'acme/example', 'main' ) );
@@ -236,36 +239,36 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		}
 
 		self::assertSame( array(), $this->requests() );
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testStaleOrMismatchedWebhookBranchResponsesFailBeforeArchiveAuthentication(): void {
+	public function test_stale_or_mismatched_webhook_branch_responses_fail_before_archive_authentication(): void {
 		$fixtures = array(
 			'stale head'          => array(
-				$this->branchBody( 'main', self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ),
+				$this->branch_body( 'main', self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ),
 				409,
 				'The Bitbucket deployment event is stale because the configured branch has moved.',
 			),
 			'branch mismatch'     => array(
-				$this->branchBody( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ),
+				$this->branch_body( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ),
 				502,
 				null,
 			),
 			'repository mismatch' => array(
-				$this->branchBody( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ),
+				$this->branch_body( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ),
 				502,
 				null,
 			),
 			'uuid mismatch'       => array(
-				$this->branchBody( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ),
+				$this->branch_body( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ),
 				502,
 				null,
 			),
 		);
 
-		foreach ( $fixtures as $name => [$body, $code, $expectedMessage] ) {
+		foreach ( $fixtures as $name => [$body, $code, $expected_message] ) {
 			$context = (string) $name;
-			$this->resetHarness();
+			$this->reset_harness();
 			$this->queue( array( $this->response( 200, $body ) ) );
 
 			try {
@@ -274,10 +277,10 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				self::fail( 'Expected the webhook branch guard to reject: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $code, $exception->getCode(), $context );
-				if ( null !== $expectedMessage ) {
-					self::assertSame( $expectedMessage, $exception->getMessage(), $context );
+				if ( null !== $expected_message ) {
+					self::assertSame( $expected_message, $exception->getMessage(), $context );
 				}
-				$this->assertSafeFailure( $exception, $context );
+				$this->assert_safe_failure( $exception, $context );
 			}
 
 			self::assertCount( 1, $this->requests(), $context );
@@ -286,12 +289,12 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				$this->requests()[0]['url'],
 				$context
 			);
-			self::assertSame( $this->basicAuthorization(), $this->requests()[0]['arguments']['headers']['Authorization'], $context );
-			$this->assertNoArchiveHooks( $context );
+			self::assertSame( $this->basic_authorization(), $this->requests()[0]['arguments']['headers']['Authorization'], $context );
+			$this->assert_no_archive_hooks( $context );
 		}
 	}
 
-	public function testInvalidProviderRepositoryRefCredentialAndWorkspaceFailBeforeHttpOrHooks(): void {
+	public function test_invalid_provider_repository_ref_credential_and_workspace_fail_before_http_or_hooks(): void {
 		$fixtures = array(
 			'repository traversal' => fn (): ArchiveRequest => $this->request( self::COMMIT, false, null, 'acme/../example' ),
 			'ref traversal'        => fn (): ArchiveRequest => $this->request( '../main', false ),
@@ -301,68 +304,95 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			'implicit credential'  => fn (): ArchiveRequest => $this->request( self::COMMIT, true ),
 		);
 
-		foreach ( $fixtures as $name => $requestFactory ) {
-			$this->resetHarness();
+		foreach ( $fixtures as $name => $request_factory ) {
+			$this->reset_harness();
 
 			try {
-				$this->preparer()->prepare_archive( $requestFactory() );
+				$this->preparer()->prepare_archive( $request_factory() );
 				self::fail( 'Expected invalid archive input to fail: ' . $name );
 			} catch ( \Throwable $exception ) {
-				$this->assertSafeFailure( $exception, $name );
+				$this->assert_safe_failure( $exception, $name );
 			}
 
 			self::assertSame( array(), $this->requests(), $name );
-			$this->assertNoArchiveHooks( $name );
+			$this->assert_no_archive_hooks( $name );
 		}
 
-		$this->resetHarness();
+		$this->reset_harness();
 		$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
 
 		try {
 			$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, true, 'other' ) );
 			self::fail( 'Expected a credential for another workspace to fail.' );
 		} catch ( RuntimeException $exception ) {
-			$this->assertSafeFailure( $exception, 'workspace mismatch' );
+			$this->assert_safe_failure( $exception, 'workspace mismatch' );
 		}
 
 		self::assertSame( array(), $this->requests() );
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testBranchStatusTransportAndMalformedResponsesFailSafelyWithoutArchiveHooks(): void {
+	public function test_branch_status_transport_and_malformed_responses_fail_safely_without_archive_hooks(): void {
 		$fixtures = array(
 			'transport'           => array( new BitbucketCredentialValidationTransportError(), 0, true ),
 			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, false ),
 			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, false ),
 			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, false ),
-			'400'                 => array( $this->response( 400, $this->errorBody() ), 400, false ),
-			'401'                 => array( $this->response( 401, $this->errorBody() ), 401, false ),
-			'403'                 => array( $this->response( 403, $this->errorBody() ), 403, false ),
-			'404'                 => array( $this->response( 404, $this->errorBody() ), 404, false ),
-			'410'                 => array( $this->response( 410, $this->errorBody() ), 410, false ),
-			'429'                 => array( $this->response( 429, $this->errorBody() ), 429, false ),
-			'503'                 => array( $this->response( 503, $this->errorBody() ), 0, true ),
-			'502'                 => array( $this->response( 502, $this->errorBody() ), 0, true ),
-			'504'                 => array( $this->response( 504, $this->errorBody() ), 0, true ),
-			'500'                 => array( $this->response( 500, $this->errorBody() ), 502, false ),
-			'501'                 => array( $this->response( 501, $this->errorBody() ), 502, false ),
-			'505'                 => array( $this->response( 505, $this->errorBody() ), 502, false ),
+			'400'                 => array( $this->response( 400, $this->error_body() ), 400, false ),
+			'401'                 => array( $this->response( 401, $this->error_body() ), 401, false ),
+			'403'                 => array( $this->response( 403, $this->error_body() ), 403, false ),
+			'404'                 => array( $this->response( 404, $this->error_body() ), 404, false ),
+			'410'                 => array( $this->response( 410, $this->error_body() ), 410, false ),
+			'429'                 => array( $this->response( 429, $this->error_body() ), 429, false ),
+			'503'                 => array( $this->response( 503, $this->error_body() ), 0, true ),
+			'502'                 => array( $this->response( 502, $this->error_body() ), 0, true ),
+			'504'                 => array( $this->response( 504, $this->error_body() ), 0, true ),
+			'500'                 => array( $this->response( 500, $this->error_body() ), 502, false ),
+			'501'                 => array( $this->response( 501, $this->error_body() ), 502, false ),
+			'505'                 => array( $this->response( 505, $this->error_body() ), 502, false ),
 			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, false ),
 			'null json'           => array( $this->response( 200, 'null' ), 502, false ),
 			'scalar json'         => array( $this->response( 200, '42' ), 502, false ),
 			'scalar target'       => array( $this->response( 200, '{"name":"main","target":42}' ), 502, false ),
-			'scalar repository'   => array( $this->response( 200, $this->json( array( 'name' => 'main', 'target' => array( 'hash' => self::COMMIT, 'repository' => 42 ) ) ) ), 502, false ),
-			'missing repository'  => array( $this->response( 200, $this->json( array( 'name' => 'main', 'target' => array( 'hash' => self::COMMIT ) ) ) ), 502, false ),
+			'scalar repository'   => array(
+				$this->response(
+					200,
+					$this->json(
+						array(
+							'name'   => 'main',
+							'target' => array(
+								'hash'       => self::COMMIT,
+								'repository' => 42,
+							),
+						)
+					)
+				),
+				502,
+				false,
+			),
+			'missing repository'  => array(
+				$this->response(
+					200,
+					$this->json(
+						array(
+							'name'   => 'main',
+							'target' => array( 'hash' => self::COMMIT ),
+						)
+					)
+				),
+				502,
+				false,
+			),
 			'missing target'      => array( $this->response( 200, '{"name":"main"}' ), 502, false ),
-			'branch mismatch'     => array( $this->response( 200, $this->branchBody( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'invalid hash'        => array( $this->response( 200, $this->branchBody( 'main', 'not-a-hash', 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'repository mismatch' => array( $this->response( 200, $this->branchBody( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'uuid mismatch'       => array( $this->response( 200, $this->branchBody( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
+			'branch mismatch'     => array( $this->response( 200, $this->branch_body( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
+			'invalid hash'        => array( $this->response( 200, $this->branch_body( 'main', 'not-a-hash', 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
+			'repository mismatch' => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
+			'uuid mismatch'       => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
 		);
 
 		foreach ( $fixtures as $name => [$response, $code, $retryable] ) {
 			$context = (string) $name;
-			$this->resetHarness();
+			$this->reset_harness();
 			$this->queue( '404' === $context ? array( $response, $response ) : array( $response ) );
 
 			try {
@@ -371,44 +401,44 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				self::fail( 'Expected branch resolution failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
-				$this->assertSafeFailure( $exception, $context );
+				$this->assert_safe_failure( $exception, $context );
 			}
 
 			self::assertCount( '404' === $context ? 2 : 1, $this->requests(), $context );
 			self::assertStringNotContainsString( self::TOKEN, $this->requests()[0]['url'], $context );
 			self::assertStringNotContainsString( self::EMAIL, $this->requests()[0]['url'], $context );
-			$this->assertNoArchiveHooks( $context );
+			$this->assert_no_archive_hooks( $context );
 		}
 	}
 
-	public function testDirectCommitStatusTransportAndIdentityFailuresAreSafeAndHookFree(): void {
+	public function test_direct_commit_status_transport_and_identity_failures_are_safe_and_hook_free(): void {
 		$fixtures = array(
 			'transport'           => array( new BitbucketCredentialValidationTransportError(), 0, true ),
 			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, false ),
 			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, false ),
 			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, false ),
-			'400'                 => array( $this->response( 400, $this->errorBody() ), 400, false ),
-			'401'                 => array( $this->response( 401, $this->errorBody() ), 401, false ),
-			'403'                 => array( $this->response( 403, $this->errorBody() ), 403, false ),
-			'404'                 => array( $this->response( 404, $this->errorBody() ), 404, false ),
-			'410'                 => array( $this->response( 410, $this->errorBody() ), 410, false ),
-			'429'                 => array( $this->response( 429, $this->errorBody() ), 429, false ),
-			'503'                 => array( $this->response( 503, $this->errorBody() ), 0, true ),
-			'502'                 => array( $this->response( 502, $this->errorBody() ), 0, true ),
-			'504'                 => array( $this->response( 504, $this->errorBody() ), 0, true ),
-			'500'                 => array( $this->response( 500, $this->errorBody() ), 502, false ),
-			'501'                 => array( $this->response( 501, $this->errorBody() ), 502, false ),
-			'505'                 => array( $this->response( 505, $this->errorBody() ), 502, false ),
+			'400'                 => array( $this->response( 400, $this->error_body() ), 400, false ),
+			'401'                 => array( $this->response( 401, $this->error_body() ), 401, false ),
+			'403'                 => array( $this->response( 403, $this->error_body() ), 403, false ),
+			'404'                 => array( $this->response( 404, $this->error_body() ), 404, false ),
+			'410'                 => array( $this->response( 410, $this->error_body() ), 410, false ),
+			'429'                 => array( $this->response( 429, $this->error_body() ), 429, false ),
+			'503'                 => array( $this->response( 503, $this->error_body() ), 0, true ),
+			'502'                 => array( $this->response( 502, $this->error_body() ), 0, true ),
+			'504'                 => array( $this->response( 504, $this->error_body() ), 0, true ),
+			'500'                 => array( $this->response( 500, $this->error_body() ), 502, false ),
+			'501'                 => array( $this->response( 501, $this->error_body() ), 502, false ),
+			'505'                 => array( $this->response( 505, $this->error_body() ), 502, false ),
 			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, false ),
 			'missing repository'  => array( $this->response( 200, $this->json( array( 'hash' => self::COMMIT ) ) ), 502, false ),
-			'hash mismatch'       => array( $this->response( 200, $this->commitBody( self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'repository mismatch' => array( $this->response( 200, $this->commitBody( self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'uuid mismatch'       => array( $this->response( 200, $this->commitBody( self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
+			'hash mismatch'       => array( $this->response( 200, $this->commit_body( self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
+			'repository mismatch' => array( $this->response( 200, $this->commit_body( self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
+			'uuid mismatch'       => array( $this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
 		);
 
 		foreach ( $fixtures as $name => [$response, $code, $retryable] ) {
 			$context = (string) $name;
-			$this->resetHarness();
+			$this->reset_harness();
 			$this->queue( array( $response ) );
 
 			try {
@@ -417,7 +447,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				self::fail( 'Expected direct commit verification failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
-				$this->assertSafeFailure( $exception, $context );
+				$this->assert_safe_failure( $exception, $context );
 			}
 
 			self::assertCount( 1, $this->requests(), $context );
@@ -426,16 +456,16 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				$this->requests()[0]['url'],
 				$context
 			);
-			self::assertSame( $this->basicAuthorization(), $this->requests()[0]['arguments']['headers']['Authorization'], $context );
+			self::assertSame( $this->basic_authorization(), $this->requests()[0]['arguments']['headers']['Authorization'], $context );
 			self::assertStringNotContainsString( self::TOKEN, $this->requests()[0]['url'], $context );
 			self::assertStringNotContainsString( self::EMAIL, $this->requests()[0]['url'], $context );
-			$this->assertNoArchiveHooks( $context );
+			$this->assert_no_archive_hooks( $context );
 		}
 	}
 
-	public function testPrivateAuthenticationIsOneShotAndBoundToTheExactImmutableArchive(): void {
-		$archive  = $this->privateImmutableArchive();
-		$callback = $this->archiveFilters()[0]['callback'];
+	public function test_private_authentication_is_one_shot_and_bound_to_the_exact_immutable_archive(): void {
+		$archive  = $this->private_immutable_archive();
+		$callback = $this->archive_filters()[0]['callback'];
 		$url      = $archive->get_url();
 		$hostile  = array(
 			'https://example.test/archive.zip',
@@ -451,92 +481,92 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$arguments = $callback( array( 'headers' => array( 'Existing' => 'value' ) ), $candidate );
 
 			self::assertSame( array( 'Existing' => 'value' ), $arguments['headers'], $candidate );
-			self::assertCount( 1, $this->archiveFilters(), $candidate );
+			self::assertCount( 1, $this->archive_filters(), $candidate );
 		}
 
 		$arguments = $callback( array( 'headers' => array( 'Existing' => 'value' ) ), $url );
 
 		self::assertSame( 'value', $arguments['headers']['Existing'] );
-		self::assertSame( $this->basicAuthorization(), $arguments['headers']['Authorization'] );
-		self::assertSame( array(), $this->archiveFilters() );
-		self::assertCount( 1, $this->archiveActions() );
+		self::assertSame( $this->basic_authorization(), $arguments['headers']['Authorization'] );
+		self::assertSame( array(), $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
 
 		try {
 			$callback( array( 'headers' => array() ), $url );
 			self::fail( 'Expected consumed archive authentication to remain unavailable.' );
 		} catch ( RuntimeException $exception ) {
-			$this->assertSafeFailure( $exception );
+			$this->assert_safe_failure( $exception );
 		}
 	}
 
-	public function testRedirectScrubberOnlyRemovesAuthInheritedFromTheExactArchiveOrigin(): void {
-		$archive          = $this->privateImmutableArchive();
-		$requestCallback  = $this->archiveFilters()[0]['callback'];
-		$redirectCallback = $this->archiveActions()[0]['callback'];
-		$url              = $archive->get_url();
-		$arguments        = $requestCallback( array( 'headers' => array() ), $url );
-		$location         = 'https://bbuseruploads.example.test/signed/archive.zip';
-		$unrelatedHeaders = $arguments['headers'];
-		$archiveHeaders   = array(
+	public function test_redirect_scrubber_only_removes_auth_inherited_from_the_exact_archive_origin(): void {
+		$archive           = $this->private_immutable_archive();
+		$request_callback  = $this->archive_filters()[0]['callback'];
+		$redirect_callback = $this->archive_actions()[0]['callback'];
+		$url               = $archive->get_url();
+		$arguments         = $request_callback( array( 'headers' => array() ), $url );
+		$location          = 'https://bbuseruploads.example.test/signed/archive.zip';
+		$unrelated_headers = $arguments['headers'];
+		$archive_headers   = array(
 			'authorization' => $arguments['headers']['Authorization'],
 			'Existing'      => 'value',
 		);
 
 		call_user_func_array(
-			$redirectCallback,
-			array( &$location, &$unrelatedHeaders, null, array(), (object) array( 'url' => 'https://example.test/' ) )
+			$redirect_callback,
+			array( &$location, &$unrelated_headers, null, array(), (object) array( 'url' => 'https://example.test/' ) )
 		);
-		self::assertArrayHasKey( 'Authorization', $unrelatedHeaders );
+		self::assertArrayHasKey( 'Authorization', $unrelated_headers );
 
 		call_user_func_array(
-			$redirectCallback,
-			array( &$location, &$archiveHeaders, null, array(), (object) array( 'url' => $url ) )
+			$redirect_callback,
+			array( &$location, &$archive_headers, null, array(), (object) array( 'url' => $url ) )
 		);
-		self::assertArrayNotHasKey( 'authorization', $archiveHeaders );
-		self::assertSame( 'value', $archiveHeaders['Existing'] );
+		self::assertArrayNotHasKey( 'authorization', $archive_headers );
+		self::assertSame( 'value', $archive_headers['Existing'] );
 		self::assertStringNotContainsString( self::TOKEN, $location );
 
 		$archive->cleanup();
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testCleanupIsIdempotentBeforeAndAfterAuthentication(): void {
-		$cancelled = $this->privateImmutableArchive();
-		$callback  = $this->archiveFilters()[0]['callback'];
+	public function test_cleanup_is_idempotent_before_and_after_authentication(): void {
+		$cancelled = $this->private_immutable_archive();
+		$callback  = $this->archive_filters()[0]['callback'];
 
 		$cancelled->cleanup();
 		$cancelled->cleanup();
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 
 		try {
 			$callback( array( 'headers' => array() ), $cancelled->get_url() );
 			self::fail( 'Expected cleaned archive authentication to remain unavailable.' );
 		} catch ( RuntimeException $exception ) {
-			$this->assertSafeFailure( $exception );
+			$this->assert_safe_failure( $exception );
 		}
 
-		$consumed = $this->privateImmutableArchive();
-		$this->archiveFilters()[0]['callback']( array( 'headers' => array() ), $consumed->get_url() );
+		$consumed = $this->private_immutable_archive();
+		$this->archive_filters()[0]['callback']( array( 'headers' => array() ), $consumed->get_url() );
 		$consumed->cleanup();
 		$consumed->cleanup();
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	public function testPrivateArchiveExposesOnlyItsImmutableResolvedRef(): void {
-		$archive = $this->privateImmutableArchive();
+	public function test_private_archive_exposes_only_its_immutable_resolved_ref(): void {
+		$archive = $this->private_immutable_archive();
 
 		self::assertSame( self::COMMIT, $archive->get_resolved_ref() );
 		self::assertStringNotContainsString( self::TOKEN, $archive->get_url() );
 		self::assertStringNotContainsString( self::EMAIL, $archive->get_url() );
 		$archive->cleanup();
 
-		$this->assertNoArchiveHooks();
+		$this->assert_no_archive_hooks();
 	}
 
-	private function privateImmutableArchive(): AuthenticatedPreparedArchive {
+	private function private_immutable_archive(): AuthenticatedPreparedArchive {
 		$this->queue(
 			array(
-				$this->response( 200, $this->commitBody( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
 		$archive = $this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
@@ -556,13 +586,13 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 	private function request(
 		string $ref,
-		bool $private,
+		bool $is_private,
 		?string $credential_id = null,
-		string $fullName = 'acme/example',
+		string $full_name = 'acme/example',
 		?string $expected_branch = null
 	): ArchiveRequest {
 		return new ArchiveRequest(
-			new RepositoryReference( $fullName, self::REPOSITORY_UUID, $private, $credential_id ),
+			new RepositoryReference( $full_name, self::REPOSITORY_UUID, $is_private, $credential_id ),
 			$ref,
 			$expected_branch
 		);
@@ -591,19 +621,19 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 	}
 
-	private function basicAuthorization(): string {
+	private function basic_authorization(): string {
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Assert Bitbucket's required Basic wire value.
 		return 'Basic ' . base64_encode( self::EMAIL . ':' . self::TOKEN );
 	}
 
-	private function branchBody( string $name, string $hash, string $fullName, string $uuid ): string {
+	private function branch_body( string $name, string $hash, string $full_name, string $uuid ): string {
 		return $this->json(
 			array(
 				'name'   => $name,
 				'target' => array(
 					'hash'       => $hash,
 					'repository' => array(
-						'full_name' => $fullName,
+						'full_name' => $full_name,
 						'uuid'      => $uuid,
 					),
 				),
@@ -611,19 +641,19 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 	}
 
-	private function commitBody( string $hash, string $fullName, string $uuid ): string {
+	private function commit_body( string $hash, string $full_name, string $uuid ): string {
 		return $this->json(
 			array(
 				'hash'       => $hash,
 				'repository' => array(
-					'full_name' => $fullName,
+					'full_name' => $full_name,
 					'uuid'      => $uuid,
 				),
 			)
 		);
 	}
 
-	private function errorBody(): string {
+	private function error_body(): string {
 		return '{"error":"' . self::RESPONSE_CANARY . '"}';
 	}
 
@@ -655,28 +685,28 @@ final class BitbucketArchivePreparerTest extends TestCase {
 	}
 
 	/** @return list<array{callback: callable, priority: int, accepted_args: int}> */
-	private function archiveFilters(): array {
+	private function archive_filters(): array {
 		return \RAN\RepositoryProvider\authenticated_archive_filters( 'http_request_args' );
 	}
 
 	/** @return list<array{callback: callable, priority: int, accepted_args: int}> */
-	private function archiveActions(): array {
+	private function archive_actions(): array {
 		return \RAN\RepositoryProvider\authenticated_archive_actions( AuthenticatedPreparedArchive::REDIRECT_HOOK );
 	}
 
-	private function assertNoArchiveHooks( string $context = '' ): void {
-		self::assertSame( array(), $this->archiveFilters(), $context );
-		self::assertSame( array(), $this->archiveActions(), $context );
+	private function assert_no_archive_hooks( string $context = '' ): void {
+		self::assertSame( array(), $this->archive_filters(), $context );
+		self::assertSame( array(), $this->archive_actions(), $context );
 	}
 
-	private function assertSafeFailure( \Throwable $exception, string $context = '' ): void {
+	private function assert_safe_failure( \Throwable $exception, string $context = '' ): void {
 		self::assertNotSame( '', trim( $exception->getMessage() ), $context );
 		self::assertStringNotContainsString( self::TOKEN, $exception->getMessage(), $context );
 		self::assertStringNotContainsString( self::EMAIL, $exception->getMessage(), $context );
 		self::assertStringNotContainsString( self::RESPONSE_CANARY, $exception->getMessage(), $context );
 	}
 
-	private function resetHarness(): void {
+	private function reset_harness(): void {
 		\RAN\RepositoryProvider\authenticated_archive_hooks_reset();
 		$this->queue( array() );
 	}

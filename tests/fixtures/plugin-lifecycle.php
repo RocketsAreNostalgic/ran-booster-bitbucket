@@ -1,10 +1,12 @@
 <?php
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
 
 declare(strict_types=1);
 
-$mode = $argv[1] ?? '';
+$fixture_mode = $argv[1] ?? '';
 
-if ( ! in_array( $mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $fixture_mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Standalone CLI reports diagnostics to its standard stream without WordPress.
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
 }
@@ -13,39 +15,39 @@ define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
 // Observe every implementation autoload attempt, including unsuccessful requests.
-$implementationLoadAttempts = 0;
+$implementation_load_attempts = 0;
 spl_autoload_register(
-	static function ( string $class ) use ( &$implementationLoadAttempts ): void {
-		if ( str_starts_with( $class, 'RAN\\Booster\\Bitbucket\\' ) && 'RAN\\Booster\\Bitbucket\\Plugin' !== $class ) {
-			++$implementationLoadAttempts;
+	static function ( string $class_name ) use ( &$implementation_load_attempts ): void {
+		if ( str_starts_with( $class_name, 'RAN\\Booster\\Bitbucket\\' ) && 'RAN\\Booster\\Bitbucket\\Plugin' !== $class_name ) {
+			++$implementation_load_attempts;
 		}
 	},
 	true,
 	true
 );
-$addOnLoaded                              = false;
-$markersDefinedWhenAddOnLoaded           = null;
-$compatibleModes                         = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatibleModes                       = array( 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
-$addOnFirstModes                         = array( 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
-$coreBackedModes                         = array_merge( $compatibleModes, $incompatibleModes );
-$loadAddOn                               = static function () use ( &$addOnLoaded, &$markersDefinedWhenAddOnLoaded ): void {
-	$markersDefinedWhenAddOnLoaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
+$add_on_loaded                      = false;
+$markers_defined_when_add_on_loaded = null;
+$compatible_modes                   = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
+$incompatible_modes                 = array( 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
+$add_on_first_modes                 = array( 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
+$core_backed_modes                  = array_merge( $compatible_modes, $incompatible_modes );
+$load_add_on                        = static function () use ( &$add_on_loaded, &$markers_defined_when_add_on_loaded ): void {
+	$markers_defined_when_add_on_loaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
 		&& defined( 'RAN_BOOSTER_ADDON_API_VERSION' )
 		&& defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' );
 	require dirname( __DIR__, 2 ) . '/ran-booster-bitbucket.php';
-	$addOnLoaded = true;
+	$add_on_loaded = true;
 };
 
 /** @param callable $callback */
-function add_action( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
-	unset( $priority, $acceptedArgs );
+function add_action( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): void {
+	unset( $priority, $accepted_args );
 	$GLOBALS['ran_booster_bitbucket_fixture_actions'][ $hook ][] = $callback;
 }
 
 /** @param callable $callback */
-function add_filter( string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1 ): void {
-	unset( $priority, $acceptedArgs );
+function add_filter( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): void {
+	unset( $priority, $accepted_args );
 	$GLOBALS['ran_booster_bitbucket_fixture_filters'][ $hook ][] = $callback;
 }
 
@@ -58,6 +60,7 @@ function __( string $text ): string {
 }
 
 function esc_html_e( string $text ): void {
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixture implements the foreign escaping function itself; return its controlled stand-in output.
 	echo $text;
 }
 
@@ -83,6 +86,7 @@ function wp_remote_get( string $url, array $arguments ): array {
 
 	return array(
 		'response' => array( 'code' => 200 ),
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Standalone fixture produces machine-readable JSON without WordPress.
 		'body'     => json_encode(
 			array(
 				'uuid'       => '{controlled-repository}',
@@ -109,31 +113,32 @@ function wp_remote_retrieve_body( array $response ): string {
 	return (string) $response['body'];
 }
 
-$GLOBALS['ran_booster_bitbucket_fixture_mode']         = $mode;
+$GLOBALS['ran_booster_bitbucket_fixture_mode']         = $fixture_mode;
 $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'] = 0;
 
-if ( in_array( $mode, $coreBackedModes, true ) ) {
-	$coreRoot = getenv( 'RAN_BOOSTER_CORE_PATH' );
-	$coreRoot = false === $coreRoot || '' === $coreRoot
+if ( in_array( $fixture_mode, $core_backed_modes, true ) ) {
+	$core_root     = getenv( 'RAN_BOOSTER_CORE_PATH' );
+	$core_root     = false === $core_root || '' === $core_root
 		? dirname( __DIR__, 3 ) . '/ran-booster'
-		: rtrim( $coreRoot, '/\\' );
-	$coreAutoload = $coreRoot . '/autoload.php';
+		: rtrim( $core_root, '/\\' );
+	$core_autoload = $core_root . '/autoload.php';
 
-	if ( ! is_file( $coreAutoload ) ) {
+	if ( ! is_file( $core_autoload ) ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Standalone CLI reports diagnostics to its standard stream without WordPress.
 		fwrite( STDERR, "The exact certified RAN Booster production source is required.\n" );
 		exit( 3 );
 	}
 
-	if ( in_array( $mode, $addOnFirstModes, true ) ) {
-		$loadAddOn();
+	if ( in_array( $fixture_mode, $add_on_first_modes, true ) ) {
+		$load_add_on();
 	}
 
-	$coreVendorAutoload = getenv( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD' );
-	if ( false !== $coreVendorAutoload && '' !== $coreVendorAutoload ) {
-		require $coreVendorAutoload;
+	$core_vendor_autoload = getenv( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD' );
+	if ( false !== $core_vendor_autoload && '' !== $core_vendor_autoload ) {
+		require $core_vendor_autoload;
 	}
-	require $coreAutoload;
-	$apiVersions = match ( $mode ) {
+	require $core_autoload;
+	$api_versions = match ( $fixture_mode ) {
 		'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first' => array( 15, 17 ),
 		'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first' => array( 14, 18 ),
 		'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first' => array( 13, 17 ),
@@ -142,68 +147,68 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 		'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first' => array( 12, 17 ),
 		default => array( 14, 17 ),
 	};
-	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $apiVersions[0] );
-	define( 'RAN_BOOSTER_ADDON_API_VERSION', $apiVersions[1] );
+	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $api_versions[0] );
+	define( 'RAN_BOOSTER_ADDON_API_VERSION', $api_versions[1] );
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 
-if ( 'unsupported-multisite' === $mode ) {
+if ( 'unsupported-multisite' === $fixture_mode ) {
 	define( 'RAN_BOOSTER_RUNTIME_MODE', 'multisite_unsupported' );
 }
 
-if ( 'inactive' !== $mode && ! $addOnLoaded ) {
-	$loadAddOn();
+if ( 'inactive' !== $fixture_mode && ! $add_on_loaded ) {
+	$load_add_on();
 }
 
-$callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
-$documentationFilters = $GLOBALS['ran_booster_bitbucket_fixture_filters']['ran_booster_documentation_sections_after_provider_bb'] ?? array();
-$adminInteractionCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_admin_interaction_ready'] ?? array();
-$noticeCallbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['admin_notices'] ?? array();
-$documentationSections = array();
-$documentation          = '';
-$notice                 = '';
-if ( array() !== $documentationFilters ) {
-	$documentationSections = $documentationFilters[0]( array(), 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
-	if ( array() !== $documentationSections ) {
+$callbacks                   = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_register_providers'] ?? array();
+$documentation_filters       = $GLOBALS['ran_booster_bitbucket_fixture_filters']['ran_booster_documentation_sections_after_provider_bb'] ?? array();
+$admin_interaction_callbacks = $GLOBALS['ran_booster_bitbucket_fixture_actions']['ran_booster_admin_interaction_ready'] ?? array();
+$notice_callbacks            = $GLOBALS['ran_booster_bitbucket_fixture_actions']['admin_notices'] ?? array();
+$documentation_sections      = array();
+$documentation               = '';
+$notice                      = '';
+if ( array() !== $documentation_filters ) {
+	$documentation_sections = $documentation_filters[0]( array(), 'https://example.test/wp-admin/admin.php?page=ran-booster&tab=documentation', 'site' );
+	if ( array() !== $documentation_sections ) {
 		ob_start();
-		$documentationSections[0]['content']();
+		$documentation_sections[0]['content']();
 		$documentation = (string) ob_get_clean();
 	}
 }
 
-if ( array() !== $noticeCallbacks ) {
+if ( array() !== $notice_callbacks ) {
 	ob_start();
-	$noticeCallbacks[0]();
+	$notice_callbacks[0]();
 	$notice = (string) ob_get_clean();
 }
-$result    = array(
-	'provider_callbacks'           => count( $callbacks ),
-	'documentation_filters'        => count( $documentationFilters ),
-	'documentation_sections'       => count( $documentationSections ),
-	'documentation'                => $documentation,
-	'compatibility_notice'         => $notice,
-	'admin_interaction_callbacks'  => count( $adminInteractionCallbacks ),
-	'admin_interaction_api_version' => defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' )
+$result = array(
+	'provider_callbacks'              => count( $callbacks ),
+	'documentation_filters'           => count( $documentation_filters ),
+	'documentation_sections'          => count( $documentation_sections ),
+	'documentation'                   => $documentation,
+	'compatibility_notice'            => $notice,
+	'admin_interaction_callbacks'     => count( $admin_interaction_callbacks ),
+	'admin_interaction_api_version'   => defined( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION' )
 		? RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION
 		: null,
-	'markers_defined_when_loaded'  => $markersDefinedWhenAddOnLoaded,
-	'provider_loaded'              => class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ),
-	'registered'                   => false,
-	'provider_code'                => '',
-	'credential_store_was_scoped'  => false,
-	'delivery_evidence_was_scoped' => false,
-	'owner_requires_managed_target' => false,
-	'navigation_slot'              => 0,
-	'credential_store_reads'       => 0,
+	'markers_defined_when_loaded'     => $markers_defined_when_add_on_loaded,
+	'provider_loaded'                 => class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false ),
+	'registered'                      => false,
+	'provider_code'                   => '',
+	'credential_store_was_scoped'     => false,
+	'delivery_evidence_was_scoped'    => false,
+	'owner_requires_managed_target'   => false,
+	'navigation_slot'                 => 0,
+	'credential_store_reads'          => 0,
 	'implements_release_capabilities' => array(),
-	'implements_webhook_fitness'   => false,
-	'implements_webhook_management' => false,
-	'remote_calls'                 => 0,
-	'operation_locator'            => '',
+	'implements_webhook_fitness'      => false,
+	'implements_webhook_management'   => false,
+	'remote_calls'                    => 0,
+	'operation_locator'               => '',
 );
 
-if ( in_array( $mode, $coreBackedModes, true ) ) {
-	$store = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
+if ( in_array( $fixture_mode, $core_backed_modes, true ) ) {
+	$store    = new class() implements \RAN\RepositoryProvider\ProviderCredentialStore {
 		public int $reads = 0;
 
 		public function credential_profiles(): array {
@@ -212,6 +217,7 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 			return array();
 		}
 
+		// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Preserve the ProviderCredentialStore foreign credential_material parameter signature in this inert test double.
 		public function credential_material( ?string $id = null ): ?array {
 			++$this->reads;
 
@@ -247,11 +253,11 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 	$callbacks[0]( $registry );
 	$result['registered'] = array_key_exists( 'bb', $registry->all() );
 	if ( $result['registered'] ) {
-		$provider                             = $registry->get( 'bb' );
-		$metadata                             = $provider->get_metadata();
-		$result['provider_code']              = $metadata->code->value;
-		$result['owner_requires_managed_target'] = $metadata->admin?->get_webhook_scope( 'owner' )?->requires_managed_target ?? false;
-		$result['navigation_slot']            = $metadata->admin?->navigation?->slot ?? 0;
+		$provider                                  = $registry->get( 'bb' );
+		$metadata                                  = $provider->get_metadata();
+		$result['provider_code']                   = $metadata->code->value;
+		$result['owner_requires_managed_target']   = $metadata->admin?->get_webhook_scope( 'owner' )?->requires_managed_target ?? false;
+		$result['navigation_slot']                 = $metadata->admin?->navigation?->slot ?? 0;
 		$result['implements_release_capabilities'] = array(
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseMetadata,
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseCandidateListing,
@@ -259,20 +265,21 @@ if ( in_array( $mode, $coreBackedModes, true ) ) {
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseAcquirer,
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseNativeTargets,
 		);
-		$result['implements_webhook_fitness'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
-		$result['implements_webhook_management'] = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
-		$repository = $provider->resolve_repository(
+		$result['implements_webhook_fitness']      = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookFitness;
+		$result['implements_webhook_management']   = $provider instanceof \RAN\RepositoryProvider\RepositoryWebhookManagement;
+		$repository                                = $provider->resolve_repository(
 			new \RAN\RepositoryProvider\RepositoryLookupRequest( 'example/reference-plugin', null, true )
 		);
-		$result['operation_locator'] = $repository->locator;
+		$result['operation_locator']               = $repository->locator;
 	}
 	$result['credential_store_reads'] = $store->reads;
 } elseif ( array() !== $callbacks ) {
 	$callbacks[0]( new stdClass() );
 }
 
-$result['provider_loaded'] = class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false );
-$result['implementation_load_attempts'] = $implementationLoadAttempts;
-$result['remote_calls'] = $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
+$result['provider_loaded']              = class_exists( 'RAN\\Booster\\Bitbucket\\BitbucketProvider', false );
+$result['implementation_load_attempts'] = $implementation_load_attempts;
+$result['remote_calls']                 = $GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
 
+// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- Standalone fixture produces machine-readable JSON without WordPress.
 echo json_encode( $result, JSON_THROW_ON_ERROR );

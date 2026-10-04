@@ -56,7 +56,8 @@ extension case variants fail before they can evade the lowercase PHP tools. The
 `composer test:coverage` disposable fixture proves that the required `check`
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release
-verifier and purpose-built test fixtures retain their separate scopes.
+verifier and purpose-built test fixtures now share the PHPCS/PHPCBF profile
+with the documented role-specific exceptions; PHPStan remains product-only.
 
 ## Condition-style enforcement
 
@@ -75,8 +76,9 @@ The current API 14 candidate no longer needs certified Core naming exceptions.
 `RANOwnedMethods` and the shared WordPress naming rules cover `src/`, `views/`,
 `autoload.php`, `ran-booster-bitbucket.php` and `index.php`: all 20 currently
 shipped PHP files. Check and fix use this same scope; new PHP files under the
-configured directories are included automatically. Tests and purpose-built
-fixtures keep their existing separate scope.
+configured directories are included automatically. The same profile also
+covers all 28 development PHP files under `tests/` and `scripts/`, with the
+diagnostic-specific foreign-signature and CLI exceptions described below.
 
 The former per-class allowlist and blanket method-name, namespace-prefix,
 unused-parameter and reserved-parameter suppressions have been removed.
@@ -261,8 +263,27 @@ actual output escaping remain unchanged. All other locked packages, the
 required PHPStan level 8 gate and immutable Core beta.31 certification remain
 unchanged.
 
-This bounded adoption is not full organisation #128 acceptance. Product PHP
-retains its existing coverage proof. Tests and standalone scripts still need
-their agreed profiles, removal of inactive blanket directives and suppression
-protection; retained product exceptions still need grouped disposition. Those
-remaining tasks must be qualified separately before next-beta acceptance.
+The follow-up development profile now checks all 48 maintained PHP files: the
+20 product files plus 28 tests, installed probes and CLI helpers. Analysis remains
+PHPStan level 8 over the same 20 product files; development standards coverage
+does not claim development-file static analysis.
+
+Owned test/helper methods and local variables use snake_case, including inherited
+PHPUnit test methods. PHPUnit lifecycle overrides, native DOM/ZipArchive fields,
+and the ProviderCredentialStore test-double signature retain exact inline
+exceptions. The three former blanket suppressions are removed. Standalone CLI
+filesystem/process operations and inert WordPress fixture behavior have named,
+explained diagnostic exceptions. Prefix diagnostics have concrete inline or file-scoped annotations for PHPUnit
+namespaces, CLI processes, foreign functions/constants and installed foreign
+hooks. They cannot leak into similarly named product subdirectories and do not
+disable owned local/method naming or product prefix checking.
+
+`check:coverage` rejects new unselected development PHP and blanket PHPCS comments
+using PHP tokens. It still rejects product exclusions and unsupported analysis
+configuration; all PHPCS configuration exclusions are rejected. `test:naming` exercises the real standards commands on future test
+and CLI files, inherited methods, removed development scope, and line/block/doc
+blanket annotations. Two clean fixer passes must preserve tracked bytes.
+
+This does not by itself declare full organisation #128 acceptance: retained
+product exceptions still require grouped disposition. Runtime PHP, dependency
+locks, API identities and genuine released-Core certification are unchanged.

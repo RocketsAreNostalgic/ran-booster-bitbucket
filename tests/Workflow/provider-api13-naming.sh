@@ -8,7 +8,7 @@ cd "$repo_root"
 
 # Use the actual repository scope and activated rule. Ignore annotations here so
 # an obsolete API-12 exception cannot conceal a reverted declaration.
-vendor/bin/phpcs --standard=.phpcs.xml --sniffs=RANOwnedMethods.NamingConventions.ValidMethodName --ignore-annotations --no-colors -q --report=json > "$work_root/positive.json"
+vendor/bin/phpcs --standard=.phpcs.xml --sniffs=RANOwnedMethods.NamingConventions.ValidMethodName --ignore-annotations --no-colors -q --report=json src ran-booster-bitbucket.php autoload.php index.php views > "$work_root/positive.json"
 
 # Mutate every migrated declaration in disposable copies. This exercises the
 # real ruleset against implementing classes without loading candidate Core.
@@ -90,3 +90,69 @@ if ($expected !== $actual || array_sum(array_map('count', $actual)) !== 28) {
 }
 echo "Provider API-13 naming controls passed: maintained product declarations comply; all 28 reverted declarations are blocking errors.\n";
 PHP
+
+# Qualify the same whole-maintained-PHP profile through its actual Composer commands.
+fixture="$work_root/development scope"
+mkdir "$fixture"
+git ls-files -z > "$work_root/tracked"
+tar --null -T "$work_root/tracked" -cf - | tar -C "$fixture" -xf -
+ln -s "$repo_root/vendor" "$fixture/vendor"
+run() { composer --no-interaction --no-plugins --working-dir="$fixture" "$1" > "$work_root/command.log" 2>&1; }
+fail() { printf 'development standards: %s\n' "$*" >&2; cat "$work_root/command.log" >&2; exit 1; }
+snapshot() { (cd "$fixture" && xargs -0 sha256sum < "$work_root/tracked") > "$1"; }
+run standards || fail 'clean maintained PHP did not pass'
+snapshot "$work_root/before"
+for pass in 1 2; do
+	status=0
+	run standards:fix || status=$?
+	(( status <= 1 )) || fail 'fixer failed'
+	snapshot "$work_root/after"
+	cmp -s "$work_root/before" "$work_root/after" || fail 'clean fixer changed tracked bytes'
+done
+
+# Ordinary PHPCS suppression syntax must not bypass the independent coverage guard.
+for suppression in '<rule ref="RANWordPressPlugin"><exclude name="WordPress.PHP.YodaConditions"/></rule>' '<rule ref="WordPress.PHP.YodaConditions"><severity>0</severity></rule>'; do
+	sed '/<\/ruleset>/i\'"$suppression" "$repo_root/.phpcs.xml" > "$fixture/.phpcs.xml"
+	if run check:coverage; then fail 'ruleset diagnostic suppression escaped the guard'; fi
+	grep -q 'Review PHPCS exclusions' "$work_root/command.log" || fail 'ruleset suppression failed for an unrelated reason'
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
+# Development-role exceptions must never leak to same-named product subdirectories.
+for directory in tests scripts; do
+	mkdir -p "$fixture/src/$directory"
+	printf '<?php\nnamespace UnprefixedProbe;\n$unprefixed_probe = 1;\n' > "$fixture/src/$directory/PrefixProbe.php"
+	if run standards; then fail 'product subdirectory escaped prefix checking'; fi
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/src/$directory/PrefixProbe.php" >> "$work_root/command.log" 2>&1 || true
+	grep -q 'NonPrefixedNamespaceFound' "$work_root/command.log" || fail 'product namespace prefix diagnostic was suppressed'
+	grep -q 'NonPrefixedVariableFound' "$work_root/command.log" || fail 'product variable prefix diagnostic was suppressed'
+	rm "$fixture/src/$directory/PrefixProbe.php"
+	rmdir "$fixture/src/$directory"
+done
+
+printf '<?php\nnamespace Tests;\nclass DevelopmentProbe extends \\PHPUnit\\Framework\\TestCase { public function ownedBadName(): void {} }\n' > "$fixture/tests/DevelopmentProbe.php"
+if run standards; then fail 'new inherited owned test method escaped the real checker'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/tests/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true
+grep -q 'RANOwnedMethods' "$work_root/command.log" || fail 'new test failed for an unrelated reason'
+rm "$fixture/tests/DevelopmentProbe.php"
+printf '<?php\n$ownedBadVariable = 1;\n' > "$fixture/scripts/DevelopmentProbe.php"
+if run standards; then fail 'new CLI variable escaped the real checker'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/scripts/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true
+grep -q 'VariableNotSnakeCase' "$work_root/command.log" || fail 'new CLI variable failed for an unrelated reason'
+rm "$fixture/scripts/DevelopmentProbe.php"
+
+# The coverage guard must reject narrowing development paths as well as production.
+sed -i '/<file>tests<\/file>/d' "$fixture/.phpcs.xml"
+if run check:coverage; then fail 'development selection removal escaped coverage'; fi
+grep -q 'PHPCS/PHPCBF does not directly select maintained PHP: tests/' "$work_root/command.log" || fail 'development removal failed for an unrelated reason'
+cp .phpcs.xml "$fixture/.phpcs.xml"
+for annotation in '// phpcs:ignoreFile' '// phpcs:disable' '/* phpcs:disable */' '/** phpcs:disable */' '// PHPCS:DISABLE' '// @codingStandardsIgnoreStart' '// @codingStandardsIgnoreFile' '// @codingStandardsIgnoreLine'; do
+	printf '<?php\n%s\nclass NamingProbe { public function hiddenBadName() {} }\n' "$annotation" > "$fixture/tests/DevelopmentProbe.php"
+	"$repo_root/vendor/bin/phpcs" --standard=RANOwnedMethods -q "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 || fail 'annotation no longer suppresses the locked checker'
+	if run check:coverage; then fail 'blanket annotation escaped independent token guard'; fi
+	grep -q 'Blanket PHPCS suppression' "$work_root/command.log" || fail 'annotation failed for an unrelated reason'
+done
+rm "$fixture/tests/DevelopmentProbe.php"
+run standards || fail 'restored development controls do not pass'
+run check:coverage || fail 'restored coverage controls do not pass'
+printf 'Development standards controls passed: new tests/scripts, inherited methods, narrowed selection, blanket directives and two stable fixer passes.\n'

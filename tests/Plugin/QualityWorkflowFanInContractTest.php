@@ -2,22 +2,23 @@
 
 declare(strict_types=1);
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
 namespace Tests\Plugin;
 
 use PHPUnit\Framework\TestCase;
 
 final class QualityWorkflowFanInContractTest extends TestCase {
-	public function testSharedPhpProviderContractIsPinnedToReviewedProfile(): void {
+	public function test_shared_php_provider_contract_is_pinned_to_reviewed_profile(): void {
 		$root     = dirname( __DIR__, 2 );
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
 
-		$baselineStart   = strpos( $workflow, "  baseline:\n" );
-		$repositoryStart = strpos( $workflow, "  repository-quality:\n" );
-		self::assertIsInt( $baselineStart );
-		self::assertIsInt( $repositoryStart );
-		self::assertTrue( $baselineStart < $repositoryStart );
-		$baseline = substr( $workflow, $baselineStart, $repositoryStart - $baselineStart );
+		$baseline_start   = strpos( $workflow, "  baseline:\n" );
+		$repository_start = strpos( $workflow, "  repository-quality:\n" );
+		self::assertIsInt( $baseline_start );
+		self::assertIsInt( $repository_start );
+		self::assertTrue( $baseline_start < $repository_start );
+		$baseline = substr( $workflow, $baseline_start, $repository_start - $baseline_start );
 
 		self::assertStringContainsString(
 			'uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9',
@@ -34,19 +35,19 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 			JSON_THROW_ON_ERROR
 		);
 		self::assertIsArray( $composer );
-		$extensionFloor = $composer['extra']['ran-booster-extension']['requires-php'] ?? null;
-		self::assertIsString( $extensionFloor );
-		self::assertSame( '^' . $extensionFloor, $composer['require']['php'] ?? null );
+		$extension_floor = $composer['extra']['ran-booster-extension']['requires-php'] ?? null;
+		self::assertIsString( $extension_floor );
+		self::assertSame( '^' . $extension_floor, $composer['require']['php'] ?? null );
 
 		$plugin = file_get_contents( $root . '/ran-booster-bitbucket.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $plugin );
 		$matched = preg_match( '/^[ \t]*\*[ \t]+Requires PHP:[ \t]*([^\r\n]+)/m', $plugin, $matches );
 		self::assertSame( 1, $matched );
-		self::assertSame( $extensionFloor, trim( $matches[1] ) );
-		self::assertStringContainsString( "php-floor: '{$extensionFloor}'", $baseline );
+		self::assertSame( $extension_floor, trim( $matches[1] ) );
+		self::assertStringContainsString( "php-floor: '{$extension_floor}'", $baseline );
 	}
 
-	public function testComposerQualityAggregatesPreserveSourceAndRepositoryEvidence(): void {
+	public function test_composer_quality_aggregates_preserve_source_and_repository_evidence(): void {
 		$composer = json_decode(
 			(string) file_get_contents( dirname( __DIR__, 2 ) . '/composer.json' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 			true,
@@ -77,29 +78,29 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		);
 	}
 
-	public function testRepositoryQualityLaneRunsTheRepositoryAggregate(): void {
+	public function test_repository_quality_lane_runs_the_repository_aggregate(): void {
 		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
 
-		$repositoryStart = strpos( $workflow, "  repository-quality:\n" );
-		$releaseStart    = strpos( $workflow, "  release-candidate-install:\n" );
-		self::assertIsInt( $repositoryStart );
-		self::assertIsInt( $releaseStart );
-		self::assertTrue( $repositoryStart < $releaseStart );
+		$repository_start = strpos( $workflow, "  repository-quality:\n" );
+		$release_start    = strpos( $workflow, "  release-candidate-install:\n" );
+		self::assertIsInt( $repository_start );
+		self::assertIsInt( $release_start );
+		self::assertTrue( $repository_start < $release_start );
 
-		$repository = substr( $workflow, $repositoryStart, $releaseStart - $repositoryStart );
+		$repository = substr( $workflow, $repository_start, $release_start - $repository_start );
 		self::assertStringContainsString( 'run: composer check:host', $repository );
 		self::assertStringNotContainsString( 'continue-on-error:', $repository );
 		self::assertStringNotContainsString( "run: composer check\n", $repository );
 	}
 
-	public function testTerminalQualityGateRequiresApplicableEvidenceForEveryLane(): void {
+	public function test_terminal_quality_gate_requires_applicable_evidence_for_every_lane(): void {
 		$workflow = file_get_contents( dirname( __DIR__, 2 ) . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		self::assertIsString( $workflow );
 
-		$terminalStart = strpos( $workflow, "  quality:\n    name: Quality\n" );
-		self::assertIsInt( $terminalStart );
-		$terminal = substr( $workflow, $terminalStart );
+		$terminal_start = strpos( $workflow, "  quality:\n    name: Quality\n" );
+		self::assertIsInt( $terminal_start );
+		$terminal = substr( $workflow, $terminal_start );
 
 		self::assertStringContainsString( 'if: ${{ always() }}', $terminal );
 		foreach ( array( 'runtime-archive', 'baseline', 'repository-quality', 'release-candidate-install' ) as $need ) {
@@ -109,33 +110,33 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertStringContainsString( 'test "$BASELINE_RESULT" = success', $terminal );
 		self::assertStringNotContainsString( 'ADMITTED', $terminal );
 
-		$fullStart             = strpos( $terminal, 'if [[ "$LANE" == full ]]' );
-		$releaseCandidateStart = strpos( $terminal, 'elif [[ "$LANE" == release-candidate ]]' );
-		$unsupportedStart      = strpos( $terminal, 'else', $releaseCandidateStart );
-		self::assertIsInt( $fullStart );
-		self::assertIsInt( $releaseCandidateStart );
-		self::assertIsInt( $unsupportedStart );
-		self::assertTrue( $fullStart < $releaseCandidateStart );
-		self::assertTrue( $releaseCandidateStart < $unsupportedStart );
+		$full_start              = strpos( $terminal, 'if [[ "$LANE" == full ]]' );
+		$release_candidate_start = strpos( $terminal, 'elif [[ "$LANE" == release-candidate ]]' );
+		$unsupported_start       = strpos( $terminal, 'else', $release_candidate_start );
+		self::assertIsInt( $full_start );
+		self::assertIsInt( $release_candidate_start );
+		self::assertIsInt( $unsupported_start );
+		self::assertTrue( $full_start < $release_candidate_start );
+		self::assertTrue( $release_candidate_start < $unsupported_start );
 
-		$full = substr( $terminal, $fullStart, $releaseCandidateStart - $fullStart );
+		$full = substr( $terminal, $full_start, $release_candidate_start - $full_start );
 		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = success', $full );
 		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped', $full );
 
-		$releaseCandidate = substr( $terminal, $releaseCandidateStart, $unsupportedStart - $releaseCandidateStart );
-		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = skipped', $releaseCandidate );
-		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = success', $releaseCandidate );
+		$release_candidate = substr( $terminal, $release_candidate_start, $unsupported_start - $release_candidate_start );
+		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = skipped', $release_candidate );
+		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = success', $release_candidate );
 
-		$unsupported = substr( $terminal, $unsupportedStart );
+		$unsupported = substr( $terminal, $unsupported_start );
 		self::assertStringContainsString( 'Unsupported quality lane: $LANE', $unsupported );
 		self::assertStringContainsString( 'exit 1', $unsupported );
 	}
 
-	public function testProfileBReleaseCallerAndPromotionManifestArePinned(): void {
-		$root = dirname( __DIR__, 2 );
+	public function test_profile_b_release_caller_and_promotion_manifest_are_pinned(): void {
+		$root    = dirname( __DIR__, 2 );
 		$release = (string) file_get_contents( $root . '/.github/workflows/release-please.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 		$quality = (string) file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
-		$config = json_decode( (string) file_get_contents( $root . '/release-please-config.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
+		$config  = json_decode( (string) file_get_contents( $root . '/release-please-config.json' ), true, 512, JSON_THROW_ON_ERROR ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local workflow contract.
 
 		self::assertStringContainsString( 'uses: RocketsAreNostalgic/.github/.github/workflows/release-profile-b.yml@e2fb19244a301a62f8fae2a80536898adf21fe22', $release );
 		self::assertStringContainsString( 'expected-workflow-path: .github/workflows/quality.yml', $release );
@@ -149,5 +150,4 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertTrue( $config['force-tag-creation'] ?? false );
 		self::assertNotSame( true, $config['skip-github-release'] ?? false );
 	}
-
 }
