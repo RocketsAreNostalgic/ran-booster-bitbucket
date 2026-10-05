@@ -21,7 +21,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		$baseline = substr( $workflow, $baseline_start, $repository_start - $baseline_start );
 
 		self::assertStringContainsString(
-			'uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9',
+			'uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@84dde4704058d71646f56c369981bb6aaf201e24',
 			$baseline
 		);
 		self::assertStringContainsString( "php-current: '8.5'", $baseline );

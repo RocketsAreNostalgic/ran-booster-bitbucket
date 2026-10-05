@@ -19,7 +19,7 @@ permissions:
 jobs:
   installed-proof:
     name: Certified Core installed proof
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       mysql:

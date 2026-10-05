@@ -17,7 +17,7 @@ permissions:
 jobs:
   runtime-archive:
     name: Runtime archive
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -233,7 +233,7 @@ jobs:
 
   baseline:
     name: Shared PHP quality
-    uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@788f783d2998994f7aab9691710911ed1bd762c9
+    uses: RocketsAreNostalgic/.github/.github/workflows/quality-php-library-v2.yml@84dde4704058d71646f56c369981bb6aaf201e24
     with:
       php-floor: '8.2'
       php-current: '8.5'
@@ -244,7 +244,7 @@ jobs:
     name: Repository quality
     needs: runtime-archive
     if: ${{ needs.runtime-archive.outputs.lane == 'full' }}
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
@@ -332,7 +332,7 @@ jobs:
     name: Release candidate install readback
     needs: runtime-archive
     if: ${{ needs.runtime-archive.outputs.lane == 'release-candidate' }}
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       mysql:
@@ -434,7 +434,7 @@ jobs:
       - baseline
       - repository-quality
       - release-candidate-install
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require applicable shared and repository quality evidence
