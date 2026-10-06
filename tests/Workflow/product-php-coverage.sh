@@ -214,3 +214,41 @@ printf '<?php function unowned_probe() {}\n' | "$repo_root/vendor/bin/phpcs" --s
 grep -q 'NonPrefixedFunctionFound' "$work_root/xml-real.log" || fail 'restored actual prefix diagnostic missing'
 composer --working-dir="$fixture" check > "$work_root/xml-restored.log" 2>&1 || fail 'restored XML guard failed'
 printf 'XML controls passed: severity 1-4 and prefix-property weakening are rejected.\n'
+
+# The canonical checker must retain diagnostics for newly introduced source files.
+# Do not use --sniffs: that CLI override can reactivate conditionally disabled rules.
+json_probe() {
+    printf '<?php json_encode( array() );\n' | "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --stdin-path="$fixture/src/unreviewed-future.php" -q --report=json - > "$work_root/selector-real.json" || :
+    php -r '$v = json_decode(file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR); foreach ($v["files"] as $file) { foreach ($file["messages"] as $message) { if ($message["source"] === "WordPress.WP.AlternativeFunctions.json_encode_json_encode") { exit(0); } } } exit(1);' "$work_root/selector-real.json" && return 0
+    local status=$?
+    [[ "$status" -eq 1 ]] || fail 'actual checker did not produce a valid JSON diagnostic report'
+    return 1
+}
+json_probe || fail 'canonical JSON diagnostic missing before selector controls'
+for selector in cbf-only phpcs-false include-default include-absolute include-relative; do
+    cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+    php -r '
+        $path = $argv[1];
+        $selector = $argv[2];
+        $rule = "<rule ref=\"RANWordPressPlugin\"";
+        if ($selector === "cbf-only") {
+            $replacement = $rule . " phpcbf-only=\"true\"/>";
+        } elseif ($selector === "phpcs-false") {
+            $replacement = $rule . " phpcs-only=\"false\"/>";
+        } else {
+            $type = substr($selector, 8);
+            $attribute = $type === "default" ? "" : " type=\"$type\"";
+            $replacement = $rule . "><include-pattern$attribute>^(?!*unreviewed-future[.]php)</include-pattern></rule>";
+        }
+        $xml = str_replace($rule . "/>", $replacement, file_get_contents($path), $count);
+        if ($count !== 1) { exit(1); }
+        file_put_contents($path, $xml);
+    ' "$fixture/.phpcs.xml" "$selector" || fail 'selector mutation did not alter exactly the existing rule'
+    if json_probe; then fail "$selector no longer hides the actual JSON diagnostic"; fi
+    if composer --working-dir="$fixture" check > "$work_root/selector-guard.log" 2>&1; then fail "$selector escaped the required guard"; fi
+    grep -q 'Review PHPCS exclusions' "$work_root/selector-guard.log" || fail "$selector failed for an unrelated reason"
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+json_probe || fail 'restored actual JSON diagnostic missing'
+composer --working-dir="$fixture" check > "$work_root/selector-restored.log" 2>&1 || fail 'restored selector guard failed'
+printf 'Selector controls passed: command-conditional rules and default/absolute/relative include patterns cannot hide future-file diagnostics.\n'

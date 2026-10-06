@@ -75,7 +75,7 @@ if ( ! @$xml->load( $root . '/.phpcs.xml', LIBXML_NONET ) ) {
 	throw new RuntimeException( 'Cannot parse the PHPCS ruleset.' );
 }
 $xpath = new DOMXPath( $xml );
-if ( $xpath->query( '//exclude-pattern | //exclude | //severity | //arg[@name="ignore"]' )->length !== 0 ) {
+if ( $xpath->query( '//include-pattern | //exclude-pattern | //exclude | //severity | //arg[@name="ignore"] | //@phpcs-only | //@phpcbf-only' )->length !== 0 ) {
 	throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
 }
 // Preserve the reviewed local rule ancestry and naming/compatibility properties.
