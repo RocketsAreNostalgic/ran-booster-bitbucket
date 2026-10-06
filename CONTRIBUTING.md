@@ -287,3 +287,22 @@ blanket annotations. Two clean fixer passes must preserve tracked bytes.
 This does not by itself declare full organisation #128 acceptance: retained
 product exceptions still require grouped disposition. Runtime PHP, dependency
 locks, API identities and genuine released-Core certification are unchanged.
+
+## Narrow standards exemptions
+
+The suppression guard reads PHP comment tokens, accepts only exact four-part
+PHPCS diagnostic codes with a non-empty reason, and rejects category/standard
+selectors, legacy directives, case/prefix variants of file ignores and inline
+configuration changes. Only the process-local variable prefix diagnostic may
+remain disabled at line 2 of a root `tests/` or `scripts/` file. That exemption
+does not cover declarations or foreign hooks. Existing foreign WordPress/Core
+names have occurrence-local diagnostic annotations; the release verifier's
+owned constants and functions use the repository prefix.
+
+These are mechanical scope controls, not automatic approval of a new reason.
+New exemptions still require review and an accepted invariant under organisation
+#65/#128. Do not infer exemption acceptance from a green standards report. The
+real-checker controls demonstrate broad annotations hiding a violation while
+the independent guard rejects them, and an exact annotation leaving its adjacent
+violation visible. Production analysis remains level 8, with independently
+discovered product PHP failing the gate if omitted from direct analysis.

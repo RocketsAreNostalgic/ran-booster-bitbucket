@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 // Executed by WP-CLI inside an explicitly marked disposable WordPress installation.
 
@@ -219,6 +219,7 @@ if ( 1 !== $requests
 }
 
 $sections = apply_filters(
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	'ran_booster_documentation_sections_after_provider_bb',
 	array(),
 	admin_url( 'admin.php?page=ran-booster&tab=documentation' ),

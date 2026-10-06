@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 declare(strict_types=1);
 
@@ -11,6 +11,7 @@ if ( ! in_array( $fixture_mode, array( 'absent', 'absent-unprivileged', 'provide
 	exit( 2 );
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 define( 'ABSPATH', __DIR__ . '/' );
 $GLOBALS['ran_booster_bitbucket_fixture_actions'] = array();
 $GLOBALS['ran_booster_bitbucket_fixture_filters'] = array();
@@ -40,46 +41,56 @@ $load_add_on                        = static function () use ( &$add_on_loaded, 
 };
 
 /** @param callable $callback */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function add_action( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): void {
 	unset( $priority, $accepted_args );
 	$GLOBALS['ran_booster_bitbucket_fixture_actions'][ $hook ][] = $callback;
 }
 
 /** @param callable $callback */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function add_filter( string $hook, callable $callback, int $priority = 10, int $accepted_args = 1 ): void {
 	unset( $priority, $accepted_args );
 	$GLOBALS['ran_booster_bitbucket_fixture_filters'][ $hook ][] = $callback;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function esc_html__( string $text ): string {
 	return $text;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function __( string $text ): string {
 	return $text;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function esc_html_e( string $text ): void {
 	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixture implements the foreign escaping function itself; return its controlled stand-in output.
 	echo $text;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function esc_url( string $url ): string {
 	return $url;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function admin_url( string $path ): string {
 	return 'https://example.test/wp-admin/' . ltrim( $path, '/' );
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function current_user_can( string $capability ): bool {
 	return 'activate_plugins' === $capability && 'absent-unprivileged' !== ( $GLOBALS['ran_booster_bitbucket_fixture_mode'] ?? '' );
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_parse_url( string $url ): array|false {
 	return parse_url( $url ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- WordPress fixture stand-in.
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_get( string $url, array $arguments ): array {
 	unset( $url, $arguments );
 	++$GLOBALS['ran_booster_bitbucket_fixture_remote_calls'];
@@ -99,16 +110,19 @@ function wp_remote_get( string $url, array $arguments ): array {
 	);
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function is_wp_error( mixed $value ): bool {
 	unset( $value );
 
 	return false;
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_retrieve_response_code( array $response ): int {
 	return (int) $response['response']['code'];
 }
 
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_retrieve_body( array $response ): string {
 	return (string) $response['body'];
 }
@@ -147,12 +161,16 @@ if ( in_array( $fixture_mode, $core_backed_modes, true ) ) {
 		'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first' => array( 12, 17 ),
 		default => array( 14, 17 ),
 	};
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $api_versions[0] );
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $api_versions[1] );
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 
 if ( 'unsupported-multisite' === $fixture_mode ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_RUNTIME_MODE', 'multisite_unsupported' );
 }
 

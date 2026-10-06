@@ -141,17 +141,30 @@ if run standards; then fail 'new CLI variable escaped the real checker'; fi
 grep -q 'VariableNotSnakeCase' "$work_root/command.log" || fail 'new CLI variable failed for an unrelated reason'
 rm "$fixture/scripts/DevelopmentProbe.php"
 
+for path in scripts/verify-release.php tests/bootstrap.php; do
+	cp "$fixture/$path" "$work_root/protected.php"
+	printf '\nfunction unprefixed_future_declaration() {}\n' >> "$fixture/$path"
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/$path" > "$work_root/command.log" 2>&1 && fail 'new declaration inherited process-variable waiver'
+	grep -q 'NonPrefixedFunctionFound' "$work_root/command.log" || fail 'new declaration prefix diagnostic disappeared'
+	cp "$work_root/protected.php" "$fixture/$path"
+done
+
 # The coverage guard must reject narrowing development paths as well as production.
 sed -i '/<file>tests<\/file>/d' "$fixture/.phpcs.xml"
 if run check:coverage; then fail 'development selection removal escaped coverage'; fi
 grep -q 'PHPCS/PHPCBF does not directly select maintained PHP: tests/' "$work_root/command.log" || fail 'development removal failed for an unrelated reason'
 cp .phpcs.xml "$fixture/.phpcs.xml"
-for annotation in '// phpcs:ignoreFile' '// phpcs:disable' '/* phpcs:disable */' '/** phpcs:disable */' '// PHPCS:DISABLE' '// @codingStandardsIgnoreStart' '// @codingStandardsIgnoreFile' '// @codingStandardsIgnoreLine'; do
+for annotation in '// phpcs:ignoreFile' '// phpcs:disable' '/* phpcs:disable */' '/** phpcs:disable */' '// PHPCS:DISABLE' '// PHPCS:IGNOREfileXYZ' '// phpcs:ignore RANOwnedMethods -- Broad standard' '// phpcs:disable RANOwnedMethods.NamingConventions -- Broad category' '// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName -- Broad sniff' '// phpcs:disable RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Persistent method waiver' '// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase' '// @codingStandardsIgnoreStart' '// @codingStandardsIgnoreFile' '// @codingStandardsIgnoreLine'; do
 	printf '<?php\n%s\nclass NamingProbe { public function hiddenBadName() {} }\n' "$annotation" > "$fixture/tests/DevelopmentProbe.php"
 	"$repo_root/vendor/bin/phpcs" --standard=RANOwnedMethods -q "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 || fail 'annotation no longer suppresses the locked checker'
 	if run check:coverage; then fail 'blanket annotation escaped independent token guard'; fi
 	grep -q 'Blanket PHPCS suppression' "$work_root/command.log" || fail 'annotation failed for an unrelated reason'
 done
+printf '<?php\n// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Synthetic external signature.\nclass NamingProbe { public function hiddenBadName() {} }\nclass OtherNamingProbe { public function visibleBadName() {} }\n' > "$fixture/tests/DevelopmentProbe.php"
+run check:coverage || fail 'explained exact-code annotation was rejected'
+"$repo_root/vendor/bin/phpcs" --standard=RANOwnedMethods -s "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 && fail 'precise annotation suppressed adjacent declaration'
+grep -q 'visibleBadName' "$work_root/command.log" || fail 'adjacent naming diagnostic disappeared'
+if grep -q 'hiddenBadName' "$work_root/command.log"; then fail 'exact-code positive annotation did not apply'; fi
 rm "$fixture/tests/DevelopmentProbe.php"
 run standards || fail 'restored development controls do not pass'
 run check:coverage || fail 'restored coverage controls do not pass'

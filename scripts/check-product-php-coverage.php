@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone CLI process owns these globals; this file is never loaded as product PHP. Local names remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 declare(strict_types=1);
 
@@ -121,16 +121,45 @@ foreach ( array(
 }
 
 
-foreach ( array_unique( $selected_files ) as $selected_file ) {
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect owned PHP comments without executing the source.
-	foreach ( token_get_all( file_get_contents( $root . '/' . $selected_file ) ) as $token ) {
+/** Reject broad or unexplained directives without interpreting inert fixture strings. */
+function ran_booster_bitbucket_has_broad_directive( string $source, string $path ): bool {
+	foreach ( token_get_all( $source ) as $token ) {
 		if ( ! is_array( $token ) || ! in_array( $token[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ) {
 			continue;
 		}
-		$source_comment = trim( preg_replace( '/[\s*\/]+/', ' ', $token[1] ) );
-		if ( 1 === preg_match( '/(?:@?phpcs:ignorefile\b|@codingStandardsIgnore(?:File|Start|Line)\b|@?phpcs:(?:disable|ignore)(?=\s*(?:--|$)))/i', $source_comment ) ) {
-			throw new RuntimeException( 'Blanket PHPCS suppression in ' . $selected_file );
+		if ( preg_match( '/@codingStandardsIgnore|@phpcs:/i', $token[1] ) ) {
+			return true;
 		}
+		preg_match_all( '/phpcs:(ignorefile\S*|disable\S*|ignore\S*|set\S*)([^\r\n]*)/i', $token[1], $directives, PREG_SET_ORDER );
+		foreach ( $directives as $directive ) {
+			$operation = strtolower( $directive[1] );
+			if ( ! in_array( $operation, array( 'ignore', 'disable' ), true ) ) {
+				return true;
+			}
+			$parts = explode( ' -- ', trim( $directive[2], ' 	*/' ), 2 );
+			if ( 2 !== count( $parts ) || '' === trim( $parts[1] ) ) {
+				return true;
+			}
+			foreach ( explode( ',', $parts[0] ) as $code ) {
+				if ( ! preg_match( '/^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*){3}$/D', trim( $code ) ) ) {
+					return true;
+				}
+			}
+			// Only standalone process variables retain a persistent exemption.
+			if ( 'disable' === $operation && ( 2 !== $token[2]
+				|| ! preg_match( '~^(?:tests|scripts)/~', $path )
+				|| 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound' !== trim( $parts[0] ) ) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+foreach ( array_unique( $selected_files ) as $selected_file ) {
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect owned PHP comments without executing the source.
+	if ( ran_booster_bitbucket_has_broad_directive( file_get_contents( $root . '/' . $selected_file ), $selected_file ) ) {
+		throw new RuntimeException( 'Blanket PHPCS suppression or unreviewed directive in ' . $selected_file );
 	}
 }
 
