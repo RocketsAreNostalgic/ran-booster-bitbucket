@@ -64,3 +64,18 @@ The webhook normalizer's generic SecretsFile test double now supplies stable
 string profile IDs, matching the certified Core return contract. Its test-only
 adapter observes only empty/nonempty results. A direct value/order assertion and
 the existing webhook success/failure cases preserve the fixture exercise.
+
+PHPCS/PHPCBF and the suppression inventory include the existing HTTP `.stub`
+contract too. Its sole prefix exception is the exact `wp_remote_get` declaration,
+whose foreign identity is required by PHPStan. The adjacent-declaration and broad
+annotation controls protect that boundary. All 50 maintained PHP-bearing files
+are now selected by both analysis and standards; accepted exception disposition
+remains separate from mechanical gate success.
+
+The persistent standalone-variable diagnostic exemption is restricted to the
+seven existing bootstrap, installed-site and CLI files enumerated by the guard.
+New files must comply or receive a deliberate reviewed scope change. Regression
+controls reject a future file using the same directive and verify an unrelated
+function remains checked immediately inside an existing exempt file. Product
+source retains only the occurrence-local base64 encoding exception needed for
+Bitbucket HTTP Basic credentials; it grants no naming exemption.

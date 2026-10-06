@@ -33,4 +33,5 @@
  * } $args See WP_Http::request()
  * @return mixed
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This analysis-only declaration must retain the exact WordPress transport function identity.
 function wp_remote_get( $url, $args = array() ) {}

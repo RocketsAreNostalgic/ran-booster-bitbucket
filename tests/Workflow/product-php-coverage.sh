@@ -45,6 +45,14 @@ chmod +x "$fixture/vendor/bin/phpcs"
 fail() { printf 'coverage regression: %s\n' "$*" >&2; exit 1; }
 composer --working-dir="$fixture" check > "$work_root/clean.log" 2>&1 || fail 'valid direct scopes failed'
 
+# The maintained transport declaration must not fall out through extensions.
+sed -i 's/value="php,stub"/value="php"/' "$fixture/.phpcs.xml"
+if composer --working-dir="$fixture" check > "$work_root/stub-extension.log" 2>&1; then
+	fail 'HTTP stub escaped standards through narrowed extensions'
+fi
+grep -q 'Review PHPCS exclusions or command arguments' "$work_root/stub-extension.log" || fail 'stub extension control did not run'
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
 mkdir "$fixture/new product"
 printf '<?php\n' > "$fixture/new product/plugin.php"
 if composer --working-dir="$fixture" check > "$work_root/new-root.log" 2>&1; then

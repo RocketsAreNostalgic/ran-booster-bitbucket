@@ -186,3 +186,34 @@ rm "$fixture/tests/DevelopmentProbe.php"
 run standards || fail 'restored development controls do not pass'
 run check:coverage || fail 'restored coverage controls do not pass'
 printf 'Development standards controls passed: new tests/scripts, inherited methods, narrowed selection, blanket directives and two stable fixer passes.\n'
+
+# The existing PHPStan declaration is maintained PHP, with one foreign function.
+cp "$fixture/tests/phpstan/wordpress-http.stub" "$work_root/http-contract"
+printf '\nfunction unowned_stub_probe() {}\n' >> "$fixture/tests/phpstan/wordpress-http.stub"
+if run standards; then fail 'unprefixed declaration beside the foreign stub function escaped canonical standards'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/tests/phpstan/wordpress-http.stub" > "$work_root/stub-report" 2>&1 && fail 'stub prefix negative unexpectedly passed'
+grep -q 'NonPrefixedFunctionFound' "$work_root/stub-report" || fail 'stub diagnostic missing'
+grep -q 'unowned_stub_probe' "$work_root/stub-report" || fail 'adjacent declaration diagnostic missing'
+if grep -q 'Found: "wp_remote_get"' "$work_root/stub-report"; then fail 'foreign function exception failed'; fi
+cp "$work_root/http-contract" "$fixture/tests/phpstan/wordpress-http.stub"
+printf '\n// phpcs:disable WordPress\n' >> "$fixture/tests/phpstan/wordpress-http.stub"
+if run check:coverage; then fail 'stub annotation escaped independent token guard'; fi
+grep -q 'Blanket PHPCS suppression' "$work_root/command.log" || fail 'stub annotation control failed for unrelated reason'
+cp "$work_root/http-contract" "$fixture/tests/phpstan/wordpress-http.stub"
+run standards || fail 'restored foreign declaration did not pass canonical standards'
+run check:coverage || fail 'restored stub scope did not pass coverage'
+printf 'HTTP contract standards controls passed: exact foreign name, adjacent declaration and annotation inventory.\n'
+
+# A future standalone file cannot inherit the seven existing variable exemptions.
+printf '%s\n' '<?php' '// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.' '$unowned_probe = 1;' > "$fixture/tests/future-variable-scope.php"
+if run check:coverage; then fail 'future file inherited persistent variable exemption'; fi
+grep -q 'Blanket PHPCS suppression or unreviewed directive in tests/future-variable-scope.php' "$work_root/command.log" || fail 'future variable exemption control did not execute'
+rm "$fixture/tests/future-variable-scope.php"
+cp "$fixture/tests/bootstrap.php" "$work_root/bootstrap.clean"
+printf '\nfunction unrelated_function_probe() {}\n' >> "$fixture/tests/bootstrap.php"
+if run standards; then fail 'variable exemption hid unrelated function'; fi
+grep -q 'NonPrefixedFunctionFound' "$work_root/command.log" || fail 'unrelated declaration control did not execute'
+cp "$work_root/bootstrap.clean" "$fixture/tests/bootstrap.php"
+run check:coverage || fail 'restored variable exemptions failed'
+run standards || fail 'restored variable fixture failed'
+printf 'Persistent variable controls passed: seven existing files, future file rejected, unrelated function checked.\n'

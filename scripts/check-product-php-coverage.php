@@ -116,7 +116,7 @@ foreach ( $xpath->query( '//arg' ) as $node ) {
 	/** @var DOMElement $node XPath selects only arg elements. */
 	$arguments[] = array( $node->getAttribute( 'name' ), $node->getAttribute( 'value' ) );
 }
-if ( array( array( 'basepath', '.' ), array( 'colors', '' ), array( 'extensions', 'php' ), array( 'parallel', '4' ), array( '', 'sp' ) ) !== $arguments ) {
+if ( array( array( 'basepath', '.' ), array( 'colors', '' ), array( 'extensions', 'php,stub' ), array( 'parallel', '4' ), array( '', 'sp' ) ) !== $arguments ) {
 	throw new RuntimeException( 'Review PHPCS exclusions or command arguments before certifying coverage.' );
 }
 $standards = array();
@@ -127,7 +127,7 @@ foreach ( $xpath->query( '/ruleset/file' ) as $node ) {
 $extensions = $xpath->query( '/ruleset/arg[@name="extensions"]' );
 /** @var DOMElement|null $extension XPath selects only arg elements. */
 $extension = $extensions->item( 0 );
-if ( 1 !== $extensions->length || 'php' !== $extension->getAttribute( 'value' ) ) {
+if ( 1 !== $extensions->length || 'php,stub' !== $extension->getAttribute( 'value' ) ) {
 	throw new RuntimeException( 'Review PHPCS extensions before certifying PHP coverage.' );
 }
 
@@ -148,8 +148,8 @@ foreach ( array(
 	if ( 'PHPCS/PHPCBF' === $tool ) {
 		foreach ( array( 'tests', 'scripts' ) as $development_directory ) {
 			foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root . '/' . $development_directory, FilesystemIterator::SKIP_DOTS ) ) as $development_file ) {
-				if ( $development_file->isFile() && 'php' === strtolower( $development_file->getExtension() ) ) {
-					if ( 'php' !== $development_file->getExtension() ) {
+				if ( $development_file->isFile() && ( 'php' === strtolower( $development_file->getExtension() ) || $root . '/tests/phpstan/wordpress-http.stub' === $development_file->getPathname() ) ) {
+					if ( 'php' !== $development_file->getExtension() && $root . '/tests/phpstan/wordpress-http.stub' !== $development_file->getPathname() ) {
 						throw new RuntimeException( 'Review unsupported development PHP extension.' );
 					}
 					$selected_files[] = substr( $development_file->getPathname(), strlen( $root ) + 1 );
@@ -229,7 +229,19 @@ function ran_booster_bitbucket_has_broad_directive( string $source, string $path
 			}
 			// Only standalone process variables retain a persistent exemption.
 			if ( 'disable' === $operation && ( 2 !== $token[2]
-				|| ! preg_match( '~^(?:tests|scripts)/~', $path )
+				|| ! in_array(
+					$path,
+					array(
+						'scripts/check-product-php-coverage.php',
+						'scripts/verify-release.php',
+						'tests/bootstrap.php',
+						'tests/phpstan-bootstrap.php',
+						'tests/fixtures/plugin-lifecycle.php',
+						'tests/WordPress/bitbucket-installed-inert.php',
+						'tests/WordPress/bitbucket-installed-smoke.php',
+					),
+					true
+				)
 				|| 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound' !== trim( $parts[0] ) ) ) {
 				return true;
 			}
@@ -265,9 +277,8 @@ try {
 	// @phpstan-ignore phpstanApi.constructor, phpstanApi.constructor (Match locked CLI stub filtering, with real omission controls.)
 	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
 	// @phpstan-ignore phpstanApi.method (Use the locked CLI exclusion semantics; requalify on upgrades.)
-	$actual     = array_values( array_filter( $actual, static fn ( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
-	$expected   = array_map( static fn ( string $file ): string => $root . '/' . $file, array_diff( array_unique( $selected_files ), $files ) );
-	$expected[] = $root . '/tests/phpstan/wordpress-http.stub';
+	$actual   = array_values( array_filter( $actual, static fn ( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
+	$expected = array_map( static fn ( string $file ): string => $root . '/' . $file, array_diff( array_unique( $selected_files ), $files ) );
 	if ( array() !== array_diff( $expected, $actual ) || array() !== array_diff( $actual, $expected ) ) {
 		throw new RuntimeException( 'Effective development PHPStan selection differs from maintained development PHP.' );
 	}
@@ -282,4 +293,4 @@ try {
 	}
 }
 
-printf( "Maintained PHP coverage: %d product files analysed; %d maintained .php files checked by PHPCS/PHPCBF; those files plus the HTTP .stub contract directly analysed across levels 8/5.\n", count( $files ), count( array_unique( $selected_files ) ) );
+printf( "Maintained PHP coverage: %d product files analysed; %d maintained PHP-bearing files checked by PHPCS/PHPCBF and directly analysed across levels 8/5.\n", count( $files ), count( array_unique( $selected_files ) ) );
