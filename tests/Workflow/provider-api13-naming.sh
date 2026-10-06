@@ -145,6 +145,12 @@ if run standards; then fail 'new inherited owned test method escaped the real ch
 "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/tests/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true
 grep -q 'RANOwnedMethods' "$work_root/command.log" || fail 'new test failed for an unrelated reason'
 grep -q 'NonPrefixedNamespaceFound' "$work_root/command.log" || fail 'owned test namespace escaped the real checker'
+for directive in 'phpcs:set' '@codingStandardsChangeSetting'; do
+	printf '<?php\n// %s WordPress.NamingConventions.PrefixAllGlobals prefixes unowned\nfunction unowned_probe() {}\n' "$directive" > "$fixture/tests/DevelopmentProbe.php"
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --sniffs=WordPress.NamingConventions.PrefixAllGlobals -q "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 || fail 'inline property control no longer suppresses the real checker'
+	if run check:coverage > "$work_root/command.log" 2>&1; then fail 'inline property change escaped token guard'; fi
+	grep -qi 'blanket PHPCS suppression' "$work_root/command.log" || fail 'inline property control failed for an unrelated reason'
+done
 rm "$fixture/tests/DevelopmentProbe.php"
 printf '<?php\n$ownedBadVariable = 1;\n' > "$fixture/scripts/DevelopmentProbe.php"
 if run standards; then fail 'new CLI variable escaped the real checker'; fi

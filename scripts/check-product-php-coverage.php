@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 // This repository-level guard deliberately does not depend on the certified Core.
 $root                = dirname( __DIR__ );
-$ignored_directories = array( '.git', '.github', '.phpstan', '.phpunit.cache', 'build', 'node_modules', 'scripts', 'tests', 'vendor' );
+$ignored_directories = array( '.git', '.phpstan', '.phpunit.cache', 'build', 'node_modules', 'scripts', 'tests', 'vendor' );
 $directory           = new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS );
 $filter              = new RecursiveCallbackFilterIterator(
 	$directory,
@@ -37,9 +37,10 @@ if ( array() === $files ) {
 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Read local repository or archive bytes in standalone CLI tooling; no remote HTTP request.
 $composer = json_decode( (string) file_get_contents( $root . '/composer.json' ), true, 512, JSON_THROW_ON_ERROR );
 $commands = array(
-	'analyze'       => 'vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M',
-	'standards'     => 'vendor/bin/phpcs --standard=.phpcs.xml --report=summary',
-	'standards:fix' => 'vendor/bin/phpcbf --standard=.phpcs.xml --report=summary',
+	'analyze:development' => 'vendor/bin/phpstan analyse --configuration=phpstan-development.neon.dist --no-progress --debug --memory-limit=512M',
+	'analyze'             => 'vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M',
+	'standards'           => 'vendor/bin/phpcs --standard=.phpcs.xml --report=summary',
+	'standards:fix'       => 'vendor/bin/phpcbf --standard=.phpcs.xml --report=summary',
 );
 foreach ( $commands as $name => $expected ) {
 	if ( ( $composer['scripts'][ $name ] ?? null ) !== $expected ) {
@@ -50,6 +51,7 @@ foreach ( $commands as $name => $expected ) {
 // Parse NEON with the locked PHPStan adapter so merge keys, quoted keys and
 // comments have the same meaning here as they do in the analysis command.
 require $root . '/vendor/autoload.php';
+// @phpstan-ignore phpstanApi.method, phpstanApi.constructor (Locked PHPStan discovery adapter; upgrade requires the existing actual-command contract review.)
 $config = ( new PHPStan\DependencyInjection\NeonAdapter( array() ) )->load( $root . '/phpstan.neon.dist' );
 if ( ( $config['includes'] ?? null ) !== array( 'vendor/szepeviktor/phpstan-wordpress/extension.neon' ) ) {
 	throw new RuntimeException( 'Review PHPStan includes before certifying coverage.' );
@@ -78,6 +80,7 @@ if ( $xpath->query( '//exclude-pattern | //exclude | //severity[number(.) = 0] |
 }
 $arguments = array();
 foreach ( $xpath->query( '//arg' ) as $node ) {
+	/** @var DOMElement $node XPath selects only arg elements. */
 	$arguments[] = array( $node->getAttribute( 'name' ), $node->getAttribute( 'value' ) );
 }
 if ( array( array( 'basepath', '.' ), array( 'colors', '' ), array( 'extensions', 'php' ), array( 'parallel', '4' ), array( '', 'sp' ) ) !== $arguments ) {
@@ -89,7 +92,9 @@ foreach ( $xpath->query( '/ruleset/file' ) as $node ) {
 	$standards[] = trim( $node->textContent );
 }
 $extensions = $xpath->query( '/ruleset/arg[@name="extensions"]' );
-if ( 1 !== $extensions->length || 'php' !== $extensions->item( 0 )->getAttribute( 'value' ) ) {
+/** @var DOMElement|null $extension XPath selects only arg elements. */
+$extension = $extensions->item( 0 );
+if ( 1 !== $extensions->length || 'php' !== $extension->getAttribute( 'value' ) ) {
 	throw new RuntimeException( 'Review PHPCS extensions before certifying PHP coverage.' );
 }
 
@@ -115,6 +120,12 @@ foreach ( array(
 						throw new RuntimeException( 'Review unsupported development PHP extension.' );
 					}
 					$selected_files[] = substr( $development_file->getPathname(), strlen( $root ) + 1 );
+				} elseif ( $development_file->isFile() && $root . '/tests/phpstan/wordpress-http.stub' !== $development_file->getPathname() ) {
+					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect local development headers without executing fixture source.
+					$header = file_get_contents( $development_file->getPathname(), false, null, 0, 256 );
+					if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $header ) ) {
+						throw new RuntimeException( 'Review development PHP outside lowercase .php before certifying coverage.' );
+					}
 				}
 			}
 		}
@@ -140,9 +151,11 @@ try {
 	$container = ( new PHPStan\DependencyInjection\ContainerFactory( $root ) )->create( $temp, array( $root . '/phpstan.neon.dist' ), array() );
 	$actual    = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
 	// CommandHelper removes configured stubs after FileFinder discovery.
+	// @phpstan-ignore phpstanApi.constructor, phpstanApi.constructor (Match locked CLI stub filtering; regression controls prove production-stub omissions fail.)
 	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
-	$actual        = array_values( array_filter( $actual, static fn( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
-	$expected      = array_map( static fn( string $file ): string => $root . '/' . $file, $files );
+	// @phpstan-ignore phpstanApi.method (Use the locked CLI exclusion semantics; upgrade requires contract requalification.)
+	$actual   = array_values( array_filter( $actual, static fn( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
+	$expected = array_map( static fn( string $file ): string => $root . '/' . $file, $files );
 	if ( array() !== array_diff( $expected, $actual ) || array() !== array_diff( $actual, $expected ) ) {
 		throw new RuntimeException( 'Effective PHPStan selection differs from discovered production PHP.' );
 	}
@@ -163,7 +176,7 @@ function ran_booster_bitbucket_has_broad_directive( string $source, string $path
 		if ( ! is_array( $token ) || ! in_array( $token[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ) {
 			continue;
 		}
-		if ( preg_match( '/@codingStandardsIgnore|@phpcs:/i', $token[1] ) ) {
+		if ( preg_match( '/@codingStandards(?:Ignore|ChangeSetting)|@phpcs:/i', $token[1] ) ) {
 			return true;
 		}
 		preg_match_all( '/phpcs:(ignorefile\S*|disable\S*|ignore\S*|set\S*)([^\r\n]*)/i', $token[1], $directives, PREG_SET_ORDER );
@@ -199,4 +212,41 @@ foreach ( array_unique( $selected_files ) as $selected_file ) {
 	}
 }
 
-printf( "Maintained PHP coverage: %d product files analysed; %d product/development files checked by PHPCS/PHPCBF.\n", count( $files ), count( array_unique( $selected_files ) ) );
+// The development profile is independently checked against maintained PHP not
+// covered by the stronger product gate. Production fixture inference stays isolated.
+// @phpstan-ignore phpstanApi.method, phpstanApi.constructor (Read the locked NEON profile with the same adapter as product discovery.)
+$development = ( new PHPStan\DependencyInjection\NeonAdapter( array() ) )->load( $root . '/phpstan-development.neon.dist' );
+if ( array_key_exists( 'ignoreErrors', $parameters ) || array_key_exists( 'ignoreErrors', $development['parameters'] ?? array() ) ) {
+	throw new RuntimeException( 'Broad analysis ignore lists require an explicit scope decision.' );
+}
+if ( ( $parameters['level'] ?? 0 ) < 8 || ( $development['parameters']['level'] ?? 0 ) < 5 ) {
+	throw new RuntimeException( 'Product level 8 and development level 5 are required.' );
+}
+if ( ( $development['includes'] ?? null ) !== array( 'vendor/szepeviktor/phpstan-wordpress/extension.neon' ) ) {
+	throw new RuntimeException( 'Review development PHPStan includes before certifying coverage.' );
+}
+$temp = sys_get_temp_dir() . '/ran-bitbucket-development-' . bin2hex( random_bytes( 12 ) );
+try {
+	$container = ( new PHPStan\DependencyInjection\ContainerFactory( $root ) )->create( $temp, array( $root . '/phpstan-development.neon.dist' ), array() );
+	$actual    = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
+	// @phpstan-ignore phpstanApi.constructor, phpstanApi.constructor (Match locked CLI stub filtering, with real omission controls.)
+	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
+	// @phpstan-ignore phpstanApi.method (Use the locked CLI exclusion semantics; requalify on upgrades.)
+	$actual     = array_values( array_filter( $actual, static fn ( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
+	$expected   = array_map( static fn ( string $file ): string => $root . '/' . $file, array_diff( array_unique( $selected_files ), $files ) );
+	$expected[] = $root . '/tests/phpstan/wordpress-http.stub';
+	if ( array() !== array_diff( $expected, $actual ) || array() !== array_diff( $actual, $expected ) ) {
+		throw new RuntimeException( 'Effective development PHPStan selection differs from maintained development PHP.' );
+	}
+} finally {
+	if ( is_dir( $temp ) ) {
+		foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $temp, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST ) as $entry ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir, WordPress.WP.AlternativeFunctions.unlink_unlink -- Remove only the private analyzer container cache created above.
+			$entry->isDir() ? rmdir( $entry->getPathname() ) : unlink( $entry->getPathname() );
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Remove only the private analyzer container cache created above.
+		rmdir( $temp );
+	}
+}
+
+printf( "Maintained PHP coverage: %d product files analysed; %d maintained .php files checked by PHPCS/PHPCBF; those files plus the HTTP .stub contract directly analysed across levels 8/5.\n", count( $files ), count( array_unique( $selected_files ) ) );

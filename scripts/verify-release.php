@@ -152,7 +152,7 @@ if ( ( $source_composer['support']['source'] ?? null ) !== RAN_BOOSTER_BITBUCKET
 
 preg_match( '/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*([^[:space:]]+)[[:space:]]*$/m', $source_plugin, $plugin_version );
 preg_match( '/^Stable tag:[[:space:]]*([^[:space:]]+)[[:space:]]*$/m', $source_readme, $readme_version );
-if ( '' === ( $plugin_version[1] ?? '' ) || ( $plugin_version[1] ?? null ) !== ( $readme_version[1] ?? null ) ) {
+if ( '' === ( $plugin_version[1] ?? '' ) || ( $readme_version[1] ?? null ) !== $plugin_version[1] ) {
 	ran_booster_bitbucket_fail( 'Source plugin header and readme version must match.' );
 }
 if ( 'ran-booster-bitbucket-' . $plugin_version[1] . '.zip' !== $archive_name ) {

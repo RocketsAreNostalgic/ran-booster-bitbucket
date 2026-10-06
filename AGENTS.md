@@ -22,7 +22,7 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 - Released certification tests require the exact sibling Core checkout recorded in `extra.ran-booster-core-certification`. Set `RAN_BOOSTER_CORE_PATH` only when that checkout lives elsewhere.
 - During the earlier API 14 migration, source qualification explicitly set `RAN_BOOSTER_CORE_TEST_MODE=candidate` and verifies the exact source SHA in `extra.ran-booster-core-candidate`. This test-only record is not a release marker or certification; no tag, archive or installed-release proof is inferred. Normal Quality now uses the beta.31 certification record and default released mode; candidate mode remains an explicit test-only facility. No candidate-to-release fallback is permitted.
 - Bitbucket tests consume Core's shipped `autoload.php` and public production contracts. Install only the exact certified Core checkout's locked production Composer dependencies with `composer install --no-dev`; do not install Core development dependencies or import Core-owned test fixtures.
-- Run `composer install` and `composer check` for the Core-independent source-quality contract, including maintained-PHP coverage drift and its negative controls. PHPCS/PHPCBF cover product, tests and CLI PHP through the same profile; PHPStan remains product-only. Owned inherited methods and locals are enforced, and blanket suppressions are rejected by the token guard. Preserve diagnostic-specific foreign/CLI exceptions and their explanations. With the exact certified Core checkout available through `RAN_BOOSTER_CORE_PATH` and its generated production dependency autoloader identified by `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, run `composer check:host` for blocking level-8 analysis, Core-backed unit tests and the candidate contract; `composer analyze` runs the same required PHPStan gate separately and `composer build:release` remains the release-archive command. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
+- Run `composer install` and `composer check` for the Core-independent source-quality contract, including maintained-PHP coverage drift and its negative controls. PHPCS/PHPCBF cover product, tests and CLI PHP through the same profile; PHPStan keeps product analysis at level 8 and directly analyzes maintained development PHP at level 5 in a separate symbol environment. Owned inherited methods and locals are enforced, and blanket suppressions are rejected by the token guard. Preserve diagnostic-specific foreign/CLI exceptions and their explanations. With the exact certified Core checkout available through `RAN_BOOSTER_CORE_PATH` and its generated production dependency autoloader identified by `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, run `composer check:host` for blocking level-8 analysis, Core-backed unit tests and the candidate contract; `composer analyze` runs the same required PHPStan gate separately and `composer build:release` remains the release-archive command. The add-on owns all PHP tooling in its own `vendor/`; Core is a production-contract fixture, not a packaged or development dependency.
 - Releases are immutable GitHub artifacts. Release Please owns version/changelog/release-PR/tag/draft-release lifecycle and the pinned shared Profile B workflow owns exact tested-asset promotion. Do not add repository-local candidate markers, version engines, publisher state machines, mutable recovery, WordPress.org/SVN publishing, or ship `vendor/`, tests, Git metadata, caches, credentials, or Core files.
 - Keep the entry header, `readme.txt` stable tag, Release Please manifest, and changelog aligned. Quality must emit the exact ZIP, checksum and `ran-profile-b-promotion.json` consumed by shared Profile B.
 - Follow `RELEASE.md` for the authoritative release procedure, package
@@ -44,3 +44,23 @@ If CI fails, inspect GitHub Actions logs directly and diagnose/fix the failure y
 
 This prohibition is a cost-control requirement and must not be overridden by convenience,
 CI failure, review comments, or suggestions from GitHub/Blacksmith UI.
+
+The development profile starts at the repository root and excludes only the
+production paths already covered at level 8 and dependency/generated roles.
+The existing effective-coverage guard verifies the exact union, level floors,
+and CLI stub filtering; no baseline or broad ignore list is accepted. The
+existing HTTP `.stub` is an analysis-only external transport contract, directly
+analyzed at level 5 as well as processed by production PHPStan stub validation; the WP-CLI stand-in is ordinary directly analyzed PHP.
+New production paths retain the existing include-or-fail guard. New tests/scripts
+are selected automatically. Fixture symbols never enter the product profile.
+
+Locked PHPStan internal discovery calls retain occurrence-specific API-policy
+annotations, with an adjacent-call negative control. The executable JSON type
+assertion retains its exact diagnostic annotation and an adjacent assertion
+control. These narrow annotations require reviewed #128 disposition; analysis
+coverage alone does not establish complete exception acceptance.
+
+The webhook normalizer's generic SecretsFile test double now supplies stable
+string profile IDs, matching the certified Core return contract. Its test-only
+adapter observes only empty/nonempty results. A direct value/order assertion and
+the existing webhook success/failure cases preserve the fixture exercise.

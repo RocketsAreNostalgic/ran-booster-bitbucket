@@ -83,12 +83,16 @@
         ],
         "check:host": [
             "@analyze",
+            "@analyze:development",
+            "@test:development-analysis",
             "@test",
             "@test:release-candidate",
             "@check"
         ],
         "test:release-candidate": "bash tests/Workflow/validate-release-candidate.sh",
-        "test:syntax": "bash tests/Workflow/lint-syntax.sh"
+        "test:syntax": "bash tests/Workflow/lint-syntax.sh",
+        "analyze:development": "vendor/bin/phpstan analyse --configuration=phpstan-development.neon.dist --no-progress --debug --memory-limit=512M",
+        "test:development-analysis": "bash tests/Workflow/development-analysis.sh"
     },
     "config": {
         "allow-plugins": {

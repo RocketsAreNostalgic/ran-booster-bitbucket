@@ -69,6 +69,8 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertSame(
 			array(
 				'@analyze',
+				'@analyze:development',
+				'@test:development-analysis',
 				'@test',
 				'@test:release-candidate',
 				'@check',

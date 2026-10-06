@@ -5,11 +5,12 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 work_root=$(mktemp -d "${TMPDIR:-/tmp}/ran-bitbucket-coverage-test.XXXXXX")
 trap 'rm -rf "$work_root"' EXIT
 fixture="$work_root/repository with spaces"
-mkdir -p "$fixture/scripts" "$fixture/src" "$fixture/views" "$fixture/tests" "$fixture/vendor/bin" "$work_root/bin"
+mkdir -p "$fixture/scripts" "$fixture/src" "$fixture/views" "$fixture/tests/phpstan" "$fixture/vendor/bin" "$work_root/bin"
 cp "$repo_root/scripts/check-product-php-coverage.php" "$fixture/scripts/"
 ln -s "$repo_root/vendor/autoload.php" "$fixture/vendor/autoload.php"
 ln -s "$repo_root/vendor/szepeviktor" "$fixture/vendor/szepeviktor"
-cp "$repo_root/phpstan.neon.dist" "$repo_root/.phpcs.xml" "$fixture/"
+cp "$repo_root/phpstan.neon.dist" "$repo_root/phpstan-development.neon.dist" "$repo_root/.phpcs.xml" "$fixture/"
+cp "$repo_root/tests/phpstan/wordpress-http.stub" "$fixture/tests/phpstan/"
 for file in autoload.php index.php ran-booster-bitbucket.php src/Sample.php views/guide.php; do
 	printf '<?php\n' > "$fixture/$file"
 done
@@ -20,12 +21,14 @@ php -r '
 $source = json_decode(file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR)["scripts"];
 if (!in_array("@check:coverage", $source["check"], true)
 	|| !in_array("@test:coverage", $source["check"], true)
+	|| !in_array("@analyze:development", $source["check:host"], true)
 	|| !in_array("@check", $source["check:host"], true)) {
 	throw new RuntimeException("Coverage guard is not in repository/host checks.");
 }
 echo json_encode(["scripts" => [
 	"check:coverage" => $source["check:coverage"],
 	"analyze" => $source["analyze"],
+	"analyze:development" => $source["analyze:development"],
 	"standards" => $source["standards"],
 	"standards:fix" => $source["standards:fix"],
 	"lint:syntax" => "php -r '\''exit(0);'\''",
@@ -163,3 +166,24 @@ grep -q 'Effective PHPStan selection differs' "$work_root/stub.log" || fail 'stu
 cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
 
 printf 'Coverage regression passed: valid scopes; root/case-variant PHP, narrowed paths, PHPCS exclusions, parsed NEON variants and command overrides rejected by required check.\n'
+
+# Direct development selection and the >=5 floor must not regress.
+sed -i 's/level: 5/level: 4/' "$fixture/phpstan-development.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/development-level.log" 2>&1; then fail 'development level weakened'; fi
+grep -q 'development level 5' "$work_root/development-level.log" || fail 'development floor control did not run'
+cp "$repo_root/phpstan-development.neon.dist" "$fixture/phpstan-development.neon.dist"
+printf '<?php\n' > "$fixture/tests/Future.php"
+composer --working-dir="$fixture" check > "$work_root/future-development.log" 2>&1 || fail 'new development file not automatically covered'
+sed -i '/analyseAndScan:/a\\	\	\	- tests/Future.php' "$fixture/phpstan-development.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/development-excluded.log" 2>&1; then fail 'excluded development PHP escaped'; fi
+grep -q 'Effective development PHPStan selection differs' "$work_root/development-excluded.log" || fail 'development scope control did not run'
+cp "$repo_root/phpstan-development.neon.dist" "$fixture/phpstan-development.neon.dist"
+sed -i '/parameters:/a\\	stubFiles:\n\	\	- tests/Future.php' "$fixture/phpstan-development.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/development-stub.log" 2>&1; then fail 'development PHP reclassified as stub escaped'; fi
+grep -q 'Effective development PHPStan selection differs' "$work_root/development-stub.log" || fail 'development stub control did not run'
+printf 'Development coverage regression passed: future files, level floor, exclusions and CLI stub filtering.\n'
+cp "$repo_root/phpstan-development.neon.dist" "$fixture/phpstan-development.neon.dist"
+printf '<?PHP\n' > "$fixture/tests/hidden-contract.inc"
+if composer --working-dir="$fixture" check > "$work_root/development-header.log" 2>&1; then fail 'development PHP header escaped extension control'; fi
+grep -q 'Review development PHP outside lowercase .php' "$work_root/development-header.log" || fail 'development header control did not run'
+rm "$fixture/tests/hidden-contract.inc"

@@ -274,8 +274,8 @@ if ( in_array( $fixture_mode, $core_backed_modes, true ) ) {
 		$provider                                  = $registry->get( 'bb' );
 		$metadata                                  = $provider->get_metadata();
 		$result['provider_code']                   = $metadata->code->value;
-		$result['owner_requires_managed_target']   = $metadata->admin?->get_webhook_scope( 'owner' )?->requires_managed_target ?? false;
-		$result['navigation_slot']                 = $metadata->admin?->navigation?->slot ?? 0;
+		$result['owner_requires_managed_target']   = $metadata->admin?->get_webhook_scope( 'owner' )->requires_managed_target ?? false;
+		$result['navigation_slot']                 = $metadata->admin?->navigation->slot ?? 0;
 		$result['implements_release_capabilities'] = array(
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseMetadata,
 			$provider instanceof \RAN\RepositoryProvider\RepositoryReleaseCandidateListing,

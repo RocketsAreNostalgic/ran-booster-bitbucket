@@ -13,7 +13,7 @@ function bitbucket_credential_validation_http_reset( mixed $response ): void {
 /**
  * Queue one response per Bitbucket HTTP request.
  *
- * @param list<mixed> $responses Responses returned in request order.
+ * @param array<array-key, mixed> $responses Responses returned in request order.
  */
 function bitbucket_repository_http_queue( array $responses ): void {
 	$GLOBALS['ran_booster_bitbucket_repository_responses']           = array_values( $responses );

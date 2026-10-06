@@ -18,6 +18,7 @@ if ( false === $expected_version || '' === $expected_version ) {
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 $plugin_file = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
+/** @var array<string, string> $plugin_data Installed headers are verified at the external WordPress boundary. */
 $plugin_data = get_plugin_data( $plugin_file, false, false );
 if ( ( $plugin_data['Version'] ?? null ) !== $expected_version
 	|| 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket' !== ( $plugin_data['UpdateURI'] ?? null )
