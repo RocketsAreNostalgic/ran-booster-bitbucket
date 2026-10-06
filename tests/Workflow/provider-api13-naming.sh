@@ -144,6 +144,7 @@ printf '<?php\nnamespace Tests;\nclass DevelopmentProbe extends \\PHPUnit\\Frame
 if run standards; then fail 'new inherited owned test method escaped the real checker'; fi
 "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/tests/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true
 grep -q 'RANOwnedMethods' "$work_root/command.log" || fail 'new test failed for an unrelated reason'
+grep -q 'NonPrefixedNamespaceFound' "$work_root/command.log" || fail 'owned test namespace escaped the real checker'
 rm "$fixture/tests/DevelopmentProbe.php"
 printf '<?php\n$ownedBadVariable = 1;\n' > "$fixture/scripts/DevelopmentProbe.php"
 if run standards; then fail 'new CLI variable escaped the real checker'; fi

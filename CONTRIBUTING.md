@@ -319,3 +319,9 @@ reclassifying maintained production PHP as a stub fails the coverage gate.
 
 The bounded header check recognizes ordinary/uppercase PHP open tags and short
 echo tags, with optional shebang, including alternate extensions such as `.inc`.
+
+Owned PHPUnit namespaces use `RAN\Booster\Bitbucket\Tests`; their previous `Tests` identities were
+local choices, so they no longer have namespace-prefix exemptions. The exact
+`RAN\RepositoryProvider` interception namespace remains unchanged with its precise foreign-namespace
+exemption. The real-checker naming control rejects restoring
+an unprefixed owned test namespace. No production code or dependencies change.
