@@ -187,3 +187,22 @@ printf '<?PHP\n' > "$fixture/tests/hidden-contract.inc"
 if composer --working-dir="$fixture" check > "$work_root/development-header.log" 2>&1; then fail 'development PHP header escaped extension control'; fi
 grep -q 'Review development PHP outside lowercase .php' "$work_root/development-header.log" || fail 'development header control did not run'
 rm "$fixture/tests/hidden-contract.inc"
+
+# Real XML changes can keep discovery green while silencing prefix diagnostics.
+for severity in 1 2 3 4; do
+    cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+    sed -i "s#</ruleset>#<rule ref=\"WordPress.NamingConventions.PrefixAllGlobals\"><severity>$severity</severity></rule></ruleset>#" "$fixture/.phpcs.xml"
+    printf '<?php function unowned_probe() {}\n' | "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --sniffs=WordPress.NamingConventions.PrefixAllGlobals --stdin-path="$fixture/tests/XmlProbe.php" -q - > "$work_root/xml-real.log" 2>&1 || fail 'low-severity XML no longer hides real diagnostic'
+    if composer --working-dir="$fixture" check > "$work_root/xml-guard.log" 2>&1; then fail 'low-severity XML escaped guard'; fi
+    grep -q 'Review PHPCS exclusions' "$work_root/xml-guard.log" || fail 'severity control failed for unrelated reason'
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+sed -i 's/value="ran_booster_bitbucket"/value="unowned"/' "$fixture/.phpcs.xml"
+printf '<?php function unowned_probe() {}\n' | "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --sniffs=WordPress.NamingConventions.PrefixAllGlobals --stdin-path="$fixture/tests/XmlProbe.php" -q - > "$work_root/xml-real.log" 2>&1 || fail 'prefix override no longer hides real diagnostic'
+if composer --working-dir="$fixture" check > "$work_root/xml-guard.log" 2>&1; then fail 'prefix override escaped guard'; fi
+grep -q 'Review PHPCS properties' "$work_root/xml-guard.log" || fail 'property control failed for unrelated reason'
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+printf '<?php function unowned_probe() {}\n' | "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --sniffs=WordPress.NamingConventions.PrefixAllGlobals --stdin-path="$fixture/tests/XmlProbe.php" -q -s - > "$work_root/xml-real.log" 2>&1 && fail 'restored rules did not report unprefixed function'
+grep -q 'NonPrefixedFunctionFound' "$work_root/xml-real.log" || fail 'restored actual prefix diagnostic missing'
+composer --working-dir="$fixture" check > "$work_root/xml-restored.log" 2>&1 || fail 'restored XML guard failed'
+printf 'XML controls passed: severity 1-4 and prefix-property weakening are rejected.\n'

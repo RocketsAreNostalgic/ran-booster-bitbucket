@@ -75,8 +75,41 @@ if ( ! @$xml->load( $root . '/.phpcs.xml', LIBXML_NONET ) ) {
 	throw new RuntimeException( 'Cannot parse the PHPCS ruleset.' );
 }
 $xpath = new DOMXPath( $xml );
-if ( $xpath->query( '//exclude-pattern | //exclude | //severity[number(.) = 0] | //arg[@name="ignore"]' )->length !== 0 ) {
+if ( $xpath->query( '//exclude-pattern | //exclude | //severity | //arg[@name="ignore"]' )->length !== 0 ) {
 	throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
+}
+// Preserve the reviewed local rule ancestry and naming/compatibility properties.
+$rule_refs = array();
+foreach ( $xpath->query( '/ruleset/rule' ) as $rule ) {
+	/** @var DOMElement $rule XPath selects rule elements. */
+	$rule_refs[] = $rule->getAttribute( 'ref' );
+}
+if ( array( 'RANWordPressPlugin', 'RANOwnedMethods', 'WordPress.NamingConventions.PrefixAllGlobals', 'WordPress.WP.I18n' ) !== $rule_refs ) {
+	throw new RuntimeException( 'Review PHPCS rule ancestry before certifying coverage.' );
+}
+$properties = array();
+foreach ( $xpath->query( '//property' ) as $property ) {
+	/** @var DOMElement $property XPath selects property elements. */
+	$values = array();
+	foreach ( $xpath->query( './element', $property ) as $element ) {
+		/** @var DOMElement $element XPath selects array elements. */
+		$values[] = $element->getAttribute( 'value' );
+	}
+	$properties[] = array( $xpath->evaluate( 'string(../../@ref)', $property ), $property->getAttribute( 'name' ), $property->getAttribute( 'type' ), $property->getAttribute( 'value' ), $values );
+}
+if ( array(
+	array( 'WordPress.NamingConventions.PrefixAllGlobals', 'prefixes', 'array', '', array( 'ran_booster_bitbucket', 'RAN\\\\' ) ),
+	array( 'WordPress.WP.I18n', 'text_domain', 'array', '', array( 'ran-booster-bitbucket' ) ),
+) !== $properties ) {
+	throw new RuntimeException( 'Review PHPCS properties before certifying coverage.' );
+}
+$configs = array();
+foreach ( $xpath->query( '//config' ) as $config_node ) {
+	/** @var DOMElement $config_node XPath selects configuration elements. */
+	$configs[] = array( $config_node->getAttribute( 'name' ), $config_node->getAttribute( 'value' ) );
+}
+if ( array( array( 'minimum_supported_wp_version', '7.0' ), array( 'testVersion', '8.2-' ) ) !== $configs ) {
+	throw new RuntimeException( 'Review PHPCS support or checker configuration before certifying coverage.' );
 }
 $arguments = array();
 foreach ( $xpath->query( '//arg' ) as $node ) {
