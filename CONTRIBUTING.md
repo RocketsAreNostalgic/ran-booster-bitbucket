@@ -306,3 +306,13 @@ real-checker controls demonstrate broad annotations hiding a violation while
 the independent guard rejects them, and an exact annotation leaving its adjacent
 violation visible. Production analysis remains level 8, with independently
 discovered product PHP failing the gate if omitted from direct analysis.
+
+The XML guard also pins the reviewed command arguments: `exclude` and `sniffs`
+arguments can otherwise remove required diagnostics without an XML exclusion.
+Locked-checker controls reproduce both bypasses. Coverage now compares its
+independent product inventory with PHPStan's effective file finder, so lexical
+path membership cannot certify an omitted dot-file. Extensionless PHP entrypoints
+are rejected for an explicit scope decision instead of silently being omitted.
+
+Effective analysis coverage mirrors PHPStan's post-discovery stub-file filtering;
+reclassifying maintained production PHP as a stub fails the coverage gate.

@@ -21,6 +21,12 @@ foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
 			throw new RuntimeException( 'Review unsupported product PHP extension: ' . $entry->getPathname() );
 		}
 		$files[] = str_replace( DIRECTORY_SEPARATOR, '/', substr( $entry->getPathname(), strlen( $root ) + 1 ) );
+	} elseif ( $entry->isFile() && '' === $entry->getExtension() ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect the local extensionless entrypoint header without executing it.
+		$header = file_get_contents( $entry->getPathname(), false, null, 0, 256 );
+		if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?php\b/', $header ) ) {
+			throw new RuntimeException( 'Review extensionless production PHP before certifying analysis coverage.' );
+		}
 	}
 }
 sort( $files, SORT_STRING );
@@ -69,6 +75,13 @@ if ( ! @$xml->load( $root . '/.phpcs.xml', LIBXML_NONET ) ) {
 $xpath = new DOMXPath( $xml );
 if ( $xpath->query( '//exclude-pattern | //exclude | //severity[number(.) = 0] | //arg[@name="ignore"]' )->length !== 0 ) {
 	throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
+}
+$arguments = array();
+foreach ( $xpath->query( '//arg' ) as $node ) {
+	$arguments[] = array( $node->getAttribute( 'name' ), $node->getAttribute( 'value' ) );
+}
+if ( array( array( 'basepath', '.' ), array( 'colors', '' ), array( 'extensions', 'php' ), array( 'parallel', '4' ), array( '', 'sp' ) ) !== $arguments ) {
+	throw new RuntimeException( 'Review PHPCS exclusions or command arguments before certifying coverage.' );
 }
 $standards = array();
 foreach ( $xpath->query( '/ruleset/file' ) as $node ) {
@@ -120,6 +133,29 @@ foreach ( array(
 	}
 }
 
+
+// Verify actual analysis selection, rather than treating lexical path ancestry as proof.
+$temp = sys_get_temp_dir() . '/ran-bitbucket-coverage-' . bin2hex( random_bytes( 12 ) );
+try {
+	$container = ( new PHPStan\DependencyInjection\ContainerFactory( $root ) )->create( $temp, array( $root . '/phpstan.neon.dist' ), array() );
+	$actual    = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
+	// CommandHelper removes configured stubs after FileFinder discovery.
+	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
+	$actual        = array_values( array_filter( $actual, static fn( string $file ): bool => ! $stub_excluder->isExcludedFromAnalysing( $file ) ) );
+	$expected      = array_map( static fn( string $file ): string => $root . '/' . $file, $files );
+	if ( array() !== array_diff( $expected, $actual ) || array() !== array_diff( $actual, $expected ) ) {
+		throw new RuntimeException( 'Effective PHPStan selection differs from discovered production PHP.' );
+	}
+} finally {
+	if ( is_dir( $temp ) ) {
+		foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $temp, FilesystemIterator::SKIP_DOTS ), RecursiveIteratorIterator::CHILD_FIRST ) as $entry ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir, WordPress.WP.AlternativeFunctions.unlink_unlink -- Remove only the private container-cache directory created above.
+			$entry->isDir() ? rmdir( $entry->getPathname() ) : unlink( $entry->getPathname() );
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Remove only the unique private container cache after its contents.
+		rmdir( $temp );
+	}
+}
 
 /** Reject broad or unexplained directives without interpreting inert fixture strings. */
 function ran_booster_bitbucket_has_broad_directive( string $source, string $path ): bool {

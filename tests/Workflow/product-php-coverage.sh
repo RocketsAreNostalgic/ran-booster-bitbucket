@@ -8,6 +8,7 @@ fixture="$work_root/repository with spaces"
 mkdir -p "$fixture/scripts" "$fixture/src" "$fixture/views" "$fixture/tests" "$fixture/vendor/bin" "$work_root/bin"
 cp "$repo_root/scripts/check-product-php-coverage.php" "$fixture/scripts/"
 ln -s "$repo_root/vendor/autoload.php" "$fixture/vendor/autoload.php"
+ln -s "$repo_root/vendor/szepeviktor" "$fixture/vendor/szepeviktor"
 cp "$repo_root/phpstan.neon.dist" "$repo_root/.phpcs.xml" "$fixture/"
 for file in autoload.php index.php ran-booster-bitbucket.php src/Sample.php views/guide.php; do
 	printf '<?php\n' > "$fixture/$file"
@@ -139,5 +140,22 @@ if composer --working-dir="$fixture" check > "$work_root/positional-path.log" 2>
 	fail 'positional PHPStan path escaped the required check'
 fi
 grep -q 'actual Composer analyze configuration' "$work_root/positional-path.log" || fail 'positional path control did not run'
+
+cp "$work_root/composer.clean.json" "$fixture/composer.json"
+printf '#!/usr/bin/env php\n<?php\n' > "$fixture/extensionless-contract"
+if composer --working-dir="$fixture" check > "$work_root/extensionless.log" 2>&1; then fail 'extensionless product PHP escaped'; fi
+grep -q 'Review extensionless production PHP' "$work_root/extensionless.log" || fail 'extensionless control did not run'
+rm "$fixture/extensionless-contract"
+# PHPStan directory discovery ignores dot files, despite lexical path coverage.
+printf '<?php\n' > "$fixture/src/.hidden-contract.php"
+if composer --working-dir="$fixture" check > "$work_root/effective.log" 2>&1; then fail 'lexical paths falsely certified hidden PHP'; fi
+grep -q 'Effective PHPStan selection differs' "$work_root/effective.log" || fail 'effective selection control did not run'
+rm "$fixture/src/.hidden-contract.php"
+composer --working-dir="$fixture" check > "$work_root/restored.log" 2>&1 || fail 'restored effective scope failed'
+
+sed -i '/stubFiles:/a\		- src/Sample.php' "$fixture/phpstan.neon.dist"
+if composer --working-dir="$fixture" check > "$work_root/stub.log" 2>&1; then fail 'production reclassified as stub escaped'; fi
+grep -q 'Effective PHPStan selection differs' "$work_root/stub.log" || fail 'stub filtering control did not run'
+cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
 
 printf 'Coverage regression passed: valid scopes; root/case-variant PHP, narrowed paths, PHPCS exclusions, parsed NEON variants and command overrides rejected by required check.\n'

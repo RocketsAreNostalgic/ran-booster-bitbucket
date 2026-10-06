@@ -118,6 +118,16 @@ for suppression in '<rule ref="RANWordPressPlugin"><exclude name="WordPress.PHP.
 done
 cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
 
+# Ruleset command arguments must not disable or select away required sniffs.
+for argument in '<arg name="exclude" value="RANOwnedMethods.NamingConventions.ValidMethodName"/>' '<arg name="sniffs" value="WordPress.PHP.YodaConditions"/>'; do
+	printf '<ruleset><rule ref="RANOwnedMethods"/>%s</ruleset>\n' "$argument" > "$work_root/argument.xml"
+	printf '<?php class Probe { public function badName() {} }' | "$repo_root/vendor/bin/phpcs" --standard="$work_root/argument.xml" -q - > "$work_root/command.log" 2>&1 || fail 'argument no longer hides the locked checker violation'
+	sed '/<\/ruleset>/i\'"$argument" "$repo_root/.phpcs.xml" > "$fixture/.phpcs.xml"
+	if run check:coverage; then fail 'ruleset command argument escaped the guard'; fi
+	grep -q 'Review PHPCS exclusions or command arguments' "$work_root/command.log" || fail 'argument failed for an unrelated reason'
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
 # Development-role exceptions must never leak to same-named product subdirectories.
 for directory in tests scripts; do
 	mkdir -p "$fixture/src/$directory"
