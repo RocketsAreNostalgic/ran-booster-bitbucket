@@ -311,8 +311,11 @@ The XML guard also pins the reviewed command arguments: `exclude` and `sniffs`
 arguments can otherwise remove required diagnostics without an XML exclusion.
 Locked-checker controls reproduce both bypasses. Coverage now compares its
 independent product inventory with PHPStan's effective file finder, so lexical
-path membership cannot certify an omitted dot-file. Extensionless PHP entrypoints
+path membership cannot certify an omitted dot-file. PHP entrypoints outside lowercase `.php`
 are rejected for an explicit scope decision instead of silently being omitted.
 
 Effective analysis coverage mirrors PHPStan's post-discovery stub-file filtering;
 reclassifying maintained production PHP as a stub fails the coverage gate.
+
+The bounded header check recognizes ordinary/uppercase PHP open tags and short
+echo tags, with optional shebang, including alternate extensions such as `.inc`.

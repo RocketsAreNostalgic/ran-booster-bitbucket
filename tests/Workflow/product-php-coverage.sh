@@ -142,10 +142,14 @@ fi
 grep -q 'actual Composer analyze configuration' "$work_root/positional-path.log" || fail 'positional path control did not run'
 
 cp "$work_root/composer.clean.json" "$fixture/composer.json"
-printf '#!/usr/bin/env php\n<?php\n' > "$fixture/extensionless-contract"
-if composer --working-dir="$fixture" check > "$work_root/extensionless.log" 2>&1; then fail 'extensionless product PHP escaped'; fi
-grep -q 'Review extensionless production PHP' "$work_root/extensionless.log" || fail 'extensionless control did not run'
-rm "$fixture/extensionless-contract"
+for header in '<?php' '<?PHP' '<?='; do
+    for path in extensionless-contract alternate-contract.inc; do
+        printf '#!/usr/bin/env php\n%s\n' "$header" > "$fixture/$path"
+        if composer --working-dir="$fixture" check > "$work_root/extensionless.log" 2>&1; then fail 'PHP header outside .php escaped'; fi
+        grep -q 'Review production PHP outside lowercase .php' "$work_root/extensionless.log" || fail 'header control did not run'
+        rm "$fixture/$path"
+    done
+done
 # PHPStan directory discovery ignores dot files, despite lexical path coverage.
 printf '<?php\n' > "$fixture/src/.hidden-contract.php"
 if composer --working-dir="$fixture" check > "$work_root/effective.log" 2>&1; then fail 'lexical paths falsely certified hidden PHP'; fi

@@ -21,11 +21,11 @@ foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
 			throw new RuntimeException( 'Review unsupported product PHP extension: ' . $entry->getPathname() );
 		}
 		$files[] = str_replace( DIRECTORY_SEPARATOR, '/', substr( $entry->getPathname(), strlen( $root ) + 1 ) );
-	} elseif ( $entry->isFile() && '' === $entry->getExtension() ) {
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect the local extensionless entrypoint header without executing it.
+	} elseif ( $entry->isFile() ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect the bounded local non-PHP-extension entrypoint header without executing it.
 		$header = file_get_contents( $entry->getPathname(), false, null, 0, 256 );
-		if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?php\b/', $header ) ) {
-			throw new RuntimeException( 'Review extensionless production PHP before certifying analysis coverage.' );
+		if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $header ) ) {
+			throw new RuntimeException( 'Review production PHP outside lowercase .php before certifying analysis coverage.' );
 		}
 	}
 }
