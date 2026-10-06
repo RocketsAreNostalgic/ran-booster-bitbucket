@@ -212,7 +212,9 @@ rm "$fixture/tests/future-variable-scope.php"
 cp "$fixture/tests/bootstrap.php" "$work_root/bootstrap.clean"
 printf '\nfunction unrelated_function_probe() {}\n' >> "$fixture/tests/bootstrap.php"
 if run standards; then fail 'variable exemption hid unrelated function'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/tests/bootstrap.php" > "$work_root/command.log" 2>&1 && fail 'unrelated declaration unexpectedly passed'
 grep -q 'NonPrefixedFunctionFound' "$work_root/command.log" || fail 'unrelated declaration control did not execute'
+grep -q 'unrelated_function_probe' "$work_root/command.log" || fail 'unrelated function diagnostic missing'
 cp "$work_root/bootstrap.clean" "$fixture/tests/bootstrap.php"
 run check:coverage || fail 'restored variable exemptions failed'
 run standards || fail 'restored variable fixture failed'
