@@ -14,7 +14,18 @@ $filter              = new RecursiveCallbackFilterIterator(
 		return ! $entry->isDir() || ! in_array( $relative, $ignored_directories, true );
 	},
 );
-$files               = array();
+// Executable template forms can contain HTML before PHP; inert documentation stays bounded.
+$unsupported_php = static function ( SplFileInfo $file ): bool {
+	$extension = strtolower( $file->getExtension() );
+	$template  = in_array( $extension, array( '', 'phtml', 'inc', 'html', 'htm' ), true );
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect local executable-template bytes without executing source or reading remote input.
+	$contents = $template ? file_get_contents( $file->getPathname() ) : file_get_contents( $file->getPathname(), false, null, 0, 256 );
+	if ( false === $contents ) {
+		throw new RuntimeException( 'Cannot inspect maintained file for PHP coverage.' );
+	}
+	return 'phtml' === $extension || 1 === preg_match( $template ? '/<\?(?:php\b|=)/i' : '/^(?:\xEF\xBB\xBF)?(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $contents );
+};
+$files           = array();
 foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
 	if ( $entry->isFile() && strcasecmp( $entry->getExtension(), 'php' ) === 0 ) {
 		if ( $entry->getExtension() !== 'php' ) {
@@ -22,9 +33,7 @@ foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
 		}
 		$files[] = str_replace( DIRECTORY_SEPARATOR, '/', substr( $entry->getPathname(), strlen( $root ) + 1 ) );
 	} elseif ( $entry->isFile() ) {
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect the bounded local non-PHP-extension entrypoint header without executing it.
-		$header = file_get_contents( $entry->getPathname(), false, null, 0, 256 );
-		if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $header ) ) {
+		if ( $unsupported_php( $entry ) ) {
 			throw new RuntimeException( 'Review production PHP outside lowercase .php before certifying analysis coverage.' );
 		}
 	}
@@ -108,7 +117,7 @@ foreach ( $xpath->query( '//config' ) as $config_node ) {
 	/** @var DOMElement $config_node XPath selects configuration elements. */
 	$configs[] = array( $config_node->getAttribute( 'name' ), $config_node->getAttribute( 'value' ) );
 }
-if ( array( array( 'minimum_supported_wp_version', '7.0' ), array( 'testVersion', '8.2-' ) ) !== $configs ) {
+if ( array( array( 'minimum_wp_version', '7.0' ), array( 'testVersion', '8.2-' ) ) !== $configs ) {
 	throw new RuntimeException( 'Review PHPCS support or checker configuration before certifying coverage.' );
 }
 $arguments = array();
@@ -154,9 +163,7 @@ foreach ( array(
 					}
 					$selected_files[] = substr( $development_file->getPathname(), strlen( $root ) + 1 );
 				} elseif ( $development_file->isFile() && $root . '/tests/phpstan/wordpress-http.stub' !== $development_file->getPathname() ) {
-					// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect local development headers without executing fixture source.
-					$header = file_get_contents( $development_file->getPathname(), false, null, 0, 256 );
-					if ( preg_match( '/^(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $header ) ) {
+					if ( $unsupported_php( $development_file ) ) {
 						throw new RuntimeException( 'Review development PHP outside lowercase .php before certifying coverage.' );
 					}
 				}
@@ -178,11 +185,30 @@ foreach ( array(
 }
 
 
+// Container construction resolves imports but does not execute bootstrap files.
+// Preserve these exact locked-tool and project identities, including multiplicity.
+$assert_bootstraps = static function ( array $actual ) use ( $root ): void {
+	$runtime  = 'phar://' . realpath( $root . '/vendor/phpstan/phpstan/phpstan.phar' ) . '/stubs/runtime/';
+	$expected = array(
+		$runtime . 'ReflectionUnionType.php',
+		$runtime . 'ReflectionAttribute.php',
+		$runtime . 'Attribute85.php',
+		$runtime . 'ReflectionIntersectionType.php',
+		$root . '/vendor/php-stubs/wordpress-stubs/wordpress-stubs.php',
+		$root . '/vendor/szepeviktor/phpstan-wordpress/bootstrap.php',
+		$root . '/tests/phpstan-bootstrap.php',
+	);
+	if ( $expected !== $actual ) {
+		throw new RuntimeException( 'Review effective PHPStan bootstrap identities before certifying coverage.' );
+	}
+};
+
 // Verify actual analysis selection, rather than treating lexical path ancestry as proof.
 $temp = sys_get_temp_dir() . '/ran-bitbucket-coverage-' . bin2hex( random_bytes( 12 ) );
 try {
 	$container = ( new PHPStan\DependencyInjection\ContainerFactory( $root ) )->create( $temp, array( $root . '/phpstan.neon.dist' ), array() );
-	$actual    = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
+	$assert_bootstraps( $container->getParameter( 'bootstrapFiles' ) );
+	$actual = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
 	// CommandHelper removes configured stubs after FileFinder discovery.
 	// @phpstan-ignore phpstanApi.constructor, phpstanApi.constructor (Match locked CLI stub filtering; regression controls prove production-stub omissions fail.)
 	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
@@ -273,7 +299,8 @@ if ( ( $development['includes'] ?? null ) !== array( 'vendor/szepeviktor/phpstan
 $temp = sys_get_temp_dir() . '/ran-bitbucket-development-' . bin2hex( random_bytes( 12 ) );
 try {
 	$container = ( new PHPStan\DependencyInjection\ContainerFactory( $root ) )->create( $temp, array( $root . '/phpstan-development.neon.dist' ), array() );
-	$actual    = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
+	$assert_bootstraps( $container->getParameter( 'bootstrapFiles' ) );
+	$actual = $container->getService( 'fileFinderAnalyse' )->findFiles( $container->getParameter( 'paths' ) )->getFiles();
 	// @phpstan-ignore phpstanApi.constructor, phpstanApi.constructor (Match locked CLI stub filtering, with real omission controls.)
 	$stub_excluder = new PHPStan\File\FileExcluder( new PHPStan\File\FileHelper( $root ), $container->getParameter( 'stubFiles' ) );
 	// @phpstan-ignore phpstanApi.method (Use the locked CLI exclusion semantics; requalify on upgrades.)
