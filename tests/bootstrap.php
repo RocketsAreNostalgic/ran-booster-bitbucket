@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 declare(strict_types=1);
 
@@ -10,6 +10,7 @@ $core_vendor_autoload = getenv( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD' );
 $core_autoload        = $core_root . '/autoload.php';
 
 if ( ! defined( 'ABSPATH' ) ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'ABSPATH', __DIR__ . '/' );
 }
 
@@ -21,12 +22,14 @@ require dirname( __DIR__ ) . '/autoload.php';
 
 if ( ! function_exists( 'add_action' ) ) {
 	/** @param callable $callback */
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	function add_action( string $hook, callable $callback ): void {
 		$GLOBALS['ran_booster_bitbucket_test_actions'][ $hook ][] = $callback;
 	}
 }
 
 if ( ! function_exists( 'esc_html__' ) ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	function esc_html__( string $text ): string {
 		return $text;
 	}

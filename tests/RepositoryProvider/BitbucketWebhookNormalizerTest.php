@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
-namespace Tests\RepositoryProvider;
+namespace RAN\Booster\Bitbucket\Tests\RepositoryProvider;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -624,17 +623,23 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	private function normalizer( ?array $profiles = null ): BitbucketWebhookNormalizer {
 		$profiles ??= array( $this->profile( self::OWNER_SECRET, 'owner', 'RocketsAreNostalgic' ) );
 
-		$secrets = new class( $profiles ) extends SecretsFile {
+		$named_profiles = array();
+		foreach ( $profiles as $index => $profile ) {
+			$named_profiles[ 'fixture-' . $index ] = $profile;
+		}
+		self::assertSame( $profiles, array_values( $named_profiles ), 'Core profile IDs must preserve fixture values and order.' );
+
+		$secrets = new class( $named_profiles ) extends SecretsFile {
 
 			/**
-			 * @param list<array<string, mixed>> $profiles Secret profiles.
+			 * @param array<string, array<string, mixed>> $profiles Secret profiles.
 			 */
 			public function __construct( private array $profiles ) {
 				parent::__construct( '/unused/test-secrets.php', array() );
 			}
 
 			/**
-			 * @return list<array<string, mixed>>
+			 * @return array<string, array<string, mixed>>
 			 */
 			public function webhook_materials( ProviderCode|string $provider ): array {
 				try {
@@ -782,6 +787,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode -- WordPress is not loaded by focused unit tests.
 		$json = json_encode( $payload, JSON_THROW_ON_ERROR | $flags );
 
+		// @phpstan-ignore staticMethod.alreadyNarrowedType (Retain the executable JSON encoder contract assertion in this test helper.)
 		self::assertIsString( $json );
 
 		return $json;

@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
-namespace Tests\Plugin;
+namespace RAN\Booster\Bitbucket\Tests\Plugin;
 
 use FilesystemIterator;
 use PHPUnit\Framework\TestCase;

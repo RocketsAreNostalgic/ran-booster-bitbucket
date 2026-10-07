@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
-namespace Tests\Plugin;
+namespace RAN\Booster\Bitbucket\Tests\Plugin;
 
 use PHPUnit\Framework\TestCase;
 
@@ -70,6 +69,8 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		self::assertSame(
 			array(
 				'@analyze',
+				'@analyze:development',
+				'@test:development-analysis',
 				'@test',
 				'@test:release-candidate',
 				'@check',

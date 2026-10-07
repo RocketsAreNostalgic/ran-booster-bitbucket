@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 // Executed by WP-CLI inside an explicitly marked disposable WordPress installation.
 
@@ -19,6 +19,7 @@ if ( false === $expected_version || '' === $expected_version ) {
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 $plugin_file = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
+/** @var array<string, string> $plugin_data Installed headers are verified at the external WordPress boundary. */
 $plugin_data = get_plugin_data( $plugin_file, false, false );
 $expected    = array(
 	'Name'            => 'RAN Booster Bitbucket Cloud',
@@ -97,7 +98,8 @@ $registry                 = new RAN\RepositoryProvider\ProviderRegistry(
 		$delivery_evidence_scoped = 'bb' === $code->value;
 
 		return new class() implements RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader {
-			public function latest_authenticated_delivery(): ?RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
+			/** @return RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence */
+			public function latest_authenticated_delivery(): RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence {
 				return new RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidence(
 					RAN\RepositoryProvider\ProviderCode::parse( 'bb' ),
 					gmdate( 'Y-m-d H:i:s' ),
@@ -219,6 +221,7 @@ if ( 1 !== $requests
 }
 
 $sections = apply_filters(
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	'ran_booster_documentation_sections_after_provider_bb',
 	array(),
 	admin_url( 'admin.php?page=ran-booster&tab=documentation' ),

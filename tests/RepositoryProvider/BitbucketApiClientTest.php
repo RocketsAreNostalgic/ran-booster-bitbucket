@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound -- Isolated PHPUnit namespace matches the test autoload contract.
-namespace Tests\RepositoryProvider;
+namespace RAN\Booster\Bitbucket\Tests\RepositoryProvider;
 
 require_once __DIR__ . '/BitbucketCredentialValidatorWordPressFunctions.php';
 require_once __DIR__ . '/BitbucketCredentialValidationSecretsStub.php';

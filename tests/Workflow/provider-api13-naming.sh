@@ -118,6 +118,16 @@ for suppression in '<rule ref="RANWordPressPlugin"><exclude name="WordPress.PHP.
 done
 cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
 
+# Ruleset command arguments must not disable or select away required sniffs.
+for argument in '<arg name="exclude" value="RANOwnedMethods.NamingConventions.ValidMethodName"/>' '<arg name="sniffs" value="WordPress.PHP.YodaConditions"/>'; do
+	printf '<ruleset><rule ref="RANOwnedMethods"/>%s</ruleset>\n' "$argument" > "$work_root/argument.xml"
+	printf '<?php class Probe { public function badName() {} }' | "$repo_root/vendor/bin/phpcs" --standard="$work_root/argument.xml" -q - > "$work_root/command.log" 2>&1 || fail 'argument no longer hides the locked checker violation'
+	sed '/<\/ruleset>/i\'"$argument" "$repo_root/.phpcs.xml" > "$fixture/.phpcs.xml"
+	if run check:coverage; then fail 'ruleset command argument escaped the guard'; fi
+	grep -q 'Review PHPCS exclusions or command arguments' "$work_root/command.log" || fail 'argument failed for an unrelated reason'
+done
+cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+
 # Development-role exceptions must never leak to same-named product subdirectories.
 for directory in tests scripts; do
 	mkdir -p "$fixture/src/$directory"
@@ -134,6 +144,13 @@ printf '<?php\nnamespace Tests;\nclass DevelopmentProbe extends \\PHPUnit\\Frame
 if run standards; then fail 'new inherited owned test method escaped the real checker'; fi
 "$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s --report=full "$fixture/tests/DevelopmentProbe.php" >> "$work_root/command.log" 2>&1 || true
 grep -q 'RANOwnedMethods' "$work_root/command.log" || fail 'new test failed for an unrelated reason'
+grep -q 'NonPrefixedNamespaceFound' "$work_root/command.log" || fail 'owned test namespace escaped the real checker'
+for directive in 'phpcs:set' '@codingStandardsChangeSetting'; do
+	printf '<?php\n// %s WordPress.NamingConventions.PrefixAllGlobals prefixes unowned\nfunction unowned_probe() {}\n' "$directive" > "$fixture/tests/DevelopmentProbe.php"
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" --sniffs=WordPress.NamingConventions.PrefixAllGlobals -q "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 || fail 'inline property control no longer suppresses the real checker'
+	if run check:coverage > "$work_root/command.log" 2>&1; then fail 'inline property change escaped token guard'; fi
+	grep -qi 'blanket PHPCS suppression' "$work_root/command.log" || fail 'inline property control failed for an unrelated reason'
+done
 rm "$fixture/tests/DevelopmentProbe.php"
 printf '<?php\n$ownedBadVariable = 1;\n' > "$fixture/scripts/DevelopmentProbe.php"
 if run standards; then fail 'new CLI variable escaped the real checker'; fi
@@ -141,18 +158,64 @@ if run standards; then fail 'new CLI variable escaped the real checker'; fi
 grep -q 'VariableNotSnakeCase' "$work_root/command.log" || fail 'new CLI variable failed for an unrelated reason'
 rm "$fixture/scripts/DevelopmentProbe.php"
 
+for path in scripts/verify-release.php tests/bootstrap.php; do
+	cp "$fixture/$path" "$work_root/protected.php"
+	printf '\nfunction unprefixed_future_declaration() {}\n' >> "$fixture/$path"
+	"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/$path" > "$work_root/command.log" 2>&1 && fail 'new declaration inherited process-variable waiver'
+	grep -q 'NonPrefixedFunctionFound' "$work_root/command.log" || fail 'new declaration prefix diagnostic disappeared'
+	cp "$work_root/protected.php" "$fixture/$path"
+done
+
 # The coverage guard must reject narrowing development paths as well as production.
 sed -i '/<file>tests<\/file>/d' "$fixture/.phpcs.xml"
 if run check:coverage; then fail 'development selection removal escaped coverage'; fi
 grep -q 'PHPCS/PHPCBF does not directly select maintained PHP: tests/' "$work_root/command.log" || fail 'development removal failed for an unrelated reason'
 cp .phpcs.xml "$fixture/.phpcs.xml"
-for annotation in '// phpcs:ignoreFile' '// phpcs:disable' '/* phpcs:disable */' '/** phpcs:disable */' '// PHPCS:DISABLE' '// @codingStandardsIgnoreStart' '// @codingStandardsIgnoreFile' '// @codingStandardsIgnoreLine'; do
+for annotation in '// phpcs:ignoreFile' '// phpcs:disable' '/* phpcs:disable */' '/** phpcs:disable */' '// PHPCS:DISABLE' '// PHPCS:IGNOREfileXYZ' '// phpcs:ignore RANOwnedMethods -- Broad standard' '// phpcs:disable RANOwnedMethods.NamingConventions -- Broad category' '// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName -- Broad sniff' '// phpcs:disable RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Persistent method waiver' '// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase' '// @codingStandardsIgnoreStart' '// @codingStandardsIgnoreFile' '// @codingStandardsIgnoreLine'; do
 	printf '<?php\n%s\nclass NamingProbe { public function hiddenBadName() {} }\n' "$annotation" > "$fixture/tests/DevelopmentProbe.php"
 	"$repo_root/vendor/bin/phpcs" --standard=RANOwnedMethods -q "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 || fail 'annotation no longer suppresses the locked checker'
 	if run check:coverage; then fail 'blanket annotation escaped independent token guard'; fi
 	grep -q 'Blanket PHPCS suppression' "$work_root/command.log" || fail 'annotation failed for an unrelated reason'
 done
+printf '<?php\n// phpcs:ignore RANOwnedMethods.NamingConventions.ValidMethodName.NotSnakeCase -- Synthetic external signature.\nclass NamingProbe { public function hiddenBadName() {} }\nclass OtherNamingProbe { public function visibleBadName() {} }\n' > "$fixture/tests/DevelopmentProbe.php"
+run check:coverage || fail 'explained exact-code annotation was rejected'
+"$repo_root/vendor/bin/phpcs" --standard=RANOwnedMethods -s "$fixture/tests/DevelopmentProbe.php" > "$work_root/command.log" 2>&1 && fail 'precise annotation suppressed adjacent declaration'
+grep -q 'visibleBadName' "$work_root/command.log" || fail 'adjacent naming diagnostic disappeared'
+if grep -q 'hiddenBadName' "$work_root/command.log"; then fail 'exact-code positive annotation did not apply'; fi
 rm "$fixture/tests/DevelopmentProbe.php"
 run standards || fail 'restored development controls do not pass'
 run check:coverage || fail 'restored coverage controls do not pass'
 printf 'Development standards controls passed: new tests/scripts, inherited methods, narrowed selection, blanket directives and two stable fixer passes.\n'
+
+# The existing PHPStan declaration is maintained PHP, with one foreign function.
+cp "$fixture/tests/phpstan/wordpress-http.stub" "$work_root/http-contract"
+printf '\nfunction unowned_stub_probe() {}\n' >> "$fixture/tests/phpstan/wordpress-http.stub"
+if run standards; then fail 'unprefixed declaration beside the foreign stub function escaped canonical standards'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/tests/phpstan/wordpress-http.stub" > "$work_root/stub-report" 2>&1 && fail 'stub prefix negative unexpectedly passed'
+grep -q 'NonPrefixedFunctionFound' "$work_root/stub-report" || fail 'stub diagnostic missing'
+grep -q 'unowned_stub_probe' "$work_root/stub-report" || fail 'adjacent declaration diagnostic missing'
+if grep -q 'Found: "wp_remote_get"' "$work_root/stub-report"; then fail 'foreign function exception failed'; fi
+cp "$work_root/http-contract" "$fixture/tests/phpstan/wordpress-http.stub"
+printf '\n// phpcs:disable WordPress\n' >> "$fixture/tests/phpstan/wordpress-http.stub"
+if run check:coverage; then fail 'stub annotation escaped independent token guard'; fi
+grep -q 'Blanket PHPCS suppression' "$work_root/command.log" || fail 'stub annotation control failed for unrelated reason'
+cp "$work_root/http-contract" "$fixture/tests/phpstan/wordpress-http.stub"
+run standards || fail 'restored foreign declaration did not pass canonical standards'
+run check:coverage || fail 'restored stub scope did not pass coverage'
+printf 'HTTP contract standards controls passed: exact foreign name, adjacent declaration and annotation inventory.\n'
+
+# A future standalone file cannot inherit the seven existing variable exemptions.
+printf '%s\n' '<?php' '// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.' '$unowned_probe = 1;' > "$fixture/tests/future-variable-scope.php"
+if run check:coverage; then fail 'future file inherited persistent variable exemption'; fi
+grep -q 'Blanket PHPCS suppression or unreviewed directive in tests/future-variable-scope.php' "$work_root/command.log" || fail 'future variable exemption control did not execute'
+rm "$fixture/tests/future-variable-scope.php"
+cp "$fixture/tests/bootstrap.php" "$work_root/bootstrap.clean"
+printf '\nfunction unrelated_function_probe() {}\n' >> "$fixture/tests/bootstrap.php"
+if run standards; then fail 'variable exemption hid unrelated function'; fi
+"$repo_root/vendor/bin/phpcs" --standard="$fixture/.phpcs.xml" -s "$fixture/tests/bootstrap.php" > "$work_root/command.log" 2>&1 && fail 'unrelated declaration unexpectedly passed'
+grep -q 'NonPrefixedFunctionFound' "$work_root/command.log" || fail 'unrelated declaration control did not execute'
+grep -q 'unrelated_function_probe' "$work_root/command.log" || fail 'unrelated function diagnostic missing'
+cp "$work_root/bootstrap.clean" "$fixture/tests/bootstrap.php"
+run check:coverage || fail 'restored variable exemptions failed'
+run standards || fail 'restored variable fixture failed'
+printf 'Persistent variable controls passed: seven existing files, future file rejected, unrelated function checked.\n'

@@ -1,5 +1,5 @@
 <?php
-// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Disposable host fixture defines foreign WordPress constants/functions/hooks and process-local probe variables; product namespaces and local snake_case remain checked.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Standalone process-local variables never enter WordPress runtime; declarations remain checked.
 
 // Executed by WP-CLI inside an explicitly marked disposable WordPress installation.
 
@@ -18,6 +18,7 @@ if ( false === $expected_version || '' === $expected_version ) {
 
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 $plugin_file = WP_PLUGIN_DIR . '/ran-booster-bitbucket/ran-booster-bitbucket.php';
+/** @var array<string, string> $plugin_data Installed headers are verified at the external WordPress boundary. */
 $plugin_data = get_plugin_data( $plugin_file, false, false );
 if ( ( $plugin_data['Version'] ?? null ) !== $expected_version
 	|| 'https://github.com/RocketsAreNostalgic/ran-booster-bitbucket' !== ( $plugin_data['UpdateURI'] ?? null )
@@ -34,8 +35,11 @@ $api_versions = match ( $fixture_mode ) {
 	default => null,
 };
 if ( null !== $api_versions ) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $api_versions[0] );
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_ADDON_API_VERSION', $api_versions[1] );
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_ADMIN_INTERACTION_API_VERSION', 3 );
 }
 require $plugin_file;
@@ -53,8 +57,10 @@ $transport = static function ( mixed $response ) use ( &$requests ): mixed {
 };
 add_filter( 'pre_http_request', $transport );
 try {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	do_action( 'ran_booster_register_providers', new stdClass() );
 	$sections = apply_filters(
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 		'ran_booster_documentation_sections_after_provider_bb',
 		array(),
 		admin_url( 'admin.php?page=ran-booster&tab=documentation' ),
