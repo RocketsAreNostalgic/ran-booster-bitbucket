@@ -9,9 +9,11 @@ mkdir -p "$fixture/scripts" "$fixture/src" "$fixture/views" "$fixture/tests/phps
 cp "$repo_root/scripts/check-product-php-coverage.php" "$fixture/scripts/"
 ln -s "$repo_root/vendor/autoload.php" "$fixture/vendor/autoload.php"
 ln -s "$repo_root/vendor/szepeviktor" "$fixture/vendor/szepeviktor"
+ln -s "$repo_root/vendor/phpstan" "$fixture/vendor/phpstan"
+ln -s "$repo_root/vendor/php-stubs" "$fixture/vendor/php-stubs"
 cp "$repo_root/phpstan.neon.dist" "$repo_root/phpstan-development.neon.dist" "$repo_root/.phpcs.xml" "$fixture/"
 cp "$repo_root/tests/phpstan/wordpress-http.stub" "$fixture/tests/phpstan/"
-for file in autoload.php index.php ran-booster-bitbucket.php src/Sample.php views/guide.php; do
+for file in autoload.php index.php ran-booster-bitbucket.php src/Sample.php views/guide.php tests/phpstan-bootstrap.php; do
 	printf '<?php\n' > "$fixture/$file"
 done
 
@@ -44,6 +46,81 @@ chmod +x "$fixture/vendor/bin/phpcs"
 
 fail() { printf 'coverage regression: %s\n' "$*" >&2; exit 1; }
 composer --working-dir="$fixture" check > "$work_root/clean.log" 2>&1 || fail 'valid direct scopes failed'
+
+# Executable templates must fail before either checker silently skips their suffix.
+for relative in src/coverage-template.phtml src/coverage-command tests/coverage-template.inc scripts/coverage-template.html views/coverage-template.htm src/coverage-template.tpl tests/coverage-template.custom; do
+	for shape in html bom-long-echo; do
+		php -r '$body = $argv[2] === "html" ? "<main>template</main><?php function ran_coverage_template(): int { return \"invalid\"; }" : "\xEF\xBB\xBF<main>" . str_repeat("x", 8192) . "</main><?= ran_missing_template_function(); ?>"; file_put_contents($argv[1], $body);' "$fixture/$relative" "$shape"
+		if composer --working-dir="$fixture" check > "$work_root/template.log" 2>&1; then fail "executable template escaped: $relative/$shape"; fi
+		grep -Eq 'Review (production|development) PHP outside lowercase .php' "$work_root/template.log" || fail 'template guard did not run'
+		rm "$fixture/$relative"
+	done
+done
+printf '<main>future executable template</main>\n' > "$fixture/src/coverage-template.phtml"
+if composer --working-dir="$fixture" check > "$work_root/template.log" 2>&1; then fail 'phtml identity was silently ignored'; fi
+grep -q 'Review production PHP outside lowercase .php' "$work_root/template.log" || fail 'phtml identity guard did not run'
+rm "$fixture/src/coverage-template.phtml"
+printf '# Example\n<main><?php example(); ?></main>\n' > "$fixture/coverage-example.md"
+printf '{"example":"<main><?php example(); ?></main>"}\n' > "$fixture/coverage-example.json"
+composer --working-dir="$fixture" check > "$work_root/inert.log" 2>&1 || fail 'inert documentation was classified as an executable template'
+rm "$fixture/coverage-example.md" "$fixture/coverage-example.json"
+# A .sh suffix alone is not an inert-language declaration; actual Bash fixture
+# scripts deliberately contain quoted PHP and are not PHP source entrypoints.
+printf '#!/usr/bin/env bash\nprintf '\''<main><?php fixture(); ?></main>'\''\n' > "$fixture/scripts/coverage-example.sh"
+composer --working-dir="$fixture" check > "$work_root/bash-example.log" 2>&1 || fail 'declared Bash fixture text was classified as PHP'
+sed -i '1d' "$fixture/scripts/coverage-example.sh"
+if composer --working-dir="$fixture" check > "$work_root/bash-example.log" 2>&1; then fail 'undeclared .sh template escaped'; fi
+grep -q 'Review development PHP outside lowercase .php' "$work_root/bash-example.log" || fail 'unknown-language body guard did not run'
+rm "$fixture/scripts/coverage-example.sh"
+
+# The real analyzer can return success without diagnostics when a bootstrap exits.
+# The independent guard must reject every unreviewed effective identity first.
+for profile in phpstan.neon.dist phpstan-development.neon.dist; do
+	if [[ "$profile" == phpstan.neon.dist ]]; then diagnostic=src/Sample.php; else diagnostic=tests/BootstrapDiagnostic.php; fi
+	printf '<?php\nfunction ran_booster_bitbucket_bootstrap_diagnostic(): int { return "invalid"; }\n' > "$fixture/$diagnostic"
+	if (cd "$fixture" && php "$repo_root/vendor/bin/phpstan" analyse --configuration="$profile" --no-progress --error-format=json "$diagnostic") > "$work_root/bootstrap-before.json" 2> "$work_root/bootstrap-before.err"; then fail 'bootstrap baseline lost its real return diagnostic'; fi
+	grep -q 'return.type' "$work_root/bootstrap-before.json" || fail 'bootstrap baseline did not diagnose invalid return'
+	printf '<?php\nexit(0);\n' > "$fixture/vendor/coverage-early-exit.php"
+	sed -i '/bootstrapFiles:/a\		- vendor/coverage-early-exit.php' "$fixture/$profile"
+	if ! (cd "$fixture" && php "$repo_root/vendor/bin/phpstan" analyse --configuration="$profile" --no-progress --error-format=json "$diagnostic") > "$work_root/bootstrap-after.json" 2> "$work_root/bootstrap-after.err"; then fail 'early-exit control did not exercise successful analyzer termination'; fi
+	[[ ! -s "$work_root/bootstrap-after.json" ]] || fail 'early-exit control unexpectedly produced an analysis report'
+	if composer --working-dir="$fixture" check > "$work_root/bootstrap-guard.log" 2>&1; then fail 'early-success bootstrap escaped required coverage guard'; fi
+	grep -q 'Review effective PHPStan bootstrap identities' "$work_root/bootstrap-guard.log" || fail 'effective bootstrap rejection did not run'
+	cp "$repo_root/$profile" "$fixture/$profile"
+	for mutation in duplicate replacement; do
+		if [[ "$mutation" == duplicate ]]; then
+			sed -i '/bootstrapFiles:/a\		- tests/phpstan-bootstrap.php' "$fixture/$profile"
+		else
+			sed -i 's#- tests/phpstan-bootstrap.php#- vendor/coverage-early-exit.php#' "$fixture/$profile"
+		fi
+		if composer --working-dir="$fixture" check > "$work_root/bootstrap-guard.log" 2>&1; then fail "bootstrap $mutation escaped"; fi
+		grep -q 'Review effective PHPStan bootstrap identities' "$work_root/bootstrap-guard.log" || fail 'bootstrap identity/multiplicity rejection did not run'
+		cp "$repo_root/$profile" "$fixture/$profile"
+	done
+	rm "$fixture/vendor/coverage-early-exit.php"
+	if [[ "$diagnostic" == src/Sample.php ]]; then printf '<?php\n' > "$fixture/$diagnostic"; else rm "$fixture/$diagnostic"; fi
+done
+composer --working-dir="$fixture" check > "$work_root/restored-bootstrap.log" 2>&1 || fail 'reviewed bootstrap identities did not remain valid'
+printf 'Template and bootstrap controls passed: executable bodies rejected, inert data admitted, actual early success and identity changes rejected.\n'
+
+# WPCS 3 reads minimum_wp_version; the obsolete spelling only leaves its default.
+for variant in active obsolete; do
+	cp "$repo_root/.phpcs.xml" "$work_root/wp-$variant.xml"
+	if [[ "$variant" == obsolete ]]; then sed -i 's/minimum_wp_version/minimum_supported_wp_version/' "$work_root/wp-$variant.xml"; fi
+	printf '<?php\nwp_add_editor_classic_theme_styles();\n' | (cd "$repo_root" && php vendor/bin/phpcs --standard="$work_root/wp-$variant.xml" --stdin-path=src/CompatibilityProbe.php --report=json -q) > "$work_root/wp-$variant.json" || true
+	php -r '$report=json_decode(file_get_contents($argv[1]),true,512,JSON_THROW_ON_ERROR);$types=[];foreach($report["files"] as $file){foreach($file["messages"] as $message){if($message["source"]==="WordPress.WP.DeprecatedFunctions.wp_add_editor_classic_theme_stylesFound"){$types[]=$message["type"];}}}if($types!==[$argv[2]]){throw new RuntimeException("WordPress floor did not enforce its actual diagnostic type.");}' "$work_root/wp-$variant.json" "$([[ "$variant" == active ]] && printf ERROR || printf WARNING)"
+done
+for mutation in obsolete missing duplicate; do
+	case "$mutation" in
+		obsolete) sed -i 's/minimum_wp_version/minimum_supported_wp_version/' "$fixture/.phpcs.xml" ;;
+		missing) sed -i '/name="minimum_wp_version"/d' "$fixture/.phpcs.xml" ;;
+		duplicate) sed -i '/name="minimum_wp_version"/a\	<config name="minimum_wp_version" value="7.0"/>' "$fixture/.phpcs.xml" ;;
+	esac
+	if composer --working-dir="$fixture" check > "$work_root/wp-guard.log" 2>&1; then fail "WordPress floor $mutation escaped"; fi
+	grep -q 'Review PHPCS support or checker configuration' "$work_root/wp-guard.log" || fail 'WordPress floor rejection did not run'
+	cp "$repo_root/.phpcs.xml" "$fixture/.phpcs.xml"
+done
+printf 'WordPress floor controls passed: active 7.0 error, obsolete-key warning, obsolete/missing/duplicate configs rejected.\n'
 
 # The maintained transport declaration must not fall out through extensions.
 sed -i 's/value="php,stub"/value="php"/' "$fixture/.phpcs.xml"
