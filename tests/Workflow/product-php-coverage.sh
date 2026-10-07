@@ -48,7 +48,7 @@ fail() { printf 'coverage regression: %s\n' "$*" >&2; exit 1; }
 composer --working-dir="$fixture" check > "$work_root/clean.log" 2>&1 || fail 'valid direct scopes failed'
 
 # Executable templates must fail before either checker silently skips their suffix.
-for relative in src/coverage-template.phtml src/coverage-command tests/coverage-template.inc scripts/coverage-template.html views/coverage-template.htm; do
+for relative in src/coverage-template.phtml src/coverage-command tests/coverage-template.inc scripts/coverage-template.html views/coverage-template.htm src/coverage-template.tpl tests/coverage-template.custom; do
 	for shape in html bom-long-echo; do
 		php -r '$body = $argv[2] === "html" ? "<main>template</main><?php function ran_coverage_template(): int { return \"invalid\"; }" : "\xEF\xBB\xBF<main>" . str_repeat("x", 8192) . "</main><?= ran_missing_template_function(); ?>"; file_put_contents($argv[1], $body);' "$fixture/$relative" "$shape"
 		if composer --working-dir="$fixture" check > "$work_root/template.log" 2>&1; then fail "executable template escaped: $relative/$shape"; fi
@@ -64,6 +64,14 @@ printf '# Example\n<main><?php example(); ?></main>\n' > "$fixture/coverage-exam
 printf '{"example":"<main><?php example(); ?></main>"}\n' > "$fixture/coverage-example.json"
 composer --working-dir="$fixture" check > "$work_root/inert.log" 2>&1 || fail 'inert documentation was classified as an executable template'
 rm "$fixture/coverage-example.md" "$fixture/coverage-example.json"
+# A .sh suffix alone is not an inert-language declaration; actual Bash fixture
+# scripts deliberately contain quoted PHP and are not PHP source entrypoints.
+printf '#!/usr/bin/env bash\nprintf '\''<main><?php fixture(); ?></main>'\''\n' > "$fixture/scripts/coverage-example.sh"
+composer --working-dir="$fixture" check > "$work_root/bash-example.log" 2>&1 || fail 'declared Bash fixture text was classified as PHP'
+sed -i '1d' "$fixture/scripts/coverage-example.sh"
+if composer --working-dir="$fixture" check > "$work_root/bash-example.log" 2>&1; then fail 'undeclared .sh template escaped'; fi
+grep -q 'Review development PHP outside lowercase .php' "$work_root/bash-example.log" || fail 'unknown-language body guard did not run'
+rm "$fixture/scripts/coverage-example.sh"
 
 # The real analyzer can return success without diagnostics when a bootstrap exits.
 # The independent guard must reject every unreviewed effective identity first.

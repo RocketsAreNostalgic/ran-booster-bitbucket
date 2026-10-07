@@ -14,16 +14,23 @@ $filter              = new RecursiveCallbackFilterIterator(
 		return ! $entry->isDir() || ! in_array( $relative, $ignored_directories, true );
 	},
 );
-// Executable template forms can contain HTML before PHP; inert documentation stays bounded.
+// Unknown suffixes may be PHP includes too. Only explicit documentation/data
+// formats and declared Bash scripts retain bounded inspection of their examples.
 $unsupported_php = static function ( SplFileInfo $file ): bool {
 	$extension = strtolower( $file->getExtension() );
-	$template  = in_array( $extension, array( '', 'phtml', 'inc', 'html', 'htm' ), true );
-	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect local executable-template bytes without executing source or reading remote input.
-	$contents = $template ? file_get_contents( $file->getPathname() ) : file_get_contents( $file->getPathname(), false, null, 0, 256 );
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Identify local document/data and Bash-script headers without executing source.
+	$header = file_get_contents( $file->getPathname(), false, null, 0, 256 );
+	if ( false === $header ) {
+		throw new RuntimeException( 'Cannot inspect maintained file for PHP coverage.' );
+	}
+	$inert = in_array( $extension, array( 'md', 'json' ), true )
+		|| ( 'sh' === $extension && ( str_starts_with( $header, "#!/usr/bin/env bash\n" ) || str_starts_with( $header, "#!/bin/bash\n" ) ) );
+	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect every potentially executable source body, including unknown suffixes, without executing it.
+	$contents = $inert ? $header : file_get_contents( $file->getPathname() );
 	if ( false === $contents ) {
 		throw new RuntimeException( 'Cannot inspect maintained file for PHP coverage.' );
 	}
-	return 'phtml' === $extension || 1 === preg_match( $template ? '/<\?(?:php\b|=)/i' : '/^(?:\xEF\xBB\xBF)?(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i', $contents );
+	return 'phtml' === $extension || 1 === preg_match( $inert ? '/^(?:\xEF\xBB\xBF)?(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i' : '/<\?(?:php\b|=)/i', $contents );
 };
 $files           = array();
 foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
