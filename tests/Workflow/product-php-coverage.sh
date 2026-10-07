@@ -73,6 +73,33 @@ if composer --working-dir="$fixture" check > "$work_root/bash-example.log" 2>&1;
 grep -q 'Review development PHP outside lowercase .php' "$work_root/bash-example.log" || fail 'unknown-language body guard did not run'
 rm "$fixture/scripts/coverage-example.sh"
 
+# Discovery is independent of short_open_tag, although PHP executes these bodies
+# when it is enabled. Exercise product and development inventories separately.
+for scope in src tests; do
+	for suffix in tpl inc html unknown; do
+		probe="$fixture/$scope/coverage-short.$suffix"
+		printf '<main><? echo "short-tag-executed"; ?>' > "$probe"
+		[[ "$(php -d short_open_tag=1 "$probe")" == '<main>short-tag-executed' ]] || fail 'bare short-tag execution probe did not execute'
+		[[ "$(php -d short_open_tag=0 "$probe")" == '<main><? echo "short-tag-executed"; ?>' ]] || fail 'disabled short-tag execution probe did not remain text'
+		for enabled in 0 1; do
+			if php -d short_open_tag="$enabled" "$fixture/scripts/check-product-php-coverage.php" > "$work_root/short.log" 2>&1; then fail "bare short tag escaped: $scope/$suffix/$enabled"; fi
+			grep -Eq 'Review (production|development) PHP outside lowercase .php' "$work_root/short.log" || fail 'bare short-tag guard did not run'
+		done
+		rm "$probe"
+	done
+	probe="$fixture/$scope/coverage-example.xml"
+	printf '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><root/>' > "$probe"
+	php "$fixture/scripts/check-product-php-coverage.php" > "$work_root/xml-data.log" 2>&1 || fail 'genuine XML declaration was rejected'
+	printf '<? echo "executed"; ?>' >> "$probe"
+	if php "$fixture/scripts/check-product-php-coverage.php" > "$work_root/xml-data.log" 2>&1; then fail 'XML followed by bare PHP escaped'; fi
+	grep -Eq 'Review (production|development) PHP outside lowercase .php' "$work_root/xml-data.log" || fail 'XML/PHP guard did not run'
+	printf '<?xmlfoo payload?><root/>' > "$probe"
+	if php "$fixture/scripts/check-product-php-coverage.php" > "$work_root/xml-data.log" 2>&1; then fail 'fake XML declaration escaped'; fi
+	grep -Eq 'Review (production|development) PHP outside lowercase .php' "$work_root/xml-data.log" || fail 'fake XML guard did not run'
+	rm "$probe"
+done
+printf 'Bare short-tag controls passed under both INI settings, with genuine XML boundaries preserved.\n'
+
 # The real analyzer can return success without diagnostics when a bootstrap exits.
 # The independent guard must reject every unreviewed effective identity first.
 for profile in phpstan.neon.dist phpstan-development.neon.dist; do
