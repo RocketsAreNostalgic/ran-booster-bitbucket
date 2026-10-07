@@ -3,6 +3,18 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.16](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.15...v0.1.0-beta.16) (2026-10-07)
+
+
+### Bug Fixes
+
+* **ci:** adopt reviewed shared PHP lint failure propagation ([#107](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/107)) ([43ec060](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/43ec060f2d129c9b02b886db01ace07170aa1375))
+
+
+### Miscellaneous Chores
+
+* **quality:** adopt published coding standards 1.0.1 ([#94](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/94)) ([3a2b249](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/3a2b24976a53af6ec374fbd123eec69814430060))
+
 ## [0.1.0-beta.15](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.14...v0.1.0-beta.15) (2026-10-03)
 
 
