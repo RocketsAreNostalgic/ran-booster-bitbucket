@@ -30,7 +30,13 @@ $unsupported_php = static function ( SplFileInfo $file ): bool {
 	if ( false === $contents ) {
 		throw new RuntimeException( 'Cannot inspect maintained file for PHP coverage.' );
 	}
-	return 'phtml' === $extension || 1 === preg_match( $inert ? '/^(?:\xEF\xBB\xBF)?(?:#![^\n]*\n)?\s*<\?(?:php\b|=)/i' : '/<\?(?:php\b|=)/i', $contents );
+	// Only a genuine leading XML declaration is data rather than a possible short PHP tag.
+	$contents = preg_replace(
+		'~\A(?:\xEF\xBB\xBF)?<\?xml[ \t\r\n]+version[ \t\r\n]*=[ \t\r\n]*(?:"1\.[01]"|\'1\.[01]\')(?:[ \t\r\n]+encoding[ \t\r\n]*=[ \t\r\n]*(?:"[A-Za-z][A-Za-z0-9._-]*"|\'[A-Za-z][A-Za-z0-9._-]*\'))?(?:[ \t\r\n]+standalone[ \t\r\n]*=[ \t\r\n]*(?:"(?:yes|no)"|\'(?:yes|no)\'))?[ \t\r\n]*\?>~',
+		'',
+		$contents
+	);
+	return 'phtml' === $extension || null === $contents || 1 === preg_match( $inert ? '/^(?:\xEF\xBB\xBF)?(?:#![^\n]*\n)?\s*<\?/' : '/<\?/', $contents );
 };
 $files           = array();
 foreach ( new RecursiveIteratorIterator( $filter ) as $entry ) {
