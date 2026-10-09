@@ -72,6 +72,7 @@ function ran_booster_bitbucket_normalize_member_name( string $name ): string {
 	return implode( '/', $segments ) . ( $is_directory ? '/' : '' );
 }
 
+/** @return array<string, string> Archive member names map to source bytes. */
 function ran_booster_bitbucket_source_files( string $commit ): array {
 	$allowlist = preg_split( '/\R/', ran_booster_bitbucket_git( array( 'show', $commit . ':release-files.txt' ) ) );
 	if ( false === $allowlist ) {
@@ -97,6 +98,10 @@ function ran_booster_bitbucket_source_files( string $commit ): array {
 	return $files;
 }
 
+/**
+ * @param array<string, string> $files Archive member names mapped to source bytes.
+ * @return array<string, true>
+ */
 function ran_booster_bitbucket_expected_directories( array $files ): array {
 	$directories = array( RAN_BOOSTER_BITBUCKET_PACKAGE_ROOT => true );
 	foreach ( array_keys( $files ) as $file ) {

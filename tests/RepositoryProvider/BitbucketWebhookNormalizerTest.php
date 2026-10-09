@@ -326,6 +326,7 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
+	/** @param array<string, mixed> $payload Deliberately malformed provider payloads. */
 	#[DataProvider( 'malformed_payload_provider' )]
 	public function test_malformed_repository_uuid_push_and_changes_fail_closed( array $payload ): void {
 		$body = $this->encode( $payload );

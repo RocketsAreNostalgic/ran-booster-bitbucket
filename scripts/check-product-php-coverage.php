@@ -96,25 +96,44 @@ $xml = new DOMDocument();
 if ( ! @$xml->load( $root . '/.phpcs.xml', LIBXML_NONET ) ) {
 	throw new RuntimeException( 'Cannot parse the PHPCS ruleset.' );
 }
-$xpath = new DOMXPath( $xml );
-if ( $xpath->query( '//include-pattern | //exclude-pattern | //exclude | //severity | //arg[@name="ignore"] | //@phpcs-only | //@phpcbf-only' )->length !== 0 ) {
+$xpath      = new DOMXPath( $xml );
+$exclusions = $xpath->query( '//include-pattern | //exclude-pattern | //exclude | //severity | //arg[@name="ignore"] | //@phpcs-only | //@phpcbf-only' );
+if ( false === $exclusions || 0 !== $exclusions->length ) {
 	throw new RuntimeException( 'Review PHPCS exclusions before certifying coverage.' );
 }
 // Preserve the reviewed local rule ancestry and naming/compatibility properties.
 $rule_refs = array();
-foreach ( $xpath->query( '/ruleset/rule' ) as $rule ) {
-	/** @var DOMElement $rule XPath selects rule elements. */
+$rules     = $xpath->query( '/ruleset/rule' );
+if ( false === $rules ) {
+	throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+}
+foreach ( $rules as $rule ) {
+	if ( ! $rule instanceof DOMElement ) {
+		throw new RuntimeException( 'Expected a PHPCS ruleset element.' );
+	}
 	$rule_refs[] = $rule->getAttribute( 'ref' );
 }
 if ( array( 'RANWordPressPlugin', 'RANOwnedMethods', 'WordPress.NamingConventions.PrefixAllGlobals', 'WordPress.WP.I18n' ) !== $rule_refs ) {
 	throw new RuntimeException( 'Review PHPCS rule ancestry before certifying coverage.' );
 }
-$properties = array();
-foreach ( $xpath->query( '//property' ) as $property ) {
-	/** @var DOMElement $property XPath selects property elements. */
-	$values = array();
-	foreach ( $xpath->query( './element', $property ) as $element ) {
-		/** @var DOMElement $element XPath selects array elements. */
+$properties     = array();
+$property_nodes = $xpath->query( '//property' );
+if ( false === $property_nodes ) {
+	throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+}
+foreach ( $property_nodes as $property ) {
+	if ( ! $property instanceof DOMElement ) {
+		throw new RuntimeException( 'Expected a PHPCS ruleset element.' );
+	}
+	$values   = array();
+	$elements = $xpath->query( './element', $property );
+	if ( false === $elements ) {
+		throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+	}
+	foreach ( $elements as $element ) {
+		if ( ! $element instanceof DOMElement ) {
+			throw new RuntimeException( 'Expected a PHPCS ruleset element.' );
+		}
 		$values[] = $element->getAttribute( 'value' );
 	}
 	$properties[] = array( $xpath->evaluate( 'string(../../@ref)', $property ), $property->getAttribute( 'name' ), $property->getAttribute( 'type' ), $property->getAttribute( 'value' ), $values );
@@ -125,31 +144,52 @@ if ( array(
 ) !== $properties ) {
 	throw new RuntimeException( 'Review PHPCS properties before certifying coverage.' );
 }
-$configs = array();
-foreach ( $xpath->query( '//config' ) as $config_node ) {
-	/** @var DOMElement $config_node XPath selects configuration elements. */
+$configs      = array();
+$config_nodes = $xpath->query( '//config' );
+if ( false === $config_nodes ) {
+	throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+}
+foreach ( $config_nodes as $config_node ) {
+	if ( ! $config_node instanceof DOMElement ) {
+		throw new RuntimeException( 'Expected a PHPCS ruleset element.' );
+	}
 	$configs[] = array( $config_node->getAttribute( 'name' ), $config_node->getAttribute( 'value' ) );
 }
 if ( array( array( 'minimum_wp_version', '7.0' ), array( 'testVersion', '8.2-' ) ) !== $configs ) {
 	throw new RuntimeException( 'Review PHPCS support or checker configuration before certifying coverage.' );
 }
-$arguments = array();
-foreach ( $xpath->query( '//arg' ) as $node ) {
-	/** @var DOMElement $node XPath selects only arg elements. */
+$arguments      = array();
+$argument_nodes = $xpath->query( '//arg' );
+if ( false === $argument_nodes ) {
+	throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+}
+foreach ( $argument_nodes as $node ) {
+	if ( ! $node instanceof DOMElement ) {
+		throw new RuntimeException( 'Expected a PHPCS ruleset element.' );
+	}
 	$arguments[] = array( $node->getAttribute( 'name' ), $node->getAttribute( 'value' ) );
 }
 if ( array( array( 'basepath', '.' ), array( 'colors', '' ), array( 'extensions', 'php,stub' ), array( 'parallel', '4' ), array( '', 'sp' ) ) !== $arguments ) {
 	throw new RuntimeException( 'Review PHPCS exclusions or command arguments before certifying coverage.' );
 }
-$standards = array();
-foreach ( $xpath->query( '/ruleset/file' ) as $node ) {
+$standards  = array();
+$file_nodes = $xpath->query( '/ruleset/file' );
+if ( false === $file_nodes ) {
+	throw new RuntimeException( 'Cannot inspect the PHPCS ruleset.' );
+}
+foreach ( $file_nodes as $node ) {
+	if ( ! $node instanceof DOMElement ) {
+		throw new RuntimeException( 'Expected a PHPCS file element.' );
+	}
 	// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Preserve the native DOM/ZipArchive property spelling; this receiver is not owned.
 	$standards[] = trim( $node->textContent );
 }
 $extensions = $xpath->query( '/ruleset/arg[@name="extensions"]' );
-/** @var DOMElement|null $extension XPath selects only arg elements. */
+if ( false === $extensions ) {
+	throw new RuntimeException( 'Cannot inspect PHPCS extensions.' );
+}
 $extension = $extensions->item( 0 );
-if ( 1 !== $extensions->length || 'php,stub' !== $extension->getAttribute( 'value' ) ) {
+if ( 1 !== $extensions->length || ! $extension instanceof DOMElement || 'php,stub' !== $extension->getAttribute( 'value' ) ) {
 	throw new RuntimeException( 'Review PHPCS extensions before certifying PHP coverage.' );
 }
 
@@ -291,20 +331,24 @@ function ran_booster_bitbucket_has_broad_directive( string $source, string $path
 
 foreach ( array_unique( $selected_files ) as $selected_file ) {
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Inspect owned PHP comments without executing the source.
-	if ( ran_booster_bitbucket_has_broad_directive( file_get_contents( $root . '/' . $selected_file ), $selected_file ) ) {
+	$source = file_get_contents( $root . '/' . $selected_file );
+	if ( false === $source ) {
+		throw new RuntimeException( 'Cannot inspect maintained source directives.' );
+	}
+	if ( ran_booster_bitbucket_has_broad_directive( $source, $selected_file ) ) {
 		throw new RuntimeException( 'Blanket PHPCS suppression or unreviewed directive in ' . $selected_file );
 	}
 }
 
 // The development profile is independently checked against maintained PHP not
-// covered by the stronger product gate. Production fixture inference stays isolated.
+// covered by the separate product gate. Production fixture inference stays isolated.
 // @phpstan-ignore phpstanApi.method, phpstanApi.constructor (Read the locked NEON profile with the same adapter as product discovery.)
 $development = ( new PHPStan\DependencyInjection\NeonAdapter( array() ) )->load( $root . '/phpstan-development.neon.dist' );
 if ( array_key_exists( 'ignoreErrors', $parameters ) || array_key_exists( 'ignoreErrors', $development['parameters'] ?? array() ) ) {
 	throw new RuntimeException( 'Broad analysis ignore lists require an explicit scope decision.' );
 }
-if ( ( $parameters['level'] ?? 0 ) < 8 || ( $development['parameters']['level'] ?? 0 ) < 5 ) {
-	throw new RuntimeException( 'Product level 8 and development level 5 are required.' );
+if ( ( $parameters['level'] ?? 0 ) < 8 || ( $development['parameters']['level'] ?? 0 ) < 8 ) {
+	throw new RuntimeException( 'Product level 8 and development level 8 are required.' );
 }
 if ( ( $development['includes'] ?? null ) !== array( 'vendor/szepeviktor/phpstan-wordpress/extension.neon' ) ) {
 	throw new RuntimeException( 'Review development PHPStan includes before certifying coverage.' );
@@ -333,4 +377,4 @@ try {
 	}
 }
 
-printf( "Maintained PHP coverage: %d product files analysed; %d maintained PHP-bearing files checked by PHPCS/PHPCBF and directly analysed across levels 8/5.\n", count( $files ), count( array_unique( $selected_files ) ) );
+printf( "Maintained PHP coverage: %d product files analysed; %d maintained PHP-bearing files checked by PHPCS/PHPCBF and directly analysed at level 8.\n", count( $files ), count( array_unique( $selected_files ) ) );

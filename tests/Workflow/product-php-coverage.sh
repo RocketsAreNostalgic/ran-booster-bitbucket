@@ -279,10 +279,10 @@ cp "$repo_root/phpstan.neon.dist" "$fixture/phpstan.neon.dist"
 
 printf 'Coverage regression passed: valid scopes; root/case-variant PHP, narrowed paths, PHPCS exclusions, parsed NEON variants and command overrides rejected by required check.\n'
 
-# Direct development selection and the >=5 floor must not regress.
-sed -i 's/level: 5/level: 4/' "$fixture/phpstan-development.neon.dist"
+# Direct development selection and the >=8 floor must not regress.
+sed -i 's/level: 8/level: 7/' "$fixture/phpstan-development.neon.dist"
 if composer --working-dir="$fixture" check > "$work_root/development-level.log" 2>&1; then fail 'development level weakened'; fi
-grep -q 'development level 5' "$work_root/development-level.log" || fail 'development floor control did not run'
+grep -q 'development level 8' "$work_root/development-level.log" || fail 'development floor control did not run'
 cp "$repo_root/phpstan-development.neon.dist" "$fixture/phpstan-development.neon.dist"
 printf '<?php\n' > "$fixture/tests/Future.php"
 composer --working-dir="$fixture" check > "$work_root/future-development.log" 2>&1 || fail 'new development file not automatically covered'
