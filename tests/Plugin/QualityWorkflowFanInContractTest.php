@@ -113,9 +113,9 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 
 		$full_start              = strpos( $terminal, 'if [[ "$LANE" == full ]]' );
 		$release_candidate_start = strpos( $terminal, 'elif [[ "$LANE" == release-candidate ]]' );
-		$unsupported_start       = strpos( $terminal, 'else', $release_candidate_start );
-		self::assertIsInt( $full_start );
 		self::assertIsInt( $release_candidate_start );
+		$unsupported_start = strpos( $terminal, 'else', $release_candidate_start );
+		self::assertIsInt( $full_start );
 		self::assertIsInt( $unsupported_start );
 		self::assertTrue( $full_start < $release_candidate_start );
 		self::assertTrue( $release_candidate_start < $unsupported_start );

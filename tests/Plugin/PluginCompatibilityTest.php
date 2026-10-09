@@ -124,6 +124,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( '', $result['documentation'] );
 		self::assertFalse( $result['provider_loaded'] );
 		self::assertFalse( $result['registered'] );
+		self::assertIsString( $result['compatibility_notice'] );
 		self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'] );
 		self::assertSame( 0, $result['remote_calls'] );
 	}
@@ -220,6 +221,7 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertFalse( $result['registered'] );
 		self::assertFalse( $result['credential_store_was_scoped'] );
 		self::assertSame( 0, $result['remote_calls'] );
+		self::assertIsString( $result['compatibility_notice'] );
 		self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'] );
 	}
 
@@ -277,6 +279,7 @@ final class PluginCompatibilityTest extends TestCase {
 			self::assertFalse( $result['credential_store_was_scoped'], $fixture_mode );
 			self::assertFalse( $result['delivery_evidence_was_scoped'], $fixture_mode );
 			self::assertFalse( $result['registered'], $fixture_mode );
+			self::assertIsString( $result['compatibility_notice'] );
 			self::assertStringContainsString( 'requires a compatible RAN Booster installation', $result['compatibility_notice'], $fixture_mode );
 			self::assertSame( 0, $result['credential_store_reads'], $fixture_mode );
 			self::assertSame( 0, $result['remote_calls'], $fixture_mode );

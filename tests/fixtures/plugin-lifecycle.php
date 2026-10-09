@@ -85,11 +85,16 @@ function current_user_can( string $capability ): bool {
 	return 'activate_plugins' === $capability && 'absent-unprivileged' !== ( $GLOBALS['ran_booster_bitbucket_fixture_mode'] ?? '' );
 }
 
+/** @return array{scheme?: string, host?: string, port?: int, user?: string, pass?: string, path?: string, query?: string, fragment?: string}|false */
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_parse_url( string $url ): array|false {
 	return parse_url( $url ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- WordPress fixture stand-in.
 }
 
+/**
+ * @param array<string, mixed> $arguments HTTP options supplied by the provider.
+ * @return array{response: array{code: int}, body: string}
+ */
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_get( string $url, array $arguments ): array {
 	unset( $url, $arguments );
@@ -117,11 +122,13 @@ function is_wp_error( mixed $value ): bool {
 	return false;
 }
 
+/** @param array{response: array{code: int}, body: string} $response Controlled fixture HTTP response. */
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_retrieve_response_code( array $response ): int {
 	return (int) $response['response']['code'];
 }
 
+/** @param array{response: array{code: int}, body: string} $response Controlled fixture HTTP response. */
 // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 function wp_remote_retrieve_body( array $response ): string {
 	return (string) $response['body'];

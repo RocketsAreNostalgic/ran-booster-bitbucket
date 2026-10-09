@@ -614,7 +614,10 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		return \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests();
 	}
 
-	/** @param list<\RAN\RepositoryProvider\RepositoryDescriptor> $repositories */
+	/**
+	 * @param list<\RAN\RepositoryProvider\RepositoryDescriptor> $repositories
+	 * @return list<array<string, string|bool|null>> Descriptor values from Core to_array().
+	 */
 	private function rows( array $repositories ): array {
 		return array_map( static fn ( $repository ): array => $repository->to_array(), $repositories );
 	}

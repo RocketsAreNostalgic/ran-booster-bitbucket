@@ -110,6 +110,9 @@ $registry                 = new RAN\RepositoryProvider\ProviderRegistry(
 	},
 	new RAN\RepositoryProvider\ProviderRegistrationContext( static fn (): int => 52_428_800 )
 );
+if ( ! is_callable( $registration_callbacks[0] ) ) {
+	throw new RuntimeException( 'The installed provider registration must be callable.' );
+}
 $registration_callbacks[0]( $registry );
 $registry->seal();
 if ( ! $credential_store_scoped || ! $delivery_evidence_scoped || ! $registry->is_sealed() ) {
