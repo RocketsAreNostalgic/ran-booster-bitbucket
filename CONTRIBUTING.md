@@ -1,5 +1,7 @@
 # Contributing
 
+Follow the [shared contribution guidance](https://github.com/RocketsAreNostalgic/.github/blob/main/CONTRIBUTING.md) and the repository-specific development instructions below.
+
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
 Before proposing a change, run `composer check` for the Core-independent source-quality contract. Host checks use the exact immutable Core beta.31 checkout recorded in
@@ -29,8 +31,8 @@ v1.0.1 (`0248066be3f4f9476ef7095d888657001488a3de`). Install from the lockfile;
 upgrades require their own dependency diff and retained local/native proof.
 The shared profile makes assignment/array alignment blocking even when PHPCS
 warnings are hidden. `standards` and `standards:fix` remain the same authority.
-The separately available `RANOwnedMethods` profile is opt-in; this adoption
-alone does not activate unfinished naming scopes or change the certified host.
+This repository also enables `RANOwnedMethods` for owned method naming; see
+`.phpcs.xml`. Dependency adoption does not change the certified host.
 
 ## Syntax command integrity
 
@@ -57,7 +59,9 @@ extension case variants fail before they can evade the lowercase PHP tools. The
 rejects a new root product file, narrowed analysis or standards scope and a
 PHPCS exclusion; `check:host` inherits this repository check. The release
 verifier and purpose-built test fixtures now share the PHPCS/PHPCBF profile
-with the documented role-specific exceptions; PHPStan remains product-only.
+with the documented role-specific exceptions. PHPStan analyzes product and
+maintained development PHP in separate level-8 profiles; `composer check:host`
+runs both.
 
 ## Condition-style enforcement
 
@@ -69,7 +73,7 @@ pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
 Owned method/variable naming is enforced across all configured product paths,
 including future classes and classes with inherited or implemented contracts.
-The current API 14 candidate no longer needs certified Core naming exceptions.
+The released API 14 contract requires no legacy Core naming exceptions.
 
 ## Production naming enforcement
 
@@ -77,42 +81,12 @@ The current API 14 candidate no longer needs certified Core naming exceptions.
 `autoload.php`, `ran-booster-bitbucket.php` and `index.php`: all 20 currently
 shipped PHP files. Check and fix use this same scope; new PHP files under the
 configured directories are included automatically. The same profile also
-covers all 28 development PHP files under `tests/` and `scripts/`, with the
+covers maintained development PHP under `tests/` and `scripts/`, including the
+HTTP `.stub` contract, with the
 diagnostic-specific foreign-signature and CLI exceptions described below.
 
-The former per-class allowlist and blanket method-name, namespace-prefix,
-unused-parameter and reserved-parameter suppressions have been removed.
 Unused-parameter checks follow the shared WPCS baseline, including its upstream
-inherited-signature allowances. The autoloader uses `class_name` for its owned
-callback parameter. PHP magic
-methods retain their required spelling. The historical connected-contract
-exceptions described below have been removed by the API 14 recovery.
-
-Historical owned-name migrations before API 13 and API 14:
-The retained Core names in this table describe those earlier stages only; the
-current API 14 contract below supersedes them.
-
-| Owned scope | Owned-name migration |
-| --- | --- |
-| `BitbucketApiResponse` | `getStatus` / `getBody` become `get_status` / `get_body`; constructor names `status` and `body` are unchanged. |
-| `BitbucketRepositoryCoordinates` | `fromFullName`, `getWorkspace`, `getRepositorySlug`, `getFullName`, `matchesFullName` become their snake_case equivalents; owned `repositorySlug` / `fullName` become `repository_slug` / `full_name`, including factory/matcher named arguments. |
-| `BitbucketCredential` | `fromMaterial`, `getWorkspace`, `isWorkspace` become `from_material`, `get_workspace`, `is_workspace`; validation and Authorization header bytes stay unchanged. |
-| `BitbucketCredentialLoader` / `BitbucketCredentialException` | `load` takes `credential_id` (including named arguments); `unavailable` is already compliant. Core `credentialMaterial` remains unchanged. |
-| `BitbucketApiClient` | Private URL/query helpers become snake_case; `responseSize` / `decodedPath` become `response_size` / `decoded_path`, including the public `get` named argument. |
-| `BitbucketApiException` | `invalidUrl`, `transportError`, `invalidResponse`, `getReason` become snake_case. Reason constants, error messages and inherited exception methods stay unchanged. |
-| `BitbucketRepositoryBrowser` | Six private helpers and owned parameters/locals become snake_case; `repository` named arguments are `full_name`, `credential_id`, `timeout`, `response_size`, `public_only`. Core DTO properties and browse-request methods remain unchanged. |
-| `BitbucketArchivePreparer` | `prepareArchive` and eleven private helpers become snake_case, with owned parameters/locals and closure captures. Core-required `BitbucketProvider::prepareArchive`, archive methods, request fields and hook/wire names remain unchanged. |
-| `BitbucketDiagnostics` | Five private helpers and the owned credential local become snake_case. Core diagnostic request/result methods and the public `diagnose` signature remain unchanged. |
-| `Plugin` | Registration, documentation and compatibility callbacks, their registered method strings, the compatibility helper and owned parameters become snake_case. Hook names, priority/argument counts, Core registration methods and rendered output remain unchanged. |
-| `BitbucketCredentialPolicy` / `BitbucketWebhookPolicy` | Nine private helpers and three owned locals become snake_case. All twelve public declarations retain their certified Core interface names; webhook authorization and target matching also retain the two interface parameter names. |
-| `BitbucketWebhookNormalizer` | Eight private helpers, two owned properties/constructor parameters and three locals become snake_case. Constructor named arguments are `webhook_profiles` and `delivery_evidence`. Core interface methods and authenticated-delivery evidence fields remain unchanged. |
-| `BitbucketProvider` / `BitbucketCredentialValidator` | Provider properties become `credential_validator` / `credential_policy`, including the owned constructor parameter. Validator's extra optional parameter becomes `response_size`; Core-required `credentialId` stays unchanged. Public interface methods and request fields are retained. |
-
-Historically, the browser/archive scope retained nine line-specific
-`UsedPropertyNotSnakeCase` suppressions for eleven accesses to certified Core
-`RepositoryDescriptor`, `RepositoryReference` and `ArchiveRequest` fields
-(`providerRepositoryId`, `credentialId`, `expectedBranch`). API 14 migrates these
-fields to snake_case and removes the obsolete suppressions.
+inherited-signature allowances. PHP magic methods retain their required spelling.
 
 ## Provider API 14 connected naming
 
@@ -160,29 +134,22 @@ entrypoint, `src/`, `views/` and `index.php`: all 20 currently shipped PHP files
 selected by `release-files.txt`. Directory roots include future PHP files under
 `src/` and `views/`. The inert index is included for complete shipped-path
 coverage. Host/bootstrap symbol availability is not additional direct coverage;
-tests, fixtures and the unshipped release verifier remain outside these roots.
+tests, fixtures and the unshipped release verifier are directly analyzed by
+`phpstan-development.neon.dist` instead. That level-8 profile starts at the
+repository root and excludes only the separately analyzed production paths and
+dependency/generated roles. New development PHP is selected automatically.
+`composer analyze:development` runs it independently; `composer check:host` runs
+both profiles plus `composer test:development-analysis`. The effective-coverage
+guard checks their union, level floors and stub filtering. The HTTP `.stub` is
+directly analyzed as development PHP and validated as a product stub; fixture
+symbols remain isolated from product analysis.
 
-Analysis uses `--debug` to keep the command serial in managed environments that
-prohibit PHPStan's loopback worker socket. It uses no baseline, ignored-error
-rule or production annotation. On 27 September 2026, all 20 paths reported zero
-errors with the locked tools against certified Core
-`ffc11fc8e40618624a785b7fca5193029c6d492e` (beta.29). A temporary return-type
-violation in the documentation view failed `check:host` during analysis, before
-PHPUnit; the probe was removed. That coverage extension retained the then-required
-level 3, production bytes, dependency locks and the certified-host tuple.
+Analysis uses `--debug` to keep the commands serial in managed environments that
+prohibit PHPStan's loopback worker socket. No baseline or broad ignore list is
+accepted. Locked PHPStan API calls and the executable JSON type assertion retain
+occurrence-specific annotations and adjacent-call/assertion negative controls,
+as described in `AGENTS.md`.
 
-The historical pilot measured these higher-level results on 11 August 2026
-(the pre-fix counts were reverified across all 20 shipped paths on 28 September
-2026 at `80895ee9ffe0bf4e49b38939115c8946438f5a60`):
-
-| Levels | Findings | Interpretation |
-| --- | ---: | --- |
-| 3 | 0 | Adopted clean floor. |
-| 4-5 | 14 | Eleven HTTP-response certainty findings plus three defensive array checks. |
-| 6-8 | 15 | The same findings plus one missing iterable return-value annotation. |
-
-The historical HTTP-client findings combined ten optimistic response-shape
-assumptions with one `method_exists()` check after `is_wp_error()` narrowing.
 The analysis-only `tests/phpstan/wordpress-http.stub` now models the return of
 `wp_remote_get()` as `mixed`: WordPress's
 [pre_http_request filter](https://developer.wordpress.org/reference/hooks/pre_http_request/)
@@ -208,14 +175,6 @@ same method. Only `http_request_failed` becomes a transport error; other codes,
 including an empty code, still become fixed safe invalid-response errors.
 Non-error objects still reach the malformed-response guard. The expanded
 classification fixtures pass before and after the cleanup.
-Levels 3–8 report zero findings across all 20 shipped PHP paths. The required
-gate is now level 8; the promotion changes configuration and guidance only.
-On 28 September 2026, each intermediate level 3–8 was rerun separately with
-zero findings against the same certified Core and locked tools. A temporary
-nullable `DateTimeImmutable` method-call probe passed levels 3 and 7, but failed
-the default `composer analyze` and `composer check:host` at level 8 before tests.
-The probe was removed and the clean host aggregate rerun.
-
 The locked WordPress stubs cover the symbols used by this add-on, with the
 filterable HTTP return correction above. Their 6.9.4 version is not a claim of
 complete WordPress 7.0 API coverage: retain the native WordPress 7.0.3 installed
@@ -253,7 +212,7 @@ The full repository lane now runs the host aggregate without an advisory
 `continue-on-error` bypass. Release-candidate lanes retain their existing
 exact-successful-main admission and installed-proof requirements.
 
-## Next-beta standards adoption
+## Development standards
 
 The v1.0.1 development-only upgrade adopts the shared exception-message policy:
 `WordPress.Security.EscapeOutput.ExceptionNotEscaped` is intentionally disabled
@@ -263,10 +222,8 @@ actual output escaping remain unchanged. All other locked packages, the
 required PHPStan level 8 gate and immutable Core beta.31 certification remain
 unchanged.
 
-The follow-up development profile now checks all 48 maintained PHP files: the
-20 product files plus 28 tests, installed probes and CLI helpers. Analysis remains
-PHPStan level 8 over the same 20 product files; development standards coverage
-does not claim development-file static analysis.
+Standards and analysis cover all 50 maintained PHP-bearing files, including
+the HTTP `.stub`. Product and development analysis both require level 8.
 
 Owned test/helper methods and local variables use snake_case, including inherited
 PHPUnit test methods. PHPUnit lifecycle overrides, native DOM/ZipArchive fields,
@@ -293,9 +250,20 @@ locks, API identities and genuine released-Core certification are unchanged.
 The suppression guard reads PHP comment tokens, accepts only exact four-part
 PHPCS diagnostic codes with a non-empty reason, and rejects category/standard
 selectors, legacy directives, case/prefix variants of file ignores and inline
-configuration changes. Only the process-local variable prefix diagnostic may
-remain disabled at line 2 of a root `tests/` or `scripts/` file. That exemption
-does not cover declarations or foreign hooks. Existing foreign WordPress/Core
+configuration changes. Only
+`WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound` may remain
+disabled at line 2, and only in these seven guard-enumerated paths:
+
+- `scripts/check-product-php-coverage.php`
+- `scripts/verify-release.php`
+- `tests/bootstrap.php`
+- `tests/phpstan-bootstrap.php`
+- `tests/fixtures/plugin-lifecycle.php`
+- `tests/WordPress/bitbucket-installed-inert.php`
+- `tests/WordPress/bitbucket-installed-smoke.php`
+
+New files must comply or receive a deliberate reviewed scope change. This
+exemption does not cover declarations or foreign hooks. Existing foreign WordPress/Core
 names have occurrence-local diagnostic annotations; the release verifier's
 owned constants and functions use the repository prefix.
 
