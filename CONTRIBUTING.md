@@ -92,8 +92,9 @@ inherited-signature allowances. PHP magic methods retain their required spelling
 
 The released Core API 14 generation includes the earlier 28 interface method migrations
 and completes owned parameter, DTO property, request/result method and consumer
-naming. Normal host qualification uses `extra.ran-booster-core-certification.commit`;
-the earlier candidate identity remains a test-only historical fixture.
+naming. API 15 source qualification now uses the exact `extra.ran-booster-core-candidate.commit`
+in explicit candidate mode. Released-host certification and installed proof remain
+required separately before publication; see `RELEASE.md`.
 
 All obsolete declaration, variable and property naming waivers have been removed.
 `composer test:naming` retains the earlier 28-method negative controls: each old

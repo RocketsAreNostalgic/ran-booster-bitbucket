@@ -57,14 +57,17 @@ Release Please is configured with `draft: true` and `force-tag-creation: true`. 
 
 The reusable `Certified Core installed proof` workflow downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact successful main Quality SHA supplied by the release caller. The release job depends on this proof succeeding; failure or a skipped proof prevents shared Profile B admission, including after a release PR merges. Manual dispatch remains available for certification diagnosis and does not invoke publication.
 
-## API 14 released-host qualification
+## API 15 candidate and release qualification
 
-Normal Quality and local host checks use the exact immutable beta.31 tag target in
-`extra.ran-booster-core-certification`, with candidate mode unset. The tag target
-and embedded archive-source commit are independently verified; for beta.31 both
-are `8a3ed5a8acdb3875f498e2f44bf9eba89fddbbaf`. This replaces the historical API 11
-beta.29 certification. The retained candidate fixture is test-only and is not used
-by normal Quality or release admission.
+Source Quality and local host checks explicitly select candidate mode and the
+exact Core PR307 SHA in `extra.ran-booster-core-candidate`. This qualifies source
+contracts only. The retained `ran-booster-core-certification` beta.31 tuple is
+historical API 14 evidence and cannot admit this API 15 revision for publication.
+Before release admission, replace it with a compatible immutable Core release,
+restore released-host Quality, and pass the existing installed-proof gate for
+the final source revision. No candidate source checkout substitutes for a released
+archive. The tag target and embedded archive-source commit remain independently
+verified.
 
 Released-host analysis and unit checks do not replace the separate certified
 installed proof. That proof must pass for the final source revision before Release

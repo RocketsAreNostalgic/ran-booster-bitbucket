@@ -137,6 +137,10 @@ final class PluginCompatibilityTest extends TestCase {
 		self::assertSame( 0, $result['remote_calls'] );
 	}
 
+	public function test_it_fails_closed_with_provider_api_fourteen_and_current_add_on_api(): void {
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fourteen-addon-seventeen' );
+	}
+
 	public function test_it_fails_closed_with_provider_api_thirteen_and_current_add_on_api(): void {
 		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-thirteen-addon-seventeen' );
 	}
@@ -146,7 +150,7 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function test_it_fails_closed_with_current_provider_and_immediate_old_add_on_api(): void {
-		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fourteen-addon-sixteen' );
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fifteen-addon-sixteen' );
 	}
 
 	public function test_it_fails_closed_with_the_immediate_old_provider_and_add_on_tuple(): void {
@@ -154,14 +158,14 @@ final class PluginCompatibilityTest extends TestCase {
 	}
 
 	public function test_it_fails_closed_with_newer_provider_api(): void {
-		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fifteen-addon-seventeen' );
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-sixteen-addon-seventeen' );
 	}
 
 	public function test_it_fails_closed_with_newer_add_on_api(): void {
-		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fourteen-addon-eighteen' );
+		$this->assert_tuple_fails_closed_in_both_load_orders( 'provider-fifteen-addon-eighteen' );
 	}
 
-	public function test_it_registers_only_against_provider_api_fourteen_without_claiming_optional_capabilities(): void {
+	public function test_it_registers_only_against_provider_api_fifteen_without_claiming_optional_capabilities(): void {
 		$result = $this->run_fixture( 'compatible-core-first' );
 
 		self::assertSame( 1, $result['provider_callbacks'] );
