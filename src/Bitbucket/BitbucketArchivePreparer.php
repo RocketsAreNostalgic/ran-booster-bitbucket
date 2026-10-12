@@ -58,6 +58,7 @@ final readonly class BitbucketArchivePreparer {
 			}
 		}
 
+		$request->progress?->progress( 'bb.resolving_revision' );
 		$commit = $this->immutable_commit(
 			$workspace,
 			$repository_slug,
@@ -67,7 +68,8 @@ final readonly class BitbucketArchivePreparer {
 			$request->expected_branch,
 			$credential
 		);
-		$url    = self::ARCHIVE_BASE
+		$request->progress?->progress( 'bb.revision_verified' );
+		$url = self::ARCHIVE_BASE
 			. rawurlencode( $workspace )
 			. '/'
 			. rawurlencode( $repository_slug )

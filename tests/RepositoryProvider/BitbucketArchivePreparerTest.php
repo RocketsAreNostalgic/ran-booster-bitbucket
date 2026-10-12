@@ -9,6 +9,7 @@ require_once __DIR__ . '/BitbucketRepositoryBrowserSecretsStub.php';
 require_once __DIR__ . '/AuthenticatedPreparedArchiveWordPressFunctions.php';
 
 use PHPUnit\Framework\TestCase;
+use RAN\Activity\ActivityProgress;
 use RAN\RepositoryProvider\AuthenticatedPreparedArchive;
 use RAN\RepositoryProvider\ArchiveRequest;
 use RAN\Booster\Bitbucket\BitbucketApiClient;
@@ -40,6 +41,21 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$this->reset_harness();
 
 		parent::tearDown();
+	}
+
+	public function test_archive_progress_reports_verified_revision_without_terminal_authority(): void {
+		$progress = new class() implements ActivityProgress {
+			/** @var list<string> */
+			public array $stages = array();
+			public function progress( string $code, string $message = '' ): void {
+				$this->stages[] = $code . $message;
+			}
+		};
+		$this->queue( array( $this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ) ) );
+		$archive = $this->preparer()->prepare_archive( new ArchiveRequest( new RepositoryReference( 'acme/example', self::REPOSITORY_UUID, false, null ), self::COMMIT, progress: $progress ) );
+		self::assertSame( array( 'bb.resolving_revision', 'bb.revision_verified' ), $progress->stages );
+		self::assertCount( 1, $this->requests() );
+		$archive->cleanup();
 	}
 
 	public function test_public_immutable_commit_is_verified_anonymously_without_credential_or_hooks(): void {

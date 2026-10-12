@@ -34,7 +34,7 @@
             "requires-php": "8.2",
             "booster-apis": {
                 "required": {
-                    "provider": 14,
+                    "provider": 15,
                     "addon": 17
                 },
                 "optional": {}

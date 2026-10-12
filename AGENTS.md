@@ -4,13 +4,13 @@ This repository is a dependent RAN Booster add-on, not a standalone plugin.
 
 ## Runtime contract
 
-- RAN Booster is required. This add-on supports exactly Provider API `14` and the official-suite Add-on API `17` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
-- The exact tag, tag-target commit, and archive-source commit in `extra.ran-booster-core-certification` identify the immutable beta.31 Core release used for released-host qualification. It is not a second runtime version gate: if Core keeps the same published Provider API 14 / Add-on API 17 generation, the add-on must rely on that public compatibility contract rather than infer a private minimum version from unchanged interfaces.
-- Provider API `14` supplies no logging capability. Diagnostics return only bounded typed results; do not add an add-on-to-Core logging channel or local fallback.
+- RAN Booster is required. This add-on supports exactly Provider API `15` and the official-suite Add-on API `17` generation, WordPress 7.0+, and PHP 8.2+; PHP 8.4 is recommended, not required.
+- The exact tag, tag-target commit, and archive-source commit in `extra.ran-booster-core-certification` identify the immutable beta.31 Core release used for released-host qualification. It is not a second runtime version gate: if Core keeps the same published Provider API 15 / Add-on API 17 generation, the add-on must rely on that public compatibility contract rather than infer a private minimum version from unchanged interfaces.
+- Provider API `15` supplies bounded activity progress through ArchiveRequest. Diagnostics retain bounded typed results; do not add a general logging channel or local fallback.
 - Bitbucket does not claim the optional webhook fitness or management capabilities. Keep its existing provider behavior unchanged until a separately reviewed provider implementation proves those operations.
 - On a missing or incompatible Core, register no provider, make no remote calls, and render only the safe administrator compatibility notice.
 - The add-on may intentionally use public RAN Booster runtime classes through Core's shipped production autoloader after the runtime API guard. Do not vendor, copy, or ship RAN Booster production or test code.
-- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`; authenticated delivery diagnostics use only the provider-bound `AuthenticatedWebhookDeliveryEvidenceReader` supplied by Provider API 14 registration.
+- Do not read Core sidecar paths, persist credentials, assume deployment authority, or reach into Core container/storage internals. Provider credentials arrive only through `ProviderCredentialStore`; authenticated delivery diagnostics use only the provider-bound `AuthenticatedWebhookDeliveryEvidenceReader` supplied by Provider API 15 registration.
 - The add-on owns one non-interactive guide at
   `ran_booster_documentation_sections_after_provider_bb`. It receives only the
   canonical documentation URL and administration scope, imports no Core

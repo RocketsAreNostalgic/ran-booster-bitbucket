@@ -43,7 +43,7 @@ final class PluginCompatibilityTest extends TestCase {
 				'requires-php'       => '8.2',
 				'booster-apis'       => array(
 					'required' => array(
-						'provider' => 14,
+						'provider' => 15,
 						'addon'    => 17,
 					),
 					'optional' => array(),
@@ -58,7 +58,7 @@ final class PluginCompatibilityTest extends TestCase {
 		);
 		self::assertStringContainsString( 'Plugin Name: RAN Booster Bitbucket Cloud', $entrypoint );
 		self::assertStringContainsString( 'Update URI: https://github.com/RocketsAreNostalgic/ran-booster-bitbucket', $entrypoint );
-		self::assertStringContainsString( '14 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '15 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '17 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		$security = file_get_contents( $root . '/SECURITY.md' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local public-support contract.
 		self::assertIsString( $security );

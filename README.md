@@ -1,5 +1,8 @@
 # RAN Booster Bitbucket Cloud
 
+> Reporting candidate: requires Provider API 15 / Add-on API 17. Exact source qualification is pending the coordinated Core candidate; the previous beta.31 certification below does not qualify this revision.
+> Archive preparation reports resolving and verified revision stages through the public progress handle. Core owns the enclosing check outcome; no local activity store or logging channel is added.
+
 RAN Booster Bitbucket Cloud is the free Bitbucket provider for RAN Booster. It
 registers the `bb` provider and adds the Bitbucket settings tab through Provider
 API 14. The add-on requires Add-on API 17 and inserts its operational guide
@@ -7,12 +10,12 @@ after Core's Bitbucket provider documentation.
 
 ## Compatibility and safety
 
-- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 14 and Add-on API 17.
+- Requires WordPress 7.0+, PHP 8.2+ (PHP 8.4 recommended), and exactly RAN Booster Provider API 15 and Add-on API 17.
 - Released-host qualification uses immutable Core `v1.0.0-beta.31`, tag target and archive-source commit `8a3ed5a8acdb3875f498e2f44bf9eba89fddbbaf`. Its archive SHA-256 is `cf0ebbd306fa9086a9f885974f490b0cacb4a172c20f6b290dde13d2f3a7b2c5`. Final release admission still requires installed proof against this genuine archive.
 - `Requires Plugins: ran-booster` declares Core as a package dependency, but WordPress does not check Booster's APIs. The add-on checks `RAN_BOOSTER_PROVIDER_API_VERSION`, `RAN_BOOSTER_ADDON_API_VERSION` and the supported runtime mode; a missing or incompatible API boundary disables provider registration and remote calls.
-- Provider API 14 has no logging capability. Diagnostics return bounded `ProviderDiagnosticResult` values to Core and never send exceptions or vendor text through a logging facade.
+- Provider API 15 supplies bounded archive progress, not a general logging capability. Diagnostics return bounded `ProviderDiagnosticResult` values to Core and never send exceptions or vendor text through a logging facade.
 - If Core is missing or incompatible, the add-on displays a compatibility notice only to administrators who can activate plugins.
-- Credentials come only from Core's provider-bound `ProviderCredentialStore`. Authenticated webhook-delivery diagnostics use Core's provider-bound `AuthenticatedWebhookDeliveryEvidenceReader`, supplied by Provider API 14 registration. The add-on neither stores credentials nor reads Core's sidecar paths, service container, database repositories or test fixtures.
+- Credentials come only from Core's provider-bound `ProviderCredentialStore`. Authenticated webhook-delivery diagnostics use Core's provider-bound `AuthenticatedWebhookDeliveryEvidenceReader`, supplied by Provider API 15 registration. The add-on neither stores credentials nor reads Core's sidecar paths, service container, database repositories or test fixtures.
 - The provider intentionally implements none of the optional release metadata,
   candidate-listing, inspection, acquisition, native-target or release-workflow capabilities.
 - The provider does not implement the optional webhook fitness or management capabilities; use the included instructions to configure Bitbucket webhooks manually. Its webhook diagnostics can still report whether Core has authenticated a delivery and whether that delivery matched a managed package.
@@ -20,7 +23,7 @@ after Core's Bitbucket provider documentation.
 
 ## Install and operate
 
-1. Install and activate a RAN Booster release that provides Provider API 14 and Add-on API 17.
+1. Install and activate a RAN Booster release that provides Provider API 15 and Add-on API 17.
 2. Download `ran-booster-bitbucket-<version>.zip` and its `.sha256` file from
    the same GitHub release. Do not use GitHub's generated source archives.
 3. Verify the checksum, then upload and activate the ZIP through WordPress's
