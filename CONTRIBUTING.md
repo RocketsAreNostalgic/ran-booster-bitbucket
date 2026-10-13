@@ -4,19 +4,22 @@ Follow the [shared contribution guidance](https://github.com/RocketsAreNostalgic
 
 Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change.
 
-Before proposing a change, run `composer check` for the Core-independent source-quality contract. Host checks use the exact immutable Core beta.31 checkout recorded in
-`extra.ran-booster-core-certification.commit`. Install only its locked production
-dependencies, leave candidate mode unset, and run both host checks and analysis:
+Before proposing a change, run `composer check` for the Core-independent source-quality contract. Host checks use the exact Core source candidate recorded in
+`extra.ran-booster-core-candidate.commit`:
+`8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2`. Install only its locked production
+dependencies, enable candidate mode, and run both host checks and analysis:
 
 ```sh
-unset RAN_BOOSTER_CORE_TEST_MODE
+git -C ../ran-booster checkout --detach 8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2
+(cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
+export RAN_BOOSTER_CORE_TEST_MODE=candidate
 export RAN_BOOSTER_CORE_PATH=../ran-booster
 export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
 composer check:host
 composer analyze
 ```
 
-The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These released-host checks qualify source merges after independent review; they do not replace certification against a matching immutable Core release or installed proof. The release caller requires that proof against the exact successful main Quality SHA before shared Profile B admission. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
+The add-on test suite consumes only that Core checkout's shipped `autoload.php` and public production contracts; do not install Core's development dependencies or import Core-owned test fixtures into this repository. Run `composer build:release` for archive verification. These candidate source checks qualify source merges after independent review; they do not replace certification against a matching immutable Core release or installed proof. The retained beta.31 tuple in `extra.ran-booster-core-certification` records historical API 14 released-host evidence only; it does not qualify API 15 publication. Default released mode has no fallback to candidate mode. The release caller requires that proof against the exact successful main Quality SHA before shared Profile B admission. Changes to compatibility, the entry header, version sources, archive allowlist, or release documentation need a matching test or archive verification update.
 
 This add-on is distributed through verified GitHub release artifacts only. Do not add WordPress.org/SVN release work without a separate decision.
 
@@ -73,7 +76,7 @@ pass before and after the change. Restoring the old comparison fails the
 configured standards gate, and two clean PHPCBF passes leave source unchanged.
 Owned method/variable naming is enforced across all configured product paths,
 including future classes and classes with inherited or implemented contracts.
-The released API 14 contract requires no legacy Core naming exceptions.
+The API 15 contract requires no legacy Core naming exceptions.
 
 ## Production naming enforcement
 
@@ -88,11 +91,11 @@ diagnostic-specific foreign-signature and CLI exceptions described below.
 Unused-parameter checks follow the shared WPCS baseline, including its upstream
 inherited-signature allowances. PHP magic methods retain their required spelling.
 
-## Provider API 14 connected naming
+## Provider API connected naming
 
-The released Core API 14 generation includes the earlier 28 interface method migrations
-and completes owned parameter, DTO property, request/result method and consumer
-naming. API 15 source qualification now uses the exact `extra.ran-booster-core-candidate.commit`
+The historical released Core API 14 generation included the earlier 28 interface method migrations
+and completed owned parameter, DTO property, request/result method and consumer
+naming, retained by the current API 15 contract. API 15 source qualification now uses the exact `extra.ran-booster-core-candidate.commit`
 in explicit candidate mode. Released-host certification and installed proof remain
 required separately before publication; see `RELEASE.md`.
 
@@ -100,7 +103,7 @@ All obsolete declaration, variable and property naming waivers have been removed
 `composer test:naming` retains the earlier 28-method negative controls: each old
 spelling is restored in a disposable copy and rejected by `RANOwnedMethods`.
 The broader production PHPCS scope checks the remaining recovered naming, and
-level-8 host analysis checks the actual released contract.
+level-8 host analysis checks the exact configured Core source contract.
 
 Public named arguments now use `credential_id`, `repository_authority_id` and
 `repository_locator`. Core DTO fields include
@@ -114,19 +117,20 @@ No coexistence aliases are provided during beta. Coordinate validation,
 authorization, case-insensitive matching, response bytes/status, wire keys,
 URL/path/query restrictions, HTTP classification, malformed-response guards,
 pagination, repository/ref/commit identity, archive authentication and cleanup
-are preserved. Provider API advances to 14 and Add-on API to 17; Workflow V3 is
-unchanged. Core beta.31 now supplies the matching immutable released host.
+are preserved. The current runtime requires Provider API 15 and Add-on API 17;
+Workflow V3 is unchanged. Core beta.31 supplied the historical API 14 released
+host; API 15 released-host certification remains a separate publication gate.
 
 ## Blocking host analysis
 
 PHPStan level 8 is required by `composer check:host` and the full repository CI
 lane, whose failure feeds terminal `Quality`. The independent `composer check`
 remains usable without Core. The focused command also fails on analysis errors.
-Run it in default released mode against the recorded Core production source; Core's own Composer
-dependencies are optional for this focused command:
+Run it in explicit candidate mode against the exact source commit configured
+above; Core's own Composer dependencies are optional for this focused command:
 
 ```sh
-RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
+RAN_BOOSTER_CORE_TEST_MODE=candidate RAN_BOOSTER_CORE_PATH=../ran-booster composer analyze
 ```
 
 The lockfile currently resolves PHPStan 2.2.8, `phpstan-wordpress` 2.0.3 and
@@ -220,8 +224,8 @@ The v1.0.1 development-only upgrade adopts the shared exception-message policy:
 by the shared profile because throwing an exception is not rendering output.
 Thirteen redundant local directives are removed; provider error mapping and
 actual output escaping remain unchanged. All other locked packages, the
-required PHPStan level 8 gate and immutable Core beta.31 certification remain
-unchanged.
+required PHPStan level 8 gate and historical immutable Core beta.31 certification
+record remain unchanged.
 
 Standards and analysis cover all 50 maintained PHP-bearing files, including
 the HTTP `.stub`. Product and development analysis both require level 8.

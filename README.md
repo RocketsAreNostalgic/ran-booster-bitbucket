@@ -46,16 +46,18 @@ installation records or credential storage to remove.
 ## Development
 
 This is a dependent add-on, not a generic standalone plugin. Development tests
-use the exact Core beta.31 release in `extra.ran-booster-core-certification`.
-Check out its tag in a separate Core checkout at `../ran-booster` and install
-only its locked production dependencies. The suite loads Core's shipped
-`autoload.php` and public production contracts. Leave candidate mode unset:
+use the exact Core source commit in `extra.ran-booster-core-candidate.commit`:
+`8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2`. Check it out in a separate Core
+checkout at `../ran-booster` and install only its locked production dependencies.
+The suite loads Core's shipped `autoload.php` and public production contracts.
+Use explicit candidate mode for this API 15 source qualification:
 
 ```sh
 composer install
 composer check
+git -C ../ran-booster checkout --detach 8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2
 (cd ../ran-booster && composer install --no-dev --no-interaction --prefer-dist --no-progress)
-unset RAN_BOOSTER_CORE_TEST_MODE
+export RAN_BOOSTER_CORE_TEST_MODE=candidate
 export RAN_BOOSTER_CORE_PATH=../ran-booster
 export RAN_BOOSTER_CORE_VENDOR_AUTOLOAD=../ran-booster/vendor/autoload.php
 composer check:host
@@ -71,7 +73,7 @@ the Core-backed unit and release-candidate contracts and is required for the
 source handoff against the exact configured Core source candidate. It does not replace
 release certification or installed proof.
 
-Set `RAN_BOOSTER_CORE_PATH` if the exact certified Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
+Set `RAN_BOOSTER_CORE_PATH` if the exact configured Core checkout is elsewhere and set `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD` to that checkout's generated `vendor/autoload.php` when running Core-backed source tests or analysis.
 For API 15 source qualification, set `RAN_BOOSTER_CORE_TEST_MODE=candidate` and
 check out the exact `ran-booster-core-candidate.commit` (Core PR307). Quality uses
 this explicit mode and only Core's locked production dependencies. The default
