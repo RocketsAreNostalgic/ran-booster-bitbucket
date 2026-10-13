@@ -3,6 +3,18 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.17](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.16...v0.1.0-beta.17) (2026-10-13)
+
+
+### Features
+
+* report Bitbucket archive check progress ([#110](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/110)) ([3345c01](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/3345c0151e23e41aaf49a78fa2d465f9547d5373))
+
+
+### Bug Fixes
+
+* certify Bitbucket API15 against released Core beta35 ([#111](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/111)) ([2578da1](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/2578da111af13c5724da6c9488227f8eb7dc63c8))
+
 ## [0.1.0-beta.16](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.15...v0.1.0-beta.16) (2026-10-07)
 
 
