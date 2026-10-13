@@ -18,9 +18,9 @@
             "commit": "8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2"
         },
         "ran-booster-core-certification": {
-            "tag": "v1.0.0-beta.31",
-            "commit": "8a3ed5a8acdb3875f498e2f44bf9eba89fddbbaf",
-            "archive-source-commit": "8a3ed5a8acdb3875f498e2f44bf9eba89fddbbaf"
+            "tag": "v1.0.0-beta.35",
+            "commit": "5743df3af0a33c35839aec0bb369a72d084b3d7a",
+            "archive-source-commit": "5743df3af0a33c35839aec0bb369a72d084b3d7a"
         },
         "ran-booster-extension": {
             "schema": 1,

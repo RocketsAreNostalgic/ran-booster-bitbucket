@@ -8,7 +8,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 $fixture_mode = getenv( 'RAN_BOOSTER_BITBUCKET_INERT_MODE' );
-if ( ! in_array( $fixture_mode, array( 'absent', 'incompatible', 'provider-twelve', 'provider-fifteen', 'addon-sixteen', 'addon-eighteen' ), true ) ) {
+if ( ! in_array( $fixture_mode, array( 'absent', 'incompatible', 'provider-fourteen', 'provider-sixteen', 'addon-sixteen', 'addon-eighteen' ), true ) ) {
 	throw new RuntimeException( 'A supported installed inertness mode is required.' );
 }
 $expected_version = getenv( 'RAN_BOOSTER_BITBUCKET_VERSION' );
@@ -28,10 +28,10 @@ if ( ( $plugin_data['Version'] ?? null ) !== $expected_version
 
 $api_versions = match ( $fixture_mode ) {
 	'incompatible' => array( 13, 17 ),
-	'provider-twelve' => array( 12, 17 ),
-	'provider-fifteen' => array( 15, 17 ),
-	'addon-sixteen' => array( 14, 16 ),
-	'addon-eighteen' => array( 14, 18 ),
+	'provider-fourteen' => array( 14, 17 ),
+	'provider-sixteen' => array( 16, 17 ),
+	'addon-sixteen' => array( 15, 16 ),
+	'addon-eighteen' => array( 15, 18 ),
 	default => null,
 };
 if ( null !== $api_versions ) {

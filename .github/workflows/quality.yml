@@ -247,7 +247,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      RAN_BOOSTER_CORE_TEST_MODE: candidate
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
     steps:
       - name: Check out repository
@@ -256,10 +255,10 @@ jobs:
           path: ran-booster-bitbucket
           fetch-depth: 0
           persist-credentials: false
-      - name: Read exact Core source candidate
+      - name: Read exact certified Core release
         working-directory: ran-booster-bitbucket
         run: |
-          core_commit="$(jq -er '.extra["ran-booster-core-candidate"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
           printf 'RAN_BOOSTER_CORE_REF=%s\n' "$core_commit" >> "$GITHUB_ENV"
       - name: Check out compatible Booster Core
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -269,7 +268,7 @@ jobs:
           ref: ${{ env.RAN_BOOSTER_CORE_REF }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Confirm exact Core candidate commit
+      - name: Confirm exact certified Core commit
         working-directory: ran-booster
         run: |
           test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
@@ -280,7 +279,7 @@ jobs:
           php-version: "8.2"
           coverage: none
           tools: composer:v2
-      - name: Install Core candidate production dependencies
+      - name: Install certified Core production dependencies
         working-directory: ran-booster
         run: |
           composer install --no-dev --no-interaction --prefer-dist --no-progress
@@ -427,6 +426,16 @@ jobs:
           unzip -q "$archive" -d "$expected_root"
           diff -qr "$expected_root/ran-booster-bitbucket" "$plugin_root"
 
+  pull-request-installed-proof:
+    name: Pull request installed proof
+    needs: runtime-archive
+    if: ${{ github.event_name == 'pull_request' && needs.runtime-archive.outputs.lane == 'full' }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/installed-proof.yml
+    with:
+      source-sha: ${{ github.event.pull_request.head.sha }}
+
   quality:
     name: Quality
     if: ${{ always() }}
@@ -435,12 +444,14 @@ jobs:
       - baseline
       - repository-quality
       - release-candidate-install
+      - pull-request-installed-proof
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require applicable shared and repository quality evidence
         shell: bash
         env:
+          PR_INSTALLED_RESULT: ${{ needs.pull-request-installed-proof.result }}
           LANE: ${{ needs.runtime-archive.outputs.lane }}
           RUNTIME_ARCHIVE_RESULT: ${{ needs.runtime-archive.result }}
           BASELINE_RESULT: ${{ needs.baseline.result }}
@@ -456,9 +467,15 @@ jobs:
 
           if [[ "$LANE" == full ]]; then
             test "$REPOSITORY_QUALITY_RESULT" = success
+            if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+              test "$PR_INSTALLED_RESULT" = success
+            else
+              test "$PR_INSTALLED_RESULT" = skipped
+            fi
             test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped
           elif [[ "$LANE" == release-candidate ]]; then
             test "$REPOSITORY_QUALITY_RESULT" = skipped
+            test "$PR_INSTALLED_RESULT" = skipped
             test "$RELEASE_CANDIDATE_INSTALL_RESULT" = success
           else
             echo "Unsupported quality lane: $LANE" >&2

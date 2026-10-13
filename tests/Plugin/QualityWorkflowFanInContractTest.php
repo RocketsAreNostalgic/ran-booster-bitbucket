@@ -104,7 +104,7 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 		$terminal = substr( $workflow, $terminal_start );
 
 		self::assertStringContainsString( 'if: ${{ always() }}', $terminal );
-		foreach ( array( 'runtime-archive', 'baseline', 'repository-quality', 'release-candidate-install' ) as $need ) {
+		foreach ( array( 'runtime-archive', 'baseline', 'repository-quality', 'release-candidate-install', 'pull-request-installed-proof' ) as $need ) {
 			self::assertStringContainsString( '- ' . $need, $terminal );
 		}
 		self::assertStringContainsString( 'test "$RUNTIME_ARCHIVE_RESULT" = success', $terminal );
@@ -122,10 +122,14 @@ final class QualityWorkflowFanInContractTest extends TestCase {
 
 		$full = substr( $terminal, $full_start, $release_candidate_start - $full_start );
 		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = success', $full );
+		self::assertStringContainsString( 'test "$PR_INSTALLED_RESULT" = success', $full );
+		self::assertStringContainsString( 'if [[ "$GITHUB_EVENT_NAME" == pull_request ]]', $full );
+		self::assertStringContainsString( 'test "$PR_INSTALLED_RESULT" = skipped', $full );
 		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = skipped', $full );
 
 		$release_candidate = substr( $terminal, $release_candidate_start, $unsupported_start - $release_candidate_start );
 		self::assertStringContainsString( 'test "$REPOSITORY_QUALITY_RESULT" = skipped', $release_candidate );
+		self::assertStringContainsString( 'test "$PR_INSTALLED_RESULT" = skipped', $release_candidate );
 		self::assertStringContainsString( 'test "$RELEASE_CANDIDATE_INSTALL_RESULT" = success', $release_candidate );
 
 		$unsupported = substr( $terminal, $unsupported_start );
