@@ -15,7 +15,7 @@
     ],
     "extra": {
         "ran-booster-core-candidate": {
-            "commit": "ae4de158e3ae02d99162b9b8d0babdc9269a36da"
+            "commit": "8ccc7268f0773fa17b28ccac0560c3b3c43f7ef2"
         },
         "ran-booster-core-certification": {
             "tag": "v1.0.0-beta.31",
@@ -34,7 +34,7 @@
             "requires-php": "8.2",
             "booster-apis": {
                 "required": {
-                    "provider": 14,
+                    "provider": 15,
                     "addon": 17
                 },
                 "optional": {}

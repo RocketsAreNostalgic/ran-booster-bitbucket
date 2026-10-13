@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $fixture_mode = $argv[1] ?? '';
 
-if ( ! in_array( $fixture_mode, array( 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
+if ( ! in_array( $fixture_mode, array( 'provider-fourteen-addon-seventeen', 'provider-fourteen-addon-seventeen-addon-first', 'absent', 'absent-unprivileged', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fifteen-addon-sixteen', 'provider-fifteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first', 'provider-sixteen-addon-seventeen', 'provider-sixteen-addon-seventeen-addon-first', 'provider-fifteen-addon-eighteen', 'provider-fifteen-addon-eighteen-addon-first', 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite', 'inactive' ), true ) ) {
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- Standalone CLI reports diagnostics to its standard stream without WordPress.
 	fwrite( STDERR, "A valid lifecycle mode is required.\n" );
 	exit( 2 );
@@ -29,8 +29,8 @@ spl_autoload_register(
 $add_on_loaded                      = false;
 $markers_defined_when_add_on_loaded = null;
 $compatible_modes                   = array( 'compatible', 'compatible-core-first', 'compatible-addon-first', 'unsupported-multisite' );
-$incompatible_modes                 = array( 'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
-$add_on_first_modes                 = array( 'provider-fifteen-addon-seventeen-addon-first', 'provider-fourteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fourteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
+$incompatible_modes                 = array( 'provider-fourteen-addon-seventeen', 'provider-fourteen-addon-seventeen-addon-first', 'provider-sixteen-addon-seventeen', 'provider-sixteen-addon-seventeen-addon-first', 'provider-fifteen-addon-eighteen', 'provider-fifteen-addon-eighteen-addon-first', 'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fifteen-addon-sixteen', 'provider-fifteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' );
+$add_on_first_modes                 = array( 'provider-fourteen-addon-seventeen-addon-first', 'provider-sixteen-addon-seventeen-addon-first', 'provider-fifteen-addon-eighteen-addon-first', 'compatible-addon-first', 'provider-twelve-addon-seventeen-addon-first', 'provider-thirteen-addon-seventeen-addon-first', 'provider-fifteen-addon-sixteen-addon-first', 'provider-eleven-addon-fifteen-addon-first' );
 $core_backed_modes                  = array_merge( $compatible_modes, $incompatible_modes );
 $load_add_on                        = static function () use ( &$add_on_loaded, &$markers_defined_when_add_on_loaded ): void {
 	$markers_defined_when_add_on_loaded = defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' )
@@ -160,13 +160,14 @@ if ( in_array( $fixture_mode, $core_backed_modes, true ) ) {
 	}
 	require $core_autoload;
 	$api_versions = match ( $fixture_mode ) {
-		'provider-fifteen-addon-seventeen', 'provider-fifteen-addon-seventeen-addon-first' => array( 15, 17 ),
-		'provider-fourteen-addon-eighteen', 'provider-fourteen-addon-eighteen-addon-first' => array( 14, 18 ),
+		'provider-sixteen-addon-seventeen', 'provider-sixteen-addon-seventeen-addon-first' => array( 16, 17 ),
+		'provider-fourteen-addon-seventeen', 'provider-fourteen-addon-seventeen-addon-first' => array( 14, 17 ),
+		'provider-fifteen-addon-eighteen', 'provider-fifteen-addon-eighteen-addon-first' => array( 15, 18 ),
 		'provider-thirteen-addon-seventeen', 'provider-thirteen-addon-seventeen-addon-first' => array( 13, 17 ),
-		'provider-fourteen-addon-sixteen', 'provider-fourteen-addon-sixteen-addon-first' => array( 14, 16 ),
+		'provider-fifteen-addon-sixteen', 'provider-fifteen-addon-sixteen-addon-first' => array( 15, 16 ),
 		'provider-eleven-addon-fifteen', 'provider-eleven-addon-fifteen-addon-first' => array( 11, 15 ),
 		'provider-twelve-addon-seventeen', 'provider-twelve-addon-seventeen-addon-first' => array( 12, 17 ),
-		default => array( 14, 17 ),
+		default => array( 15, 17 ),
 	};
 	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- This fixture exercises the exact foreign WordPress/Core contract name.
 	define( 'RAN_BOOSTER_PROVIDER_API_VERSION', $api_versions[0] );

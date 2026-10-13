@@ -20,7 +20,7 @@ final class CoreContractTest extends TestCase {
 		self::assertIsString( $core, 'A RAN Booster entry file is required at ' . $entry_file );
 		self::assertIsString( $documentation, 'A RAN Booster documentation view is required at ' . $documentation_file );
 		self::assertMatchesRegularExpression(
-			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*14\\s*\\)/",
+			"/define\\(\\s*'RAN_BOOSTER_PROVIDER_API_VERSION',\\s*15\\s*\\)/",
 			$core
 		);
 		self::assertMatchesRegularExpression(
@@ -109,11 +109,12 @@ final class CoreContractTest extends TestCase {
 		self::assertStringNotContainsString( 'workflow_dispatch:', $release );
 	}
 
-	public function test_quality_pins_exact_certified_release_without_replacing_installed_proof(): void {
+	public function test_quality_pins_exact_source_candidate_without_replacing_installed_proof(): void {
 		$workflow = $this->workflow( 'quality.yml' );
 
-		self::assertStringContainsString( '.extra["ran-booster-core-certification"].commit', $workflow );
-		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
+		self::assertStringContainsString( '.extra["ran-booster-core-candidate"].commit', $workflow );
+		self::assertStringContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $workflow );
+		self::assertStringNotContainsString( 'RAN_BOOSTER_CORE_TEST_MODE: candidate', $this->workflow( 'installed-proof.yml' ) );
 		self::assertStringNotContainsString( $this->certification()['commit'], $workflow );
 		self::assertStringNotContainsString( 'git describe --tags --exact-match HEAD', $workflow );
 		self::assertStringContainsString( 'composer validate --strict --no-check-all --no-check-publish', $workflow );

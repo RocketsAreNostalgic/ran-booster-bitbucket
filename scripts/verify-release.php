@@ -262,7 +262,7 @@ $security       = $actual_files[ RAN_BOOSTER_BITBUCKET_PACKAGE_ROOT . 'SECURITY.
 $composition    = $actual_files[ RAN_BOOSTER_BITBUCKET_PACKAGE_ROOT . 'src/Bitbucket/Plugin.php' ];
 if ( ! str_contains( $fixture_plugin, '\\RAN\\Booster\\Bitbucket\\Plugin::boot();' )
 	|| ! str_contains( $composition, 'RAN_BOOSTER_PROVIDER_API_VERSION' )
-	|| ! str_contains( $composition, '14 === RAN_BOOSTER_PROVIDER_API_VERSION' )
+	|| ! str_contains( $composition, '15 === RAN_BOOSTER_PROVIDER_API_VERSION' )
 	|| ! str_contains( $composition, 'RAN_BOOSTER_ADDON_API_VERSION' )
 	|| ! str_contains( $composition, '17 === RAN_BOOSTER_ADDON_API_VERSION' )
 	|| ! str_contains( $composition, 'ProviderRegistrationContext $registration_context' )

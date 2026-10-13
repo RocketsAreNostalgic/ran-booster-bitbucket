@@ -15,7 +15,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$plugin = file_get_contents( dirname( __DIR__, 2 ) . '/src/Bitbucket/Plugin.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local compatibility contract.
 
 		self::assertIsString( $plugin );
-		self::assertStringContainsString( '14 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
+		self::assertStringContainsString( '15 === RAN_BOOSTER_PROVIDER_API_VERSION', $plugin );
 		self::assertStringContainsString( '17 === RAN_BOOSTER_ADDON_API_VERSION', $plugin );
 		self::assertStringContainsString( 'AuthenticatedWebhookDeliveryEvidenceReader $delivery_evidence', $plugin );
 		self::assertStringContainsString( 'ProviderRegistrationContext $registration_context', $plugin );
@@ -48,7 +48,7 @@ final class CurrentCoreBoundaryTest extends TestCase {
 		$workflow = file_get_contents( $root . '/.github/workflows/quality.yml' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Local CI contract.
 		self::assertIsString( $workflow );
 		self::assertStringNotContainsString( 'Install Core development dependencies', $workflow );
-		self::assertStringContainsString( 'Install certified Core production dependencies', $workflow );
+		self::assertStringContainsString( 'Install Core candidate production dependencies', $workflow );
 		self::assertStringContainsString( 'composer install --no-dev --no-interaction --prefer-dist --no-progress', $workflow );
 		self::assertStringContainsString( 'RAN_BOOSTER_CORE_VENDOR_AUTOLOAD', $workflow );
 		self::assertStringNotContainsString( "working-directory: ran-booster\n        run: composer install\n", $workflow );

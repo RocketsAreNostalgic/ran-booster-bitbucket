@@ -247,6 +247,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
+      RAN_BOOSTER_CORE_TEST_MODE: candidate
       RAN_BOOSTER_CORE_PATH: ${{ github.workspace }}/ran-booster
     steps:
       - name: Check out repository
@@ -255,10 +256,10 @@ jobs:
           path: ran-booster-bitbucket
           fetch-depth: 0
           persist-credentials: false
-      - name: Read exact certified Core release
+      - name: Read exact Core source candidate
         working-directory: ran-booster-bitbucket
         run: |
-          core_commit="$(jq -er '.extra["ran-booster-core-certification"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
+          core_commit="$(jq -er '.extra["ran-booster-core-candidate"].commit | select(test("^[0-9a-f]{40}$"))' composer.json)"
           printf 'RAN_BOOSTER_CORE_REF=%s\n' "$core_commit" >> "$GITHUB_ENV"
       - name: Check out compatible Booster Core
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -268,7 +269,7 @@ jobs:
           ref: ${{ env.RAN_BOOSTER_CORE_REF }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Confirm exact certified Core commit
+      - name: Confirm exact Core candidate commit
         working-directory: ran-booster
         run: |
           test "$(git rev-parse HEAD)" = "$RAN_BOOSTER_CORE_REF"
@@ -279,7 +280,7 @@ jobs:
           php-version: "8.2"
           coverage: none
           tools: composer:v2
-      - name: Install certified Core production dependencies
+      - name: Install Core candidate production dependencies
         working-directory: ran-booster
         run: |
           composer install --no-dev --no-interaction --prefer-dist --no-progress
