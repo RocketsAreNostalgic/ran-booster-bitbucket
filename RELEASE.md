@@ -21,7 +21,7 @@ Do not recreate local Release Please lifecycle state, candidate markers, custom 
 1. Review the Release Please pull request, including the plugin header, `readme.txt`, manifest and changelog versions.
 2. Run `composer check` for the Core-independent source-quality contract, including the maintained-PHP analysis/standards coverage drift guard and its negative controls.
 3. Check out the exact Core release recorded in `extra.ran-booster-core-certification`, install its locked production dependencies, set `RAN_BOOSTER_CORE_PATH` and `RAN_BOOSTER_CORE_VENDOR_AUTOLOAD`, and run `composer check:host`.
-4. `composer check:host` includes required level-8 PHPStan analysis before the host tests. Analysis errors fail the aggregate and the full repository Quality lane. `composer analyze` is available as a focused rerun; it is not an additional release step or an advisory gate. Direct analysis covers all shipped PHP: `autoload.php`, the plugin entrypoint, `src/`, `views/` and `index.php`. The current certified host is immutable Core beta.31.
+4. `composer check:host` includes required level-8 PHPStan analysis before the host tests. Analysis errors fail the aggregate and the full repository Quality lane. `composer analyze` is available as a focused rerun; it is not an additional release step or an advisory gate. Direct analysis covers all shipped PHP: `autoload.php`, the plugin entrypoint, `src/`, `views/` and `index.php`. The current certified host is immutable Core beta.35.
 5. Run `composer build:release -- "$(git rev-parse HEAD)"`, then run `composer verify:release -- "build/ran-booster-bitbucket-<version>.zip" "$(git rev-parse HEAD)"` for the resulting ZIP. Preserve the package allowlist and exclusion of tests, vendor, Core code, caches, credentials and development tooling.
 6. Preserve the certified Core tuple in `composer.json`: exact immutable release tag, tag-target commit and archive-source commit.
 7. Do not manually publish, replace or clobber release assets. A bad artifact is corrected by a new qualified version.
@@ -55,19 +55,14 @@ Release Please is configured with `draft: true` and `force-tag-creation: true`. 
 
 `tests/WordPress/bitbucket-installed-proof.sh` remains the repeatable installed boundary. It verifies both archives, Core release provenance, the installed Bitbucket tree, normal dependency activation, public provider registration, authenticated-delivery diagnostics and cleanup.
 
-The reusable `Certified Core installed proof` workflow downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact successful main Quality SHA supplied by the release caller. The release job depends on this proof succeeding; failure or a skipped proof prevents shared Profile B admission, including after a release PR merges. Manual dispatch remains available for certification diagnosis and does not invoke publication.
+The reusable `Certified Core installed proof` workflow downloads the immutable Core GitHub release named by the certification record, validates release target, asset digest and checksum, installs WordPress 7.0.3, then runs the same disposable proof against the exact successful main Quality SHA supplied by the release caller. The release job depends on this proof succeeding; failure or a skipped proof prevents shared Profile B admission, including after a release PR merges. Full pull-request Quality also calls this same proof for the exact PR head and requires success before its terminal gate passes. This catches installed compatibility regressions before merge. Main release admission retains its separate proof of the exact successful main SHA. Manual dispatch remains available for certification diagnosis and does not invoke publication.
 
-## API 15 candidate and release qualification
+## API 15 released-host qualification
 
-Source Quality and local host checks explicitly select candidate mode and the
-exact Core PR307 SHA in `extra.ran-booster-core-candidate`. This qualifies source
-contracts only. The retained `ran-booster-core-certification` beta.31 tuple is
-historical API 14 evidence and cannot admit this API 15 revision for publication.
-Before release admission, replace it with a compatible immutable Core release,
-restore released-host Quality, and pass the existing installed-proof gate for
-the final source revision. No candidate source checkout substitutes for a released
-archive. The tag target and embedded archive-source commit remain independently
-verified.
+Source Quality and local host checks use default released mode against immutable
+Core beta.35, pinned in `extra.ran-booster-core-certification`. The tag target and
+embedded archive-source commit are verified independently. Candidate mode is a
+test-only facility for future source changes and is not used for release admission.
 
 Released-host analysis and unit checks do not replace the separate certified
 installed proof. That proof must pass for the final source revision before Release

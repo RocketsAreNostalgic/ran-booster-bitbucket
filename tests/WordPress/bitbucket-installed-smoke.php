@@ -45,7 +45,7 @@ if ( false === $addon || false === $core
 	throw new RuntimeException( 'The installed plugins did not load in the requested order.' );
 }
 
-if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 14 !== RAN_BOOSTER_PROVIDER_API_VERSION
+if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 15 !== RAN_BOOSTER_PROVIDER_API_VERSION
 	|| ! defined( 'RAN_BOOSTER_ADDON_API_VERSION' ) || 17 !== RAN_BOOSTER_ADDON_API_VERSION
 	|| ! interface_exists( RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class )
 	|| ! class_exists( RAN\RepositoryProvider\ProviderRegistrationContext::class )
