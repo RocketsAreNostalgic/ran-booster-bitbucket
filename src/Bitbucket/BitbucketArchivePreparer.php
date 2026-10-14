@@ -9,6 +9,7 @@ use RAN\RepositoryProvider\ArchiveRequest;
 use RAN\RepositoryProvider\AuthenticatedPreparedArchive;
 use RAN\RepositoryProvider\GitReferenceSyntax;
 use RAN\RepositoryProvider\PreparedArchive;
+use RAN\RepositoryProvider\RepositoryReference;
 use RAN\RepositoryProvider\StaleDeployment;
 use RuntimeException;
 
@@ -38,25 +39,7 @@ final readonly class BitbucketArchivePreparer {
 		$workspace       = $coordinates->get_workspace();
 		$repository_slug = $coordinates->get_repository_slug();
 		$full_name       = $coordinates->get_full_name();
-		$credential      = null;
-
-		if ( $repository->private ) {
-			$credential_id = $repository->credential_id;
-
-			if ( null === $credential_id ) {
-				throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
-			}
-
-			try {
-				$credential = $this->credentials->load( $credential_id );
-			} catch ( BitbucketCredentialException ) {
-				throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
-			}
-
-			if ( 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
-				throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
-			}
-		}
+		$credential      = $this->archive_credential( $repository, $workspace );
 
 		$request->progress?->progress( 'bb.resolving_revision' );
 		$commit = $this->immutable_commit(
@@ -81,23 +64,7 @@ final readonly class BitbucketArchivePreparer {
 		$expected_branch = $request->expected_branch;
 		if ( null !== $expected_branch ) {
 			$head_verifier = function () use ( $workspace, $repository_slug, $full_name, $repository, $expected_branch, $commit ): void {
-				$verification_credential = null;
-				if ( $repository->private ) {
-					$credential_id = $repository->credential_id;
-					if ( null === $credential_id ) {
-						throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
-					}
-
-					try {
-						$verification_credential = $this->credentials->load( $credential_id );
-					} catch ( BitbucketCredentialException ) {
-						throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
-					}
-
-					if ( 0 !== strcasecmp( $workspace, $verification_credential->get_workspace() ) ) {
-						throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
-					}
-				}
+				$verification_credential = $this->archive_credential( $repository, $workspace );
 
 				$head = $this->resolve_branch(
 					$workspace,
@@ -119,6 +86,29 @@ final readonly class BitbucketArchivePreparer {
 			: static fn ( array $arguments ): array => $credential->authorize( $arguments );
 
 		return new AuthenticatedPreparedArchive( $url, $commit, $authorizer, $head_verifier );
+	}
+
+	private function archive_credential( RepositoryReference $repository, string $workspace ): ?BitbucketCredential {
+		if ( ! $repository->private ) {
+			return null;
+		}
+
+		$credential_id = $repository->credential_id;
+		if ( null === $credential_id ) {
+			throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
+		}
+
+		try {
+			$credential = $this->credentials->load( $credential_id );
+		} catch ( BitbucketCredentialException ) {
+			throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
+		}
+
+		if ( 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
+			throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
+		}
+
+		return $credential;
 	}
 
 	private function immutable_commit(

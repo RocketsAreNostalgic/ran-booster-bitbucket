@@ -20,6 +20,16 @@ final class BitbucketRepositoryBrowserSecretsStub extends SecretsFile {
 		parent::__construct( null, array() );
 	}
 
+	/** @param array<string, mixed>|null $material */
+	public function replace_material( string $id, ?array $material ): void {
+		if ( null === $material ) {
+			unset( $this->materials[ $id ] );
+			return;
+		}
+
+		$this->materials[ $id ] = $material;
+	}
+
 	/** @return array<string, array<string, mixed>> */
 	public function credential_profiles( ProviderCode|string $provider ): array {
 		$provider                = $provider instanceof ProviderCode ? $provider->value : $provider;
