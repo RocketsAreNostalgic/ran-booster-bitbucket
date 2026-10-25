@@ -2,7 +2,9 @@
 
 Follow the [shared contribution guidance](https://github.com/RocketsAreNostalgic/.github/blob/main/CONTRIBUTING.md) and the repository-specific development instructions below.
 
-For ordinary source pull requests, use a Conventional Commit title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) so the squash commit subject consumed by Release Please truthfully represents the change; Release Please pull requests must use GitHub's **Create a merge commit** method, never squash or rebase, as required by [RELEASE.md](RELEASE.md).
+Use a Conventional Commit pull-request title (`feat:`, `fix:`, `docs:`, `test:`, `chore:`) as review metadata. Every pull request targeting `main` must use **Create a merge commit**; never squash or rebase.
+Merge commits retain the individual commit subjects, so make each subject a truthful Conventional Commit. Do not assume a squash commit becomes the Release Please release source.
+Pull-request review and green CI remain required evidence, not authority to merge; the owner must explicitly authorize that pull request.
 
 Before proposing a change, run `composer check` for the Core-independent source-quality contract. Host checks use the exact immutable Core release recorded in
 `extra.ran-booster-core-certification`: beta.35 at
