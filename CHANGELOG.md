@@ -3,6 +3,13 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.19](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.18...v0.1.0-beta.19) (2026-10-25)
+
+
+### Bug Fixes
+
+* **release:** enforce merge-only delivery to main ([#117](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/117)) ([2238ccf](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/2238ccf0f13369916119a0b32386b58d948fc81d))
+
 ## [0.1.0-beta.18](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.17...v0.1.0-beta.18) (2026-10-25)
 
 
