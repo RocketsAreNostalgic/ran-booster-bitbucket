@@ -67,4 +67,5 @@ test-only facility for future source changes and is not used for release admissi
 Released-host analysis and unit checks do not replace the separate certified
 installed proof. That proof must pass for the final source revision before Release
 Please can refresh the candidate. After refresh, qualify the exact candidate again.
-Release Please PRs always use a regular merge commit, never squash.
+
+The active native **Protect main** rule enforces merge commits for ordinary source and bot-owned Release Please pull requests targeting `main`. An administrator may deliberately change that owner-managed rule later; merge-only is not an immutability claim.
