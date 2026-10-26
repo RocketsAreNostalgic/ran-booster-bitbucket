@@ -68,4 +68,6 @@ Released-host analysis and unit checks do not replace the separate certified
 installed proof. That proof must pass for the final source revision before Release
 Please can refresh the candidate. After refresh, qualify the exact candidate again.
 
-The active native **Protect main** rule enforces merge commits for ordinary source and bot-owned Release Please pull requests targeting `main`. An administrator may deliberately change that owner-managed rule later; merge-only is not an immutability claim.
+The active native **Protect main** rule permits both merge commits and squash merges. Ordinary source pull requests may use either method; see [CONTRIBUTING.md](CONTRIBUTING.md) for Conventional Commit guidance. Rebase merging is not permitted.
+
+Bot-owned Release Please pull requests retain the qualified **Create a merge commit** procedure. The native rule does not enforce this release-specific restriction: the owner must select the qualified method. Squashed release publication requires separate qualification against the pinned shared Profile B workflow before changing this procedure. Its release SHA, tag target and promoted archive source must all match the exact admitted successful-main Quality SHA; unchanged candidate content alone does not prove that publication contract.
