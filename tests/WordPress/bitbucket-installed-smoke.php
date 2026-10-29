@@ -53,6 +53,27 @@ if ( ! defined( 'RAN_BOOSTER_PROVIDER_API_VERSION' ) || 15 !== RAN_BOOSTER_PROVI
 	throw new RuntimeException( 'The required Core provider contract is unavailable.' );
 }
 
+foreach ( array( RAN\Booster\Bitbucket\Plugin::class, RAN\Booster\Bitbucket\BitbucketProvider::class ) as $installed_class ) {
+	$source = ( new ReflectionClass( $installed_class ) )->getFileName();
+	$root   = realpath( WP_PLUGIN_DIR . '/ran-booster-bitbucket' );
+	if ( false === $source || false === $root || ! str_starts_with( (string) realpath( $source ), $root . DIRECTORY_SEPARATOR ) ) {
+		throw new RuntimeException( 'A Bitbucket class was loaded outside the installed archive.' );
+	}
+}
+
+foreach ( array(
+	RAN\RepositoryProvider\ProviderRegistry::class,
+	RAN\RepositoryProvider\ProviderRegistrationContext::class,
+	RAN\RepositoryProvider\ProviderCredentialStore::class,
+	RAN\RepositoryProvider\AuthenticatedWebhookDeliveryEvidenceReader::class,
+) as $installed_class ) {
+	$source = ( new ReflectionClass( $installed_class ) )->getFileName();
+	$root   = realpath( WP_PLUGIN_DIR . '/ran-booster' );
+	if ( false === $source || false === $root || ! str_starts_with( (string) realpath( $source ), $root . DIRECTORY_SEPARATOR ) ) {
+		throw new RuntimeException( 'A Core contract was loaded outside the installed archive.' );
+	}
+}
+
 $registration_hook      = $GLOBALS['wp_filter']['ran_booster_register_providers'] ?? null;
 $registration_callbacks = array();
 foreach ( is_object( $registration_hook ) && is_array( $registration_hook->callbacks ?? null ) ? $registration_hook->callbacks : array() as $callbacks ) {

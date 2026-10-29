@@ -301,3 +301,23 @@ local choices, so they no longer have namespace-prefix exemptions. The exact
 `RAN\RepositoryProvider` interception namespace remains unchanged with its precise foreign-namespace
 exemption. The real-checker naming control rejects restoring
 an unprefixed owned test namespace. No production code or dependencies change.
+
+### Additional-host installed qualification
+
+The installed proof also supports the explicit test-only mode
+`RAN_BOOSTER_BITBUCKET_PROOF_MODE=additional-host`. Supply the exact Core tag,
+tag-target commit and archive-source commit, both archive SHA-256 digests,
+Bitbucket version and source commit, and these disposable fixture inputs:
+
+- `RAN_BOOSTER_BITBUCKET_PROOF_ROOT`
+- `RAN_BOOSTER_BITBUCKET_PROOF_URL`
+- `RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME`
+- `RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET`
+
+The canonical root must be a `/private/tmp/ran528-*` directory on macOS or a
+`/tmp/ran528-*` directory on Linux. Its `.ran528-owner` file must contain
+`RAN528_COMPATIBILITY_PILOT_V1`; the site and socket must reside beneath it.
+The WP-CLI database host must be `localhost:` followed by that socket path.
+The supplied tag-target identity requires separate external verification; the
+runner verifies archive provenance and digests. This qualification does not
+replace certified-host release admission.
