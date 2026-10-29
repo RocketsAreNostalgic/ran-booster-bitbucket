@@ -15,6 +15,8 @@ core_archive=${RAN_BOOSTER_CORE_ARCHIVE:?RAN_BOOSTER_CORE_ARCHIVE is required}
 addon_archive=${RAN_BOOSTER_BITBUCKET_ARCHIVE:?RAN_BOOSTER_BITBUCKET_ARCHIVE is required}
 addon_commit=${RAN_BOOSTER_BITBUCKET_COMMIT:?RAN_BOOSTER_BITBUCKET_COMMIT is required}
 expected_addon_version=${RAN_BOOSTER_BITBUCKET_VERSION:?RAN_BOOSTER_BITBUCKET_VERSION is required}
+proof_mode=${RAN_BOOSTER_BITBUCKET_PROOF_MODE:-certified}
+[[ "$proof_mode" == certified || "$proof_mode" == additional-host ]] || fail 'Unknown proof mode.'
 provided_core_tag=${RAN_BOOSTER_CORE_TAG:-}
 provided_core_commit=${RAN_BOOSTER_CORE_COMMIT:-}
 provided_core_archive_source_commit=${RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT:-}
@@ -53,12 +55,17 @@ IFS='|' read -r expected_core_tag expected_core_commit expected_core_archive_sou
 	|| fail 'The canonical Core commit must be full.'
 [[ "$expected_core_archive_source_commit" =~ ^[0-9a-f]{40}$ ]] \
 	|| fail 'The canonical Core archive source commit must be full.'
-[[ -z "$provided_core_tag" || "$provided_core_tag" == "$expected_core_tag" ]] \
-	|| fail 'The supplied Core tag does not match the canonical certification.'
-[[ -z "$provided_core_commit" || "$provided_core_commit" == "$expected_core_commit" ]] \
-	|| fail 'The supplied Core commit does not match the canonical certification.'
-[[ -z "$provided_core_archive_source_commit" || "$provided_core_archive_source_commit" == "$expected_core_archive_source_commit" ]] \
-	|| fail 'The supplied Core archive source commit does not match the canonical certification.'
+if [[ "$proof_mode" == additional-host ]]; then
+	[[ -n "$provided_core_tag" && -n "$provided_core_commit" && -n "$provided_core_archive_source_commit" ]] || fail 'The additional-host tuple must be supplied in full.'
+	expected_core_tag=$provided_core_tag
+	expected_core_commit=$provided_core_commit
+	expected_core_archive_source_commit=$provided_core_archive_source_commit
+	[[ "$expected_core_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ && "$expected_core_commit" =~ ^[0-9a-f]{40}$ && "$expected_core_archive_source_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The additional-host tuple is invalid.'
+else
+	[[ -z "$provided_core_tag" || "$provided_core_tag" == "$expected_core_tag" ]] || fail 'The supplied Core tag does not match the canonical certification.'
+	[[ -z "$provided_core_commit" || "$provided_core_commit" == "$expected_core_commit" ]] || fail 'The supplied Core commit does not match the canonical certification.'
+	[[ -z "$provided_core_archive_source_commit" || "$provided_core_archive_source_commit" == "$expected_core_archive_source_commit" ]] || fail 'The supplied Core archive source commit does not match the canonical certification.'
+fi
 [[ "$addon_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'The Bitbucket source commit must be full.'
 
 marker="$wordpress/.ran-booster-disposable-test-site"
@@ -81,6 +88,21 @@ sha256_file() {
 
 [[ "$(sha256_file "$core_archive")" == "$expected_core_sha" ]] || fail 'The Core archive digest is wrong.'
 [[ "$(sha256_file "$addon_archive")" == "$expected_addon_sha" ]] || fail 'The Bitbucket archive digest is wrong.'
+if [[ "$proof_mode" == additional-host ]]; then
+	proof_root=${RAN_BOOSTER_BITBUCKET_PROOF_ROOT:?RAN_BOOSTER_BITBUCKET_PROOF_ROOT is required}
+	proof_url=${RAN_BOOSTER_BITBUCKET_PROOF_URL:?RAN_BOOSTER_BITBUCKET_PROOF_URL is required}
+	proof_db=${RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME:?RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME is required}
+	proof_socket=${RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET:?RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET is required}
+	[[ -z "$wp_require" ]] || fail 'Additional-host proof cannot use a WP-CLI require file.'
+	[[ "$proof_url" =~ ^http://127\.0\.0\.1:[0-9]+$ && "$proof_db" =~ ^[A-Za-z0-9_]+$ ]] || fail 'Unsafe additional-host URL or database name.'
+	export RAN_BOOSTER_BITBUCKET_PROOF_ROOT="$proof_root" RAN_BOOSTER_BITBUCKET_PROOF_URL="$proof_url" RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME="$proof_db" RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET="$proof_socket"
+fi
+
+if [[ "$proof_mode" == additional-host ]]; then
+	[[ ( "$proof_root" == /private/tmp/ran528-* || "$proof_root" == /tmp/ran528-* ) && -d "$proof_root" && ! -L "$proof_root" && "$(cd "$proof_root" && pwd -P)" == "$proof_root" ]] || fail 'Unsafe proof root.'
+	[[ -f "$proof_root/.ran528-owner" && ! -L "$proof_root/.ran528-owner" && "$(< "$proof_root/.ran528-owner")" == RAN528_COMPATIBILITY_PILOT_V1 ]] || fail 'Invalid proof ownership marker.'
+fi
+
 unzip -tqq "$core_archive"
 unzip -tqq "$addon_archive"
 
@@ -103,7 +125,7 @@ fi
 
 bash "$repo_root/scripts/verify-release.sh" "$addon_archive" "$addon_commit"
 
-wp_cli() {
+wp_cli_raw() {
 	local wp_entry=$wp_binary
 	local command=( "$php_binary" )
 
@@ -119,8 +141,30 @@ wp_cli() {
 	"${command[@]}" "$@"
 }
 
-[[ "$(wp_cli option get siteurl | tail -n 1)" == 'http://localhost:10028' ]] \
-	|| fail 'The disposable WordPress URL is not the authorized site.'
+owned_boundary() {
+	[[ "$proof_mode" == additional-host ]] || return 0
+	[[ ( "$proof_root" == /private/tmp/ran528-* || "$proof_root" == /tmp/ran528-* ) && -d "$proof_root" && ! -L "$proof_root" && "$(cd "$proof_root" && pwd -P)" == "$proof_root" ]] || fail 'Unsafe proof root.'
+	[[ -f "$proof_root/.ran528-owner" && ! -L "$proof_root/.ran528-owner" && "$(< "$proof_root/.ran528-owner")" == RAN528_COMPATIBILITY_PILOT_V1 ]] || fail 'Invalid proof ownership marker.'
+	[[ -d "$wordpress" && ! -L "$wordpress" && "$(cd "$wordpress" && pwd -P)" == "$wordpress" && "$wordpress" == "$proof_root"/* && "$repo_root" != "$wordpress" && "$repo_root" != "$wordpress"/* ]] || fail 'Unsafe WordPress path.'
+	[[ -z "$(find "$wordpress" -type l -print -quit)" ]] || fail 'WordPress tree contains a symlink.'
+	[[ -S "$proof_socket" && ! -L "$proof_socket" && "$(cd "$(dirname "$proof_socket")" && pwd -P)/$(basename "$proof_socket")" == "$proof_socket" && "$proof_socket" == "$proof_root"/* ]] || fail 'Unsafe database socket.'
+	wp_cli_raw eval --skip-plugins --skip-themes '
+		global $wpdb;
+		$site = rtrim(getenv("RAN_BOOSTER_WORDPRESS_PATH"), "/");
+		$socket = getenv("RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET");
+		if (rtrim(ABSPATH, "/") !== $site || realpath(ABSPATH) !== $site || realpath(WP_CONTENT_DIR) !== $site . "/wp-content" || realpath(WP_PLUGIN_DIR) !== $site . "/wp-content/plugins" || WP_CONTENT_DIR !== $site . "/wp-content" || WP_PLUGIN_DIR !== $site . "/wp-content/plugins" || get_theme_root() !== $site . "/wp-content/themes" || realpath(get_theme_root()) !== $site . "/wp-content/themes" || get_option("siteurl") !== getenv("RAN_BOOSTER_BITBUCKET_PROOF_URL") || get_option("home") !== getenv("RAN_BOOSTER_BITBUCKET_PROOF_URL") || DB_NAME !== getenv("RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME") || DB_HOST !== "localhost:" . $socket || $wpdb->get_var("SELECT @@socket") !== $socket || realpath((string) $wpdb->get_var("SELECT @@datadir")) !== dirname($socket) . "/data") { throw new RuntimeException("Unowned WordPress boundary"); }
+	' >/dev/null || fail 'WordPress ownership preflight failed.'
+}
+wp_cli() {
+	owned_boundary
+	wp_cli_raw "$@"
+}
+
+if [[ "$proof_mode" == additional-host ]]; then
+	owned_boundary
+else
+	[[ "$(wp_cli option get siteurl | tail -n 1)" == 'http://localhost:10028' ]] || fail 'The disposable WordPress URL is not the authorized site.'
+fi
 
 plugins="$wordpress/wp-content/plugins"
 core_dir="$plugins/ran-booster"
@@ -138,6 +182,10 @@ cleanup() {
 	local restored_active=''
 	trap - EXIT HUP INT TERM
 	set +e
+	if [[ "$proof_mode" == additional-host ]] && ! ( owned_boundary ); then
+		printf 'bitbucket-installed-proof: ownership changed; retained recovery data at %s\n' "$temporary" >&2
+		exit 1
+	fi
 	if [[ -d "$addon_dir" && ! -L "$addon_dir" ]]; then
 		mv "$addon_dir" "$temporary/proof-addon" || cleanup_failed=1
 	fi
@@ -174,6 +222,8 @@ wp_cli plugin activate ran-booster-bitbucket >/dev/null
 extracted="$temporary/extracted"
 mkdir "$extracted"
 unzip -q "$addon_archive" -d "$extracted"
+unzip -q "$core_archive" -d "$extracted"
+diff -qr "$extracted/ran-booster" "$core_dir"
 diff -qr "$extracted/ran-booster-bitbucket" "$addon_dir"
 
 wp_cli option update active_plugins '["ran-booster/ran-booster.php","ran-booster-bitbucket/ran-booster-bitbucket.php"]' --format=json >/dev/null
@@ -194,5 +244,11 @@ for inert_mode in incompatible provider-fourteen provider-sixteen addon-sixteen 
 done
 unset RAN_BOOSTER_BITBUCKET_INERT_MODE
 
+diff -qr "$extracted/ran-booster" "$core_dir"
+diff -qr "$extracted/ran-booster-bitbucket" "$addon_dir"
+if [[ "$proof_mode" == additional-host ]]; then
+	printf 'Bitbucket additional-host qualification passed for %s (%s) against Core %s (supplied tag target %s, archive source %s).\n' "$addon_commit" "$expected_addon_sha" "$expected_core_tag" "$expected_core_commit" "$expected_core_archive_source_commit"
+	exit 0
+fi
 printf 'Bitbucket installed proof passed for %s (%s) against certified Core %s (tag %s, archive %s).\n' \
 	"$addon_commit" "$expected_addon_sha" "$expected_core_tag" "$expected_core_commit" "$expected_core_archive_source_commit"

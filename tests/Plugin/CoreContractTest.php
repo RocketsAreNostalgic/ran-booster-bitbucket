@@ -68,6 +68,108 @@ final class CoreContractTest extends TestCase {
 		}
 	}
 
+	public function test_installed_proof_refuses_unowned_or_incomplete_inputs_before_wp_cli(): void {
+		$temporary_parent = realpath( '/tmp' );
+		self::assertIsString( $temporary_parent );
+		$root = $temporary_parent . '/ran528-contract-' . bin2hex( random_bytes( 8 ) );
+		mkdir( $root ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- Standalone disposable subprocess fixture.
+		mkdir( $root . '/site' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_mkdir -- Standalone disposable subprocess fixture.
+		file_put_contents( $root . '/site/.ran-booster-disposable-test-site', 'RAN Booster disposable test site' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Standalone disposable subprocess fixture.
+		file_put_contents( $root . '/archive', 'fixture' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Standalone disposable subprocess fixture.
+		file_put_contents( $root . '/wp.php', '<?php file_put_contents(getenv("RAN528_TEST_SENTINEL"), "called");' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Standalone disposable subprocess fixture.
+		$base  = array(
+			'RAN_BOOSTER_BITBUCKET_TEST_DISPOSABLE'  => '1',
+			'RAN_BOOSTER_WORDPRESS_PATH'             => $root . '/site',
+			'RAN_BOOSTER_CORE_ARCHIVE'               => $root . '/archive',
+			'RAN_BOOSTER_BITBUCKET_ARCHIVE'          => $root . '/archive',
+			'RAN_BOOSTER_BITBUCKET_COMMIT'           => str_repeat( 'a', 40 ),
+			'RAN_BOOSTER_BITBUCKET_VERSION'          => '1.0.0',
+			'RAN_BOOSTER_CORE_TAG'                   => 'v1.0.0',
+			'RAN_BOOSTER_CORE_COMMIT'                => str_repeat( 'b', 40 ),
+			'RAN_BOOSTER_CORE_ARCHIVE_SOURCE_COMMIT' => str_repeat( 'c', 40 ),
+			'RAN_BOOSTER_CORE_SHA256'                => hash( 'sha256', 'fixture' ),
+			'RAN_BOOSTER_BITBUCKET_SHA256'           => hash( 'sha256', 'fixture' ),
+			'RAN_BOOSTER_WP_CLI_PHP'                 => PHP_BINARY,
+			'RAN528_TEST_SENTINEL'                   => $root . '/called',
+			'RAN_BOOSTER_WP_CLI_BIN'                 => $root . '/wp.php',
+			'RAN_BOOSTER_WP_CLI_REQUIRE'             => '',
+			'RAN_BOOSTER_BITBUCKET_PROOF_ROOT'       => $root,
+			'RAN_BOOSTER_BITBUCKET_PROOF_URL'        => 'http://127.0.0.1:10241',
+			'RAN_BOOSTER_BITBUCKET_PROOF_DB_NAME'    => 'proof',
+			'RAN_BOOSTER_BITBUCKET_PROOF_DB_SOCKET'  => $root . '/db.sock',
+		);
+		$cases = array(
+			array( array( 'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => '' ), 'does not match the canonical certification' ),
+			array( array( 'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'unknown' ), 'Unknown proof mode' ),
+			array(
+				array(
+					'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host',
+					'RAN_BOOSTER_CORE_COMMIT'          => '',
+				),
+				'tuple must be supplied in full',
+			),
+			array(
+				array(
+					'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host',
+					'RAN_BOOSTER_CORE_SHA256'          => str_repeat( '0', 64 ),
+				),
+				'archive digest is wrong',
+			),
+			array( array( 'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host' ), 'ownership marker' ),
+			array( array( 'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host' ), 'ownership marker', 'wrong marker' ),
+			array( array( 'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host' ), 'End-of-central-directory', "RAN528_COMPATIBILITY_PILOT_V1\n" ),
+			array(
+				array(
+					'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host',
+					'RAN_BOOSTER_BITBUCKET_PROOF_ROOT' => $temporary_parent,
+				),
+				'Unsafe proof root',
+			),
+			array(
+				array(
+					'RAN_BOOSTER_BITBUCKET_PROOF_MODE' => 'additional-host',
+					'RAN_BOOSTER_BITBUCKET_PROOF_URL'  => 'http://example.com',
+				),
+				'Unsafe additional-host URL',
+			),
+		);
+		try {
+			foreach ( $cases as $case ) {
+				list( $override, $message ) = $case;
+				if ( isset( $case[2] ) ) {
+					file_put_contents( $root . '/.ran528-owner', $case[2] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Standalone disposable subprocess fixture.
+				} elseif ( file_exists( $root . '/.ran528-owner' ) ) {
+					unlink( $root . '/.ran528-owner' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Standalone disposable subprocess fixture.
+				}
+				$environment = array_merge( $base, $override );
+				$command     = 'env';
+				foreach ( $environment as $key => $value ) {
+					$command .= ' ' . $key . '=' . escapeshellarg( $value );
+				}
+				$command .= ' bash ' . escapeshellarg( dirname( __DIR__ ) . '/WordPress/bitbucket-installed-proof.sh' ) . ' 2>&1';
+				// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.system_calls_proc_open -- Execute the real proof against disposable refusal fixtures.
+				$process = proc_open( $command, array( 1 => array( 'pipe', 'w' ) ), $pipes );
+				self::assertIsResource( $process );
+				$output = stream_get_contents( $pipes[1] );
+				fclose( $pipes[1] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Standalone disposable subprocess fixture.
+				$status = proc_close( $process );
+				self::assertNotSame( 0, $status );
+				self::assertIsString( $output );
+				self::assertStringContainsString( $message, $output );
+				self::assertFileDoesNotExist( $root . '/called' );
+			}
+		} finally {
+			if ( file_exists( $root . '/.ran528-owner' ) ) {
+				unlink( $root . '/.ran528-owner' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Standalone disposable subprocess fixture.
+			}
+			unlink( $root . '/site/.ran-booster-disposable-test-site' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Standalone disposable subprocess fixture.
+			unlink( $root . '/archive' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Standalone disposable subprocess fixture.
+			unlink( $root . '/wp.php' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink -- Standalone disposable subprocess fixture.
+			rmdir( $root . '/site' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Standalone disposable subprocess fixture.
+			rmdir( $root ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Standalone disposable subprocess fixture.
+		}
+	}
+
 	public function test_installed_proof_separates_tag_target_from_archive_source(): void {
 		$workflow = $this->workflow( 'installed-proof.yml' );
 
