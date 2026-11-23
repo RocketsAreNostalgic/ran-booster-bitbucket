@@ -19,8 +19,8 @@ final readonly class BitbucketRepositoryCoordinates {
 		$parts     = explode( '/', $full_name );
 
 		if ( 2 !== count( $parts )
-			|| 1 !== preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $parts[0] )
-			|| 1 !== preg_match( '/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/', $parts[1] )
+			|| 1 !== preg_match( '/\A[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?\z/D', $parts[0] )
+			|| 1 !== preg_match( '/\A[A-Za-z0-9][A-Za-z0-9._-]{0,99}\z/D', $parts[1] )
 			|| '.' === $parts[1]
 			|| '..' === $parts[1]
 		) {

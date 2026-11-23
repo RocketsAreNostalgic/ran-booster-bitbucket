@@ -47,6 +47,31 @@ final class BitbucketWebhookPolicyTest extends TestCase {
 			'workspace/repository/extra',
 			'Repository-scoped webhook secrets require a workspace/repository target.',
 		);
+		yield 'repository with embedded newline in workspace' => array(
+			'repository',
+			"workspace\n/repository",
+			'Repository-scoped webhook secrets require a workspace/repository target.',
+		);
+		yield 'repository current directory segment' => array(
+			'repository',
+			'workspace/.',
+			'Repository-scoped webhook secrets require a workspace/repository target.',
+		);
+		yield 'repository parent directory segment' => array(
+			'repository',
+			'workspace/..',
+			'Repository-scoped webhook secrets require a workspace/repository target.',
+		);
+		yield 'workspace current directory segment' => array(
+			'repository',
+			'./repository',
+			'Repository-scoped webhook secrets require a workspace/repository target.',
+		);
+		yield 'workspace parent directory segment' => array(
+			'repository',
+			'../repository',
+			'Repository-scoped webhook secrets require a workspace/repository target.',
+		);
 	}
 
 	#[DataProvider( 'invalid_targets' )]

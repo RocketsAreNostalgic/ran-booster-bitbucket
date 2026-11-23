@@ -78,5 +78,6 @@ final class BitbucketRepositoryCoordinatesTest extends TestCase {
 		yield 'unicode workspace' => array( 'wörkspace/repository' );
 		yield 'workspace too long' => array( str_repeat( 'w', 65 ) . '/repository' );
 		yield 'repository too long' => array( 'workspace/' . str_repeat( 'r', 101 ) );
+		yield 'workspace embedded newline' => array( "workspace\n/repository" );
 	}
 }

@@ -754,6 +754,46 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 	}
 
+	public function test_commit_validation_rejects_trailing_newline_in_request_and_response(): void {
+		$sha_with_newline = self::COMMIT . "\n";
+
+		try {
+			$this->preparer()->prepare_archive(
+				new ArchiveRequest(
+					new RepositoryReference( 'acme/example', self::REPOSITORY_UUID, false, null ),
+					$sha_with_newline,
+					'main'
+				)
+			);
+			self::fail( 'Expected commit with trailing newline to fail with expected branch.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 'The Bitbucket deployment event does not contain a valid commit.', $exception->getMessage() );
+			self::assertSame( array(), $this->requests() );
+		}
+
+		try {
+			$this->preparer()->prepare_archive( $this->request( $sha_with_newline, false ) );
+			self::fail( 'Expected commit with trailing newline to fail without expected branch.' );
+		} catch ( RuntimeException ) {
+			self::assertSame( array(), $this->requests() );
+		}
+
+		$this->queue(
+			array(
+				$this->response(
+					200,
+					$this->branch_body( 'main', $sha_with_newline, 'acme/example', self::REPOSITORY_UUID )
+				),
+			)
+		);
+		try {
+			$this->preparer()->prepare_archive( $this->request( 'main', false ) );
+			self::fail( 'Expected branch response commit hash with trailing newline to fail.' );
+		} catch ( RuntimeException $exception ) {
+			$this->assert_safe_failure( $exception );
+		}
+	}
+
 	private function error_body(): string {
 		return '{"error":"' . self::RESPONSE_CANARY . '"}';
 	}
