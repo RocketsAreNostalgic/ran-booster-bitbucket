@@ -120,11 +120,11 @@ final readonly class BitbucketArchivePreparer {
 		?string $expected_branch,
 		?BitbucketCredential $credential
 	): string {
-		if ( null !== $expected_branch && 1 !== preg_match( '/^[0-9a-f]{40}$/i', $ref ) ) {
+		if ( null !== $expected_branch && 1 !== preg_match( '/\A[0-9a-f]{40}\z/iD', $ref ) ) {
 			throw new RuntimeException( 'The Bitbucket deployment event does not contain a valid commit.', 400 );
 		}
 
-		if ( 1 === preg_match( '/^[0-9a-f]{40}$/i', $ref ) ) {
+		if ( 1 === preg_match( '/\A[0-9a-f]{40}\z/iD', $ref ) ) {
 			$commit = strtolower( $ref );
 
 			if ( null !== $expected_branch ) {
@@ -244,7 +244,7 @@ final readonly class BitbucketArchivePreparer {
 		if ( ! is_string( $data['name'] ?? null )
 			|| ! hash_equals( $name, $data['name'] )
 			|| ! is_string( $hash )
-			|| 1 !== preg_match( '/^[0-9a-f]{40}$/i', $hash )
+			|| 1 !== preg_match( '/\A[0-9a-f]{40}\z/iD', $hash )
 		) {
 			$this->throw_invalid_response( $kind );
 		}

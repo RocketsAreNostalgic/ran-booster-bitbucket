@@ -404,7 +404,7 @@ final readonly class BitbucketRepositoryBrowser {
 	private function validate_workspace( string $workspace ): string {
 		$workspace = trim( $workspace );
 
-		if ( 1 !== preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $workspace ) ) {
+		if ( 1 !== preg_match( '/\A[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?\z/D', $workspace ) ) {
 			throw new RuntimeException( 'Enter a valid Bitbucket workspace.', 400 );
 		}
 

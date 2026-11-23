@@ -54,6 +54,6 @@ final readonly class BitbucketCredential {
 
 	private static function is_workspace( mixed $workspace ): bool {
 		return is_string( $workspace )
-			&& 1 === preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $workspace );
+			&& 1 === preg_match( '/\A[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?\z/D', $workspace );
 	}
 }

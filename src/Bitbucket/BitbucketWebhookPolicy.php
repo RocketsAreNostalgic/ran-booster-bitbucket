@@ -121,7 +121,7 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 	}
 
 	private function is_workspace( string $workspace ): bool {
-		return 1 === preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?$/', $workspace );
+		return 1 === preg_match( '/\A[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?\z/D', $workspace );
 	}
 
 	private function is_repository( string $repository ): bool {
@@ -131,6 +131,9 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 
 		list($workspace, $name) = explode( '/', $repository, 2 );
 
-		return $this->is_workspace( $workspace ) && 1 === preg_match( '/^[A-Za-z0-9_.-]{1,100}$/', $name );
+		return $this->is_workspace( $workspace )
+			&& '.' !== $name
+			&& '..' !== $name
+			&& 1 === preg_match( '/\A[A-Za-z0-9_.-]{1,100}\z/D', $name );
 	}
 }
