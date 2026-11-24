@@ -17,13 +17,13 @@ final readonly class BitbucketCredentialLoader {
 		$credential_id = trim( $credential_id );
 
 		if ( '' === $credential_id ) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::not_usable();
 		}
 
 		try {
 			$material = $this->credentials->credential_material( $credential_id );
 		} catch ( RuntimeException ) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::store_unavailable();
 		}
 
 		if ( ! is_array( $material )
@@ -31,7 +31,7 @@ final readonly class BitbucketCredentialLoader {
 			|| 'api-token' !== ( $material['kind'] ?? null )
 			|| ! is_array( $material['configuration'] ?? null )
 		) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::not_usable();
 		}
 
 		return BitbucketCredential::from_material(

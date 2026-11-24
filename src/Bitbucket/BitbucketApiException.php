@@ -9,6 +9,7 @@ use RuntimeException;
 final class BitbucketApiException extends RuntimeException {
 
 	public const INVALID_URL      = 'invalid-url';
+	public const BLOCKED_BY_SITE  = 'blocked-by-site';
 	public const TRANSPORT_ERROR  = 'transport-error';
 	public const INVALID_RESPONSE = 'invalid-response';
 
@@ -21,6 +22,10 @@ final class BitbucketApiException extends RuntimeException {
 
 	public static function invalid_url(): self {
 		return new self( self::INVALID_URL, 'The Bitbucket API request URL is not allowed.' );
+	}
+
+	public static function blocked_by_site(): self {
+		return new self( self::BLOCKED_BY_SITE, 'This site blocked the Bitbucket API request.' );
 	}
 
 	public static function transport_error(): self {

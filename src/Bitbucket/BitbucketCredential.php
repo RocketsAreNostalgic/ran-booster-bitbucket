@@ -30,7 +30,7 @@ final readonly class BitbucketCredential {
 			|| '' === trim( $token )
 			|| 1 === preg_match( '/[\x00-\x1F\x7F]/', $token )
 		) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::not_usable();
 		}
 
 		return new self(
@@ -52,14 +52,14 @@ final readonly class BitbucketCredential {
 		$headers = $arguments['headers'] ?? array();
 
 		if ( ! is_array( $headers ) ) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::not_usable();
 		}
 
 		$email = $this->email->getValue();
 		$token = $this->token->getValue();
 
 		if ( ! is_string( $email ) || ! is_string( $token ) ) {
-			throw BitbucketCredentialException::unavailable();
+			throw BitbucketCredentialException::not_usable();
 		}
 
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Bitbucket API tokens use HTTP Basic authentication.

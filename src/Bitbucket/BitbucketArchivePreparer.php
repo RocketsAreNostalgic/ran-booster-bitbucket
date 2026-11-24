@@ -101,7 +101,11 @@ final readonly class BitbucketArchivePreparer {
 
 		try {
 			$credential = $this->credentials->load( $credential_id );
-		} catch ( BitbucketCredentialException ) {
+		} catch ( BitbucketCredentialException $exception ) {
+			if ( $exception->is_store_unavailable() ) {
+				throw new RuntimeException( 'The Bitbucket credential store is unavailable.', 503 );
+			}
+
 			throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
 		}
 
@@ -302,8 +306,16 @@ final readonly class BitbucketArchivePreparer {
 		try {
 			$response = $this->api->get( $url, $credential );
 		} catch ( BitbucketApiException $exception ) {
+			if ( BitbucketApiException::INVALID_URL === $exception->get_reason() ) {
+				throw new RuntimeException( 'The Bitbucket API request URL is not allowed.', 500 );
+			}
+
+			if ( BitbucketApiException::BLOCKED_BY_SITE === $exception->get_reason() ) {
+				throw new RuntimeException( 'This site blocked the Bitbucket API request.', 502 );
+			}
+
 			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
-				throw new RuntimeException( 'Bitbucket could not resolve the requested revision.' );
+				throw new RuntimeException( 'Bitbucket could not resolve the requested revision.', 502 );
 			}
 
 			$this->throw_invalid_response( $kind );
@@ -348,8 +360,12 @@ final readonly class BitbucketArchivePreparer {
 			throw new RuntimeException( 'Bitbucket rate-limited repository access. Try again later.', 429 );
 		}
 
-		if ( in_array( $status, array( 502, 503, 504 ), true ) ) {
-			throw new RuntimeException( 'Bitbucket could not resolve the requested revision.' );
+		if ( 504 === $status ) {
+			throw new RuntimeException( 'Bitbucket could not resolve the requested revision.', 504 );
+		}
+
+		if ( in_array( $status, array( 502, 503 ), true ) ) {
+			throw new RuntimeException( 'Bitbucket could not resolve the requested revision.', 502 );
 		}
 
 		if ( $status < 200 || $status >= 300 ) {

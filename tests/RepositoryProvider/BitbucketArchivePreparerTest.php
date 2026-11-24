@@ -567,26 +567,26 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 	public function test_branch_status_transport_and_malformed_responses_fail_safely_without_archive_hooks(): void {
 		$fixtures = array(
-			'transport'           => array( new BitbucketCredentialValidationTransportError(), 0, true ),
-			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, false ),
-			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, false ),
-			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, false ),
-			'400'                 => array( $this->response( 400, $this->error_body() ), 400, false ),
-			'401'                 => array( $this->response( 401, $this->error_body() ), 401, false ),
-			'403'                 => array( $this->response( 403, $this->error_body() ), 403, false ),
-			'404'                 => array( $this->response( 404, $this->error_body() ), 404, false ),
-			'410'                 => array( $this->response( 410, $this->error_body() ), 410, false ),
-			'429'                 => array( $this->response( 429, $this->error_body() ), 429, false ),
-			'503'                 => array( $this->response( 503, $this->error_body() ), 0, true ),
-			'502'                 => array( $this->response( 502, $this->error_body() ), 0, true ),
-			'504'                 => array( $this->response( 504, $this->error_body() ), 0, true ),
-			'500'                 => array( $this->response( 500, $this->error_body() ), 502, false ),
-			'501'                 => array( $this->response( 501, $this->error_body() ), 502, false ),
-			'505'                 => array( $this->response( 505, $this->error_body() ), 502, false ),
-			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, false ),
-			'null json'           => array( $this->response( 200, 'null' ), 502, false ),
-			'scalar json'         => array( $this->response( 200, '42' ), 502, false ),
-			'scalar target'       => array( $this->response( 200, '{"name":"main","target":42}' ), 502, false ),
+			'transport'           => array( new BitbucketCredentialValidationTransportError(), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, 'This site blocked the Bitbucket API request.' ),
+			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'400'                 => array( $this->response( 400, $this->error_body() ), 400, null ),
+			'401'                 => array( $this->response( 401, $this->error_body() ), 401, null ),
+			'403'                 => array( $this->response( 403, $this->error_body() ), 403, null ),
+			'404'                 => array( $this->response( 404, $this->error_body() ), 404, null ),
+			'410'                 => array( $this->response( 410, $this->error_body() ), 410, null ),
+			'429'                 => array( $this->response( 429, $this->error_body() ), 429, null ),
+			'503'                 => array( $this->response( 503, $this->error_body() ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'502'                 => array( $this->response( 502, $this->error_body() ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'504'                 => array( $this->response( 504, $this->error_body() ), 504, 'Bitbucket could not resolve the requested revision.' ),
+			'500'                 => array( $this->response( 500, $this->error_body() ), 502, null ),
+			'501'                 => array( $this->response( 501, $this->error_body() ), 502, null ),
+			'505'                 => array( $this->response( 505, $this->error_body() ), 502, null ),
+			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, null ),
+			'null json'           => array( $this->response( 200, 'null' ), 502, null ),
+			'scalar json'         => array( $this->response( 200, '42' ), 502, null ),
+			'scalar target'       => array( $this->response( 200, '{"name":"main","target":42}' ), 502, null ),
 			'scalar repository'   => array(
 				$this->response(
 					200,
@@ -601,7 +601,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 					)
 				),
 				502,
-				false,
+				null,
 			),
 			'missing repository'  => array(
 				$this->response(
@@ -614,16 +614,16 @@ final class BitbucketArchivePreparerTest extends TestCase {
 					)
 				),
 				502,
-				false,
+				null,
 			),
-			'missing target'      => array( $this->response( 200, '{"name":"main"}' ), 502, false ),
-			'branch mismatch'     => array( $this->response( 200, $this->branch_body( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'invalid hash'        => array( $this->response( 200, $this->branch_body( 'main', 'not-a-hash', 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'repository mismatch' => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'uuid mismatch'       => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
+			'missing target'      => array( $this->response( 200, '{"name":"main"}' ), 502, null ),
+			'branch mismatch'     => array( $this->response( 200, $this->branch_body( 'other', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, null ),
+			'invalid hash'        => array( $this->response( 200, $this->branch_body( 'main', 'not-a-hash', 'acme/example', self::REPOSITORY_UUID ) ), 502, null ),
+			'repository mismatch' => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, null ),
+			'uuid mismatch'       => array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, null ),
 		);
 
-		foreach ( $fixtures as $name => [$response, $code, $retryable] ) {
+		foreach ( $fixtures as $name => [$response, $code, $expected_message] ) {
 			$context = (string) $name;
 			$this->reset_harness();
 			$this->queue( '404' === $context ? array( $response, $response ) : array( $response ) );
@@ -633,7 +633,10 @@ final class BitbucketArchivePreparerTest extends TestCase {
 					->prepare_archive( $this->request( 'main', true, 'profile' ) );
 				self::fail( 'Expected branch resolution failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
-				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
+				self::assertSame( $code, $exception->getCode(), $context );
+				if ( null !== $expected_message ) {
+					self::assertSame( $expected_message, $exception->getMessage(), $context );
+				}
 				$this->assert_safe_failure( $exception, $context );
 			}
 
@@ -646,30 +649,30 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 	public function test_direct_commit_status_transport_and_identity_failures_are_safe_and_hook_free(): void {
 		$fixtures = array(
-			'transport'           => array( new BitbucketCredentialValidationTransportError(), 0, true ),
-			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, false ),
-			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, false ),
-			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, false ),
-			'400'                 => array( $this->response( 400, $this->error_body() ), 400, false ),
-			'401'                 => array( $this->response( 401, $this->error_body() ), 401, false ),
-			'403'                 => array( $this->response( 403, $this->error_body() ), 403, false ),
-			'404'                 => array( $this->response( 404, $this->error_body() ), 404, false ),
-			'410'                 => array( $this->response( 410, $this->error_body() ), 410, false ),
-			'429'                 => array( $this->response( 429, $this->error_body() ), 429, false ),
-			'503'                 => array( $this->response( 503, $this->error_body() ), 0, true ),
-			'502'                 => array( $this->response( 502, $this->error_body() ), 0, true ),
-			'504'                 => array( $this->response( 504, $this->error_body() ), 0, true ),
-			'500'                 => array( $this->response( 500, $this->error_body() ), 502, false ),
-			'501'                 => array( $this->response( 501, $this->error_body() ), 502, false ),
-			'505'                 => array( $this->response( 505, $this->error_body() ), 502, false ),
-			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, false ),
-			'missing repository'  => array( $this->response( 200, $this->json( array( 'hash' => self::COMMIT ) ) ), 502, false ),
-			'hash mismatch'       => array( $this->response( 200, $this->commit_body( self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'repository mismatch' => array( $this->response( 200, $this->commit_body( self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, false ),
-			'uuid mismatch'       => array( $this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, false ),
+			'transport'           => array( new BitbucketCredentialValidationTransportError(), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'blocked transport'   => array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, 'This site blocked the Bitbucket API request.' ),
+			'local policy error'  => array( new BitbucketCredentialValidationTransportError( 'local_policy_canary' ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'no transport'        => array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'400'                 => array( $this->response( 400, $this->error_body() ), 400, null ),
+			'401'                 => array( $this->response( 401, $this->error_body() ), 401, null ),
+			'403'                 => array( $this->response( 403, $this->error_body() ), 403, null ),
+			'404'                 => array( $this->response( 404, $this->error_body() ), 404, null ),
+			'410'                 => array( $this->response( 410, $this->error_body() ), 410, null ),
+			'429'                 => array( $this->response( 429, $this->error_body() ), 429, null ),
+			'503'                 => array( $this->response( 503, $this->error_body() ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'502'                 => array( $this->response( 502, $this->error_body() ), 502, 'Bitbucket could not resolve the requested revision.' ),
+			'504'                 => array( $this->response( 504, $this->error_body() ), 504, 'Bitbucket could not resolve the requested revision.' ),
+			'500'                 => array( $this->response( 500, $this->error_body() ), 502, null ),
+			'501'                 => array( $this->response( 501, $this->error_body() ), 502, null ),
+			'505'                 => array( $this->response( 505, $this->error_body() ), 502, null ),
+			'not json'            => array( $this->response( 200, self::RESPONSE_CANARY ), 502, null ),
+			'missing repository'  => array( $this->response( 200, $this->json( array( 'hash' => self::COMMIT ) ) ), 502, null ),
+			'hash mismatch'       => array( $this->response( 200, $this->commit_body( self::OTHER_COMMIT, 'acme/example', self::REPOSITORY_UUID ) ), 502, null ),
+			'repository mismatch' => array( $this->response( 200, $this->commit_body( self::COMMIT, 'other/example', self::REPOSITORY_UUID ) ), 502, null ),
+			'uuid mismatch'       => array( $this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', '{other-uuid}' ) ), 502, null ),
 		);
 
-		foreach ( $fixtures as $name => [$response, $code, $retryable] ) {
+		foreach ( $fixtures as $name => [$response, $code, $expected_message] ) {
 			$context = (string) $name;
 			$this->reset_harness();
 			$this->queue( array( $response ) );
@@ -679,7 +682,10 @@ final class BitbucketArchivePreparerTest extends TestCase {
 					->prepare_archive( $this->request( self::COMMIT, true, 'profile' ) );
 				self::fail( 'Expected direct commit verification failure: ' . $context );
 			} catch ( RuntimeException $exception ) {
-				self::assertSame( $retryable ? 0 : $code, $exception->getCode(), $context );
+				self::assertSame( $code, $exception->getCode(), $context );
+				if ( null !== $expected_message ) {
+					self::assertSame( $expected_message, $exception->getMessage(), $context );
+				}
 				$this->assert_safe_failure( $exception, $context );
 			}
 
@@ -694,6 +700,97 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			self::assertStringNotContainsString( self::EMAIL, $this->requests()[0]['url'], $context );
 			$this->assert_no_archive_hooks( $context );
 		}
+	}
+
+	public function test_invalid_url_has_distinct_fixed_code_and_message_without_http_or_hooks(): void {
+		\RAN\Booster\Bitbucket\bitbucket_credential_validation_parse_url_override( static fn (): false => false );
+
+		try {
+			$this->preparer( $this->secrets( array( 'profile' => $this->credential() ) ) )
+				->prepare_archive( $this->request( 'main', true, 'profile' ) );
+			self::fail( 'Expected invalid API URL guard to reject archive resolution.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 500, $exception->getCode() );
+			self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage() );
+			$this->assert_safe_failure( $exception );
+		}
+
+		self::assertSame( array(), $this->requests() );
+		$this->assert_no_archive_hooks();
+	}
+
+	public function test_credential_store_failure_is_distinguished_from_missing_or_malformed_credential(): void {
+		$failing_secrets = new class() extends \RAN\Secrets\SecretsFile {
+			public function __construct() {
+				parent::__construct( null, array() );
+			}
+
+			/** @return array<string, mixed>|null */
+			public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
+				unset( $provider, $id );
+				throw new RuntimeException( 'store-failure-secret-canary' );
+			}
+		};
+
+		$preparer = new BitbucketArchivePreparer(
+			new BitbucketCredentialLoader( new BitbucketProviderCredentialStore( $failing_secrets ) ),
+			new BitbucketApiClient()
+		);
+
+		try {
+			$preparer->prepare_archive( $this->request( self::COMMIT, true, 'profile' ) );
+			self::fail( 'Expected credential store failure to throw 503.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 503, $exception->getCode() );
+			self::assertSame( 'The Bitbucket credential store is unavailable.', $exception->getMessage() );
+			self::assertStringNotContainsString( 'store-failure-secret-canary', $exception->getMessage() );
+			$this->assert_safe_failure( $exception );
+		}
+
+		self::assertSame( array(), $this->requests() );
+		$this->assert_no_archive_hooks();
+
+		$this->reset_harness();
+		$this->queue( array( $this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ) ) );
+		$toggle_secrets = new class( $this->credential() ) extends \RAN\Secrets\SecretsFile {
+			public bool $fail_store = false;
+
+			/** @param array<string, mixed> $material */
+			public function __construct( private array $material ) {
+				parent::__construct( null, array() );
+			}
+
+			/** @return array<string, mixed> */
+			public function credential_material( ProviderCode|string $provider, ?string $id = null ): array {
+				unset( $provider, $id );
+				if ( $this->fail_store ) {
+					throw new RuntimeException( 'head-recheck-store-canary' );
+				}
+
+				return $this->material;
+			}
+		};
+
+		$head_preparer              = new BitbucketArchivePreparer(
+			new BitbucketCredentialLoader( new BitbucketProviderCredentialStore( $toggle_secrets ) ),
+			new BitbucketApiClient()
+		);
+		$archive                    = $head_preparer->prepare_archive( $this->request( self::COMMIT, true, 'profile', 'acme/example', 'main' ) );
+		$toggle_secrets->fail_store = true;
+
+		try {
+			$archive->verify_current_head();
+			self::fail( 'Expected credential store failure during head recheck to throw 503.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 503, $exception->getCode() );
+			self::assertSame( 'The Bitbucket credential store is unavailable.', $exception->getMessage() );
+			self::assertStringNotContainsString( 'head-recheck-store-canary', $exception->getMessage() );
+		} finally {
+			$archive->cleanup();
+		}
+
+		self::assertCount( 1, $this->requests() );
+		$this->assert_no_archive_hooks();
 	}
 
 	public function test_private_authentication_is_one_shot_and_bound_to_the_exact_immutable_archive(): void {

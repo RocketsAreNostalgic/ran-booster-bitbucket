@@ -17,6 +17,7 @@ use RAN\RepositoryProvider\WebhookEnvelope;
 use RAN\RepositoryProvider\WebhookNormalizer;
 use RAN\RepositoryProvider\WebhookRejected;
 use RAN\RepositoryProvider\WebhookRequest;
+use Throwable;
 
 final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 
@@ -46,12 +47,13 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 					'Save a Bitbucket webhook secret before sending a provider test delivery.'
 				);
 			}
-		} catch ( \Throwable ) {
+		} catch ( Throwable $failure ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
 				'bb.webhook.configuration_unavailable',
 				'Bitbucket webhook configuration could not be read.',
-				'Check the credential sidecar and save the Bitbucket webhook configuration again.'
+				'Check the credential sidecar and save the Bitbucket webhook configuration again.',
+				$failure
 			);
 		}
 
@@ -61,12 +63,13 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 
 		try {
 			$delivery = $this->delivery_evidence->latest_authenticated_delivery();
-		} catch ( \Throwable ) {
+		} catch ( Throwable $failure ) {
 			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
 				'bb.webhook.delivery_evidence_unavailable',
 				'Bitbucket authenticated delivery evidence could not be read.',
-				'Check Booster Activity and send another Bitbucket test delivery.'
+				'Check Booster Activity and send another Bitbucket test delivery.',
+				$failure
 			);
 		}
 
@@ -99,6 +102,11 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$body = $request->get_body();
 
 		$event_key = $this->event_key( $request );
+		if ( 'diagnostics:ping' === $event_key ) {
+			$request->require_verification();
+			return WebhookEnvelope::probe();
+		}
+
 		if ( 'repo:push' !== $event_key ) {
 			$request->require_verification();
 			return WebhookEnvelope::ignored();

@@ -32,11 +32,7 @@ final readonly class BitbucketRepositoryBrowser {
 			$credential = null;
 
 			if ( null !== $request->get_credential_id() ) {
-				try {
-					$credential = $this->credentials->load( $request->get_credential_id() );
-				} catch ( BitbucketCredentialException ) {
-					throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
-				}
+				$credential = $this->load_credential( $request->get_credential_id() );
 			}
 
 			return $this->list_repositories(
@@ -49,11 +45,7 @@ final readonly class BitbucketRepositoryBrowser {
 		}
 
 		$credential_id = (string) $request->get_credential_id();
-		try {
-			$credential = $this->credentials->load( $credential_id );
-		} catch ( BitbucketCredentialException ) {
-			throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
-		}
+		$credential    = $this->load_credential( $credential_id );
 
 		return $this->list_repositories(
 			$credential->get_workspace(),
@@ -83,11 +75,7 @@ final readonly class BitbucketRepositoryBrowser {
 		$resolved_credential_id = null;
 
 		if ( null !== $credential_id ) {
-			try {
-				$credential = $this->credentials->load( $credential_id );
-			} catch ( BitbucketCredentialException ) {
-				throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
-			}
+			$credential = $this->load_credential( $credential_id );
 
 			if ( ! $public_only && 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
 				throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
@@ -112,7 +100,7 @@ final readonly class BitbucketRepositoryBrowser {
 		);
 		$item     = json_decode( $response->get_body(), true, 512, JSON_BIGINT_AS_STRING );
 
-		$repository = $this->descriptor_from_item( $item, $resolved_credential_id, $workspace, true );
+		$repository = $this->descriptor_from_item( $item, $resolved_credential_id, $workspace, true, $coordinates->get_full_name() );
 
 		if ( null === $repository || ! $coordinates->matches_full_name( $repository->locator ) ) {
 			throw new RuntimeException( 'Bitbucket returned an invalid repository response.', 502 );
@@ -151,6 +139,7 @@ final readonly class BitbucketRepositoryBrowser {
 			);
 		$seen_urls         = array();
 		$repositories      = array();
+		$had_skipped_items = false;
 
 		for ( $page = 1; ; ++$page ) {
 			if ( ! $browse_request->has_capacity() ) {
@@ -210,9 +199,18 @@ final readonly class BitbucketRepositoryBrowser {
 			}
 
 			foreach ( $data['values'] as $item ) {
+				if ( $public_only && $this->is_private_item_in_workspace( $item, $workspace ) ) {
+					continue;
+				}
+
 				$repository = $this->descriptor_from_item( $item, $credential_id, $workspace );
 
-				if ( null === $repository || ( $public_only && $repository->private ) ) {
+				if ( null === $repository ) {
+					$had_skipped_items = true;
+					continue;
+				}
+
+				if ( $public_only && $repository->private ) {
 					continue;
 				}
 
@@ -223,7 +221,13 @@ final readonly class BitbucketRepositoryBrowser {
 			}
 
 			if ( ! array_key_exists( 'next', $data ) || null === $data['next'] ) {
-				return new RepositoryBrowseResult( $this->deduplicate_and_sort( $repositories ) );
+				$deduplicated = $this->deduplicate_and_sort( $repositories );
+				$had_skipped  = $had_skipped_items || count( $deduplicated ) !== count( $repositories );
+
+				return new RepositoryBrowseResult(
+					$deduplicated,
+					$had_skipped ? RepositoryBrowseResult::PROVIDER : null
+				);
 			}
 
 			if ( ! is_string( $data['next'] ) || '' === $data['next'] ) {
@@ -231,6 +235,18 @@ final readonly class BitbucketRepositoryBrowser {
 			}
 
 			$url = $data['next'];
+		}
+	}
+
+	private function load_credential( string $credential_id ): BitbucketCredential {
+		try {
+			return $this->credentials->load( $credential_id );
+		} catch ( BitbucketCredentialException $exception ) {
+			if ( $exception->is_store_unavailable() ) {
+				throw new RuntimeException( 'The Bitbucket credential store is unavailable.', 503 );
+			}
+
+			throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
 		}
 	}
 
@@ -262,6 +278,14 @@ final readonly class BitbucketRepositoryBrowser {
 		try {
 			$response = $this->api->get( $url, $credential, $timeout, $response_size );
 		} catch ( BitbucketApiException $exception ) {
+			if ( BitbucketApiException::INVALID_URL === $exception->get_reason() ) {
+				throw new RuntimeException( 'The Bitbucket API request URL is not allowed.', 500 );
+			}
+
+			if ( BitbucketApiException::BLOCKED_BY_SITE === $exception->get_reason() ) {
+				throw new RuntimeException( 'This site blocked the Bitbucket API request.', 502 );
+			}
+
 			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
 				throw new RuntimeException( 'Bitbucket could not be reached. Please try again.', $transport_status );
 			}
@@ -291,6 +315,10 @@ final readonly class BitbucketRepositoryBrowser {
 			throw new RuntimeException( 'Bitbucket rate-limited repository access. Try again later.', 429 );
 		}
 
+		if ( $status >= 400 && $status < 500 ) {
+			throw new RuntimeException( 'Bitbucket rejected the repository request.', $status );
+		}
+
 		if ( $status < 200 || $status >= 300 ) {
 			throw new RuntimeException( 'Bitbucket repository access failed. Please try again.', 502 );
 		}
@@ -306,11 +334,31 @@ final readonly class BitbucketRepositoryBrowser {
 		}
 	}
 
+	private function is_private_item_in_workspace( mixed $item, string $expected_workspace ): bool {
+		if ( ! is_array( $item )
+			|| true !== ( $item['is_private'] ?? null )
+			|| ! is_string( $item['uuid'] ?? null )
+			|| '' === trim( $item['uuid'] )
+			|| ! is_string( $item['full_name'] ?? null )
+		) {
+			return false;
+		}
+
+		try {
+			$coordinates = BitbucketRepositoryCoordinates::from_full_name( trim( $item['full_name'] ) );
+		} catch ( InvalidArgumentException ) {
+			return false;
+		}
+
+		return 0 === strcasecmp( $expected_workspace, $coordinates->get_workspace() );
+	}
+
 	private function descriptor_from_item(
 		mixed $item,
 		?string $credential_id,
 		string $expected_workspace,
-		bool $require_default_branch = false
+		bool $require_default_branch = false,
+		?string $expected_full_name = null
 	): ?RepositoryDescriptor {
 		if ( ! is_array( $item )
 			|| ! is_string( $item['uuid'] ?? null )
@@ -334,12 +382,16 @@ final readonly class BitbucketRepositoryBrowser {
 			return null;
 		}
 
+		if ( null !== $expected_full_name && 0 !== strcasecmp( $expected_full_name, $full_name ) ) {
+			return null;
+		}
+
 		if ( ! is_array( $item['mainbranch'] ?? null )
 			|| ! is_string( $item['mainbranch']['name'] ?? null )
 			|| '' === trim( $item['mainbranch']['name'] )
 		) {
 			if ( $require_default_branch ) {
-				throw new RuntimeException( 'That Bitbucket repository has no default branch to deploy.', 400 );
+				throw new RuntimeException( 'That Bitbucket repository has no default branch to deploy.', 422 );
 			}
 
 			return null;

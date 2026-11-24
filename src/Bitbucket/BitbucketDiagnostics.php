@@ -9,6 +9,7 @@ use RAN\RepositoryProvider\ProviderDiagnosticRequest;
 use RAN\RepositoryProvider\ProviderDiagnosticResult;
 use RAN\RepositoryProvider\ProviderDiagnostics;
 use RuntimeException;
+use Throwable;
 
 final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 
@@ -40,8 +41,8 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 			$result = $this->credentials->validate_credential( $credential_id, $request->claim_remote_call(), 65536 );
 		} catch ( ProviderDiagnosticBudgetExceeded ) {
 			return $this->budget_result( 'bb.credential.budget_exhausted' );
-		} catch ( \Throwable ) {
-			return $this->unavailable_result( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.' );
+		} catch ( Throwable $failure ) {
+			return $this->unavailable_result( 'bb.credential.unavailable', 'Bitbucket credential validation could not be completed.', $failure );
 		}
 
 		if ( $result->is_valid() ) {
@@ -98,8 +99,8 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 			return $this->budget_result( 'bb.repository.budget_exhausted' );
 		} catch ( RuntimeException $exception ) {
 			return $this->repository_failure( $exception );
-		} catch ( \Throwable ) {
-			return $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' );
+		} catch ( Throwable $failure ) {
+			return $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.', $failure );
 		}
 
 		return new ProviderDiagnosticResult(
@@ -111,27 +112,59 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 	}
 
 	private function repository_failure( RuntimeException $exception ): ProviderDiagnosticResult {
-		return match ( $exception->getCode() ) {
-			401, 403 => new ProviderDiagnosticResult(
+		$code = (int) $exception->getCode();
+
+		if ( 401 === $code ) {
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::FAILED,
+				'bb.repository.credential_rejected',
+				'Bitbucket rejected the selected credential.',
+				'Check the workspace, account email, API token, and expiry.'
+			);
+		}
+
+		if ( 403 === $code ) {
+			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
 				'bb.repository.denied',
 				'Bitbucket denied access to the selected repository.',
 				'Check the API token scope and workspace access.'
-			),
-			404 => new ProviderDiagnosticResult(
+			);
+		}
+
+		if ( 404 === $code ) {
+			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::FAILED,
 				'bb.repository.not_found',
 				'Bitbucket could not find the selected repository with this credential.',
 				'Check the repository name, workspace, and credential access.'
-			),
-			429 => new ProviderDiagnosticResult(
+			);
+		}
+
+		if ( 429 === $code ) {
+			return new ProviderDiagnosticResult(
 				ProviderDiagnosticResult::WARNING,
 				'bb.repository.rate_limited',
 				'Bitbucket rate-limited the repository check.',
 				'Try the check again after the rate limit resets.'
-			),
-			default => $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.' ),
-		};
+			);
+		}
+
+		if ( $code >= 400 && $code < 500 ) {
+			return new ProviderDiagnosticResult(
+				ProviderDiagnosticResult::FAILED,
+				'bb.repository.request_invalid',
+				'Bitbucket could not accept the selected repository check.',
+				'Check the repository name, default branch, workspace, and selected credential.',
+				$exception
+			);
+		}
+
+		if ( $code >= 500 && $code <= 599 ) {
+			return $this->unavailable_result( 'bb.repository.server_error', 'Bitbucket repository access could not be completed.', $exception );
+		}
+
+		return $this->unavailable_result( 'bb.repository.unavailable', 'Bitbucket repository access could not be completed.', $exception );
 	}
 
 	private function budget_result( string $code ): ProviderDiagnosticResult {
@@ -143,12 +176,13 @@ final readonly class BitbucketDiagnostics implements ProviderDiagnostics {
 		);
 	}
 
-	private function unavailable_result( string $code, string $message ): ProviderDiagnosticResult {
+	private function unavailable_result( string $code, string $message, ?Throwable $failure = null ): ProviderDiagnosticResult {
 		return new ProviderDiagnosticResult(
 			ProviderDiagnosticResult::WARNING,
 			$code,
 			$message,
-			'Try again and check Bitbucket service status if the problem continues.'
+			'Try again and check Bitbucket service status if the problem continues.',
+			$failure
 		);
 	}
 }

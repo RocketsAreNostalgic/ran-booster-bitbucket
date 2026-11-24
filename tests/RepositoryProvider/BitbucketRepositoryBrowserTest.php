@@ -282,12 +282,32 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 
 	public function test_exact_lookup_rejects_workspace_mismatch_malformed_rows_and_empty_branches(): void {
 		$fixtures = array(
-			array( $this->item( '{mismatch}', 'other/repository', false, '' ), 502 ),
-			array( array( 'uuid' => '{missing-fields}' ), 502 ),
-			array( $this->item( '{empty-branch}', 'acme/repository', false, '' ), 400 ),
+			array( $this->item( '{mismatch}', 'other/repository', false, '' ), 502, 'Bitbucket returned an invalid repository response.' ),
+			array( $this->item( '{wrong-slug}', 'acme/other-repository', false, '' ), 502, 'Bitbucket returned an invalid repository response.' ),
+			array( array( 'uuid' => '{missing-fields}' ), 502, 'Bitbucket returned an invalid repository response.' ),
+			array( $this->item( '{empty-branch}', 'acme/repository', false, '' ), 422, 'That Bitbucket repository has no default branch to deploy.' ),
+			array(
+				array(
+					'uuid'       => '{null-branch}',
+					'full_name'  => 'acme/repository',
+					'is_private' => false,
+					'mainbranch' => null,
+				),
+				422,
+				'That Bitbucket repository has no default branch to deploy.',
+			),
+			array(
+				array(
+					'uuid'       => '{missing-branch}',
+					'full_name'  => 'acme/repository',
+					'is_private' => false,
+				),
+				422,
+				'That Bitbucket repository has no default branch to deploy.',
+			),
 		);
 
-		foreach ( $fixtures as [$fixture, $expected_status] ) {
+		foreach ( $fixtures as [$fixture, $expected_status, $expected_message] ) {
 			$this->queue( array( $this->response( 200, $this->json( $fixture ) ) ) );
 
 			try {
@@ -295,6 +315,7 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 				self::fail( 'Expected an invalid exact Bitbucket repository response.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $expected_status, $exception->getCode() );
+				self::assertSame( $expected_message, $exception->getMessage() );
 				$this->assert_safe_message( $exception->getMessage() );
 			}
 		}
@@ -525,7 +546,8 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 					$this->accessible_repositories( $this->browser( $secrets ), 'primary' );
 					self::fail( 'Expected hostile pagination parameter to be rejected: ' . $variant );
 				} catch ( RuntimeException $exception ) {
-					self::assertSame( 422, $exception->getCode(), $variant );
+					self::assertSame( 500, $exception->getCode(), $variant );
+					self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage(), $variant );
 					$this->assert_safe_message( $exception->getMessage() );
 				}
 
@@ -553,7 +575,22 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		self::assertCount( 1, $this->requests() );
 	}
 
-	public function test_malformed_lists_fail_and_malformed_rows_are_skipped(): void {
+	public function test_invalid_url_guard_in_exact_lookup_has_distinct_fixed_code_and_message(): void {
+		\RAN\Booster\Bitbucket\bitbucket_credential_validation_parse_url_override( static fn (): false => false );
+
+		try {
+			$this->browser()->repository( 'acme/repository' );
+			self::fail( 'Expected invalid API URL guard to reject exact lookup.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 500, $exception->getCode() );
+			self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage() );
+			$this->assert_safe_message( $exception->getMessage() );
+		}
+
+		self::assertSame( array(), $this->requests() );
+	}
+
+	public function test_malformed_lists_fail_and_skipped_empty_bad_shape_or_duplicate_rows_mark_partial(): void {
 		foreach ( array( '', 'not-json', '{}', '{"values":"invalid"}' ) as $body ) {
 			$this->queue( array( $this->response( 200, $body ) ) );
 
@@ -566,6 +603,70 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			}
 		}
 
+		$partial_cases = array(
+			'empty repository (blank branch)'    => array(
+				array(
+					$this->item( '{blank}', 'acme/blank', false, '' ),
+					$this->item( '{valid}', 'acme/valid' ),
+				),
+				array( 'acme/valid' ),
+			),
+			'empty repository (null mainbranch)' => array(
+				array(
+					array(
+						'uuid'       => '{null-branch}',
+						'full_name'  => 'acme/empty',
+						'is_private' => false,
+						'mainbranch' => null,
+					),
+					$this->item( '{valid}', 'acme/valid' ),
+				),
+				array( 'acme/valid' ),
+			),
+			'only empty repository'              => array(
+				array(
+					array(
+						'uuid'       => '{only-empty}',
+						'full_name'  => 'acme/empty',
+						'is_private' => false,
+						'mainbranch' => null,
+					),
+				),
+				array(),
+			),
+			'bad shape row'                      => array(
+				array(
+					array( 'uuid' => '{missing}' ),
+					$this->item( '{valid}', 'acme/valid' ),
+				),
+				array( 'acme/valid' ),
+			),
+			'duplicate uuid'                     => array(
+				array(
+					$this->item( '{dup}', 'acme/first' ),
+					$this->item( '{dup}', 'acme/second' ),
+				),
+				array( 'acme/first' ),
+			),
+			'duplicate full_name'                => array(
+				array(
+					$this->item( '{one}', 'acme/same' ),
+					$this->item( '{two}', 'ACME/SAME' ),
+				),
+				array( 'acme/same' ),
+			),
+		);
+
+		foreach ( $partial_cases as $name => [$values, $expected_locators] ) {
+			$this->queue( array( $this->response( 200, $this->json( array( 'values' => $values ) ) ) ) );
+
+			$result = $this->browser()->browse( RepositoryBrowseRequest::public_owner( 'acme' ) );
+
+			self::assertSame( $expected_locators, array_column( $this->rows( $result->repositories ), 'locator' ), $name );
+			self::assertTrue( $result->is_partial(), $name );
+			self::assertSame( RepositoryBrowseResult::PROVIDER, $result->partial_reason, $name );
+		}
+
 		$this->queue(
 			array(
 				$this->response(
@@ -573,34 +674,99 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 					$this->json(
 						array(
 							'values' => array(
-								array( 'uuid' => '{missing}' ),
-								$this->item( '{blank}', 'acme/blank', false, '' ),
-								$this->item( '{valid}', 'acme/valid' ),
+								$this->item( '{public}', 'acme/public', false ),
+								array(
+									'uuid'       => '{private-empty}',
+									'full_name'  => 'acme/private-empty',
+									'is_private' => true,
+									'mainbranch' => null,
+								),
 							),
 						)
 					)
 				),
 			)
 		);
+		$clean = $this->browser()->browse( RepositoryBrowseRequest::public_owner( 'acme' ) );
+		self::assertSame( array( 'acme/public' ), array_column( $this->rows( $clean->repositories ), 'locator' ) );
+		self::assertFalse( $clean->is_partial() );
+		self::assertNull( $clean->partial_reason );
+	}
 
-		self::assertSame(
-			array( 'acme/valid' ),
-			array_column( $this->rows( $this->public_repositories( $this->browser(), 'acme' ) ), 'locator' )
+	public function test_credential_store_failure_is_distinguished_from_missing_or_malformed_credential(): void {
+		$failing_secrets = new class() extends \RAN\Secrets\SecretsFile {
+			public function __construct() {
+				parent::__construct( null, array() );
+			}
+
+			/** @return array<string, mixed>|null */
+			public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
+				unset( $provider, $id );
+				throw new RuntimeException( 'browser-store-failure-canary' );
+			}
+		};
+
+		$failing_browser = new BitbucketRepositoryBrowser(
+			new BitbucketCredentialLoader( new BitbucketProviderCredentialStore( $failing_secrets ) ),
+			new BitbucketApiClient()
 		);
+
+		$operations = array(
+			'public owner with credential' => static fn (): mixed => $failing_browser->browse( RepositoryBrowseRequest::public_owner( 'acme', 'profile' ) ),
+			'accessible browse'            => static fn (): mixed => $failing_browser->browse( RepositoryBrowseRequest::accessible( 'profile' ) ),
+			'exact lookup'                 => static fn (): mixed => $failing_browser->repository( 'acme/plugin', 'profile' ),
+		);
+
+		foreach ( $operations as $name => $operation ) {
+			try {
+				$operation();
+				self::fail( 'Expected credential store failure to throw 503: ' . $name );
+			} catch ( RuntimeException $exception ) {
+				self::assertSame( 503, $exception->getCode(), $name );
+				self::assertSame( 'The Bitbucket credential store is unavailable.', $exception->getMessage(), $name );
+				self::assertStringNotContainsString( 'browser-store-failure-canary', $exception->getMessage(), $name );
+			}
+		}
+
+		$malformed_secrets = $this->secrets(
+			array( 'wrong-kind' => array_replace( $this->credential( 'acme', self::TOKEN_CANARY ), array( 'kind' => 'app-password' ) ) )
+		);
+		$malformed_browser = $this->browser( $malformed_secrets );
+
+		foreach ( array(
+			'missing accessible'   => static fn (): mixed => $malformed_browser->browse( RepositoryBrowseRequest::accessible( 'missing' ) ),
+			'malformed accessible' => static fn (): mixed => $malformed_browser->browse( RepositoryBrowseRequest::accessible( 'wrong-kind' ) ),
+			'malformed lookup'     => static fn (): mixed => $malformed_browser->repository( 'acme/plugin', 'wrong-kind' ),
+		) as $name => $operation ) {
+			try {
+				$operation();
+				self::fail( 'Expected missing or malformed credential to throw 400: ' . $name );
+			} catch ( RuntimeException $exception ) {
+				self::assertSame( 400, $exception->getCode(), $name );
+				self::assertSame( 'The selected Bitbucket credential is unavailable or invalid.', $exception->getMessage(), $name );
+				$this->assert_safe_message( $exception->getMessage() );
+			}
+		}
+
+		self::assertSame( array(), $this->requests() );
 	}
 
 	public function test_transport_and_statuses_use_fixed_redacted_errors(): void {
 		$fixtures = array(
-			array( new BitbucketCredentialValidationTransportError(), 504 ),
-			array( $this->response( 401, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 401 ),
-			array( $this->response( 403, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 403 ),
-			array( $this->response( 404, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 404 ),
-			array( $this->response( 410, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 410 ),
-			array( $this->response( 429, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 429 ),
-			array( $this->response( 500, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 502 ),
+			array( new BitbucketCredentialValidationTransportError(), 504, 'Bitbucket could not be reached. Please try again.' ),
+			array( new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ), 502, 'This site blocked the Bitbucket API request.' ),
+			array( new BitbucketCredentialValidationTransportError( 'http_failure' ), 504, 'Bitbucket could not be reached. Please try again.' ),
+			array( $this->response( 400, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 400, null ),
+			array( $this->response( 401, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 401, null ),
+			array( $this->response( 403, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 403, null ),
+			array( $this->response( 404, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 404, null ),
+			array( $this->response( 410, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 410, null ),
+			array( $this->response( 422, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 422, null ),
+			array( $this->response( 429, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 429, null ),
+			array( $this->response( 500, '{"error":"' . self::RESPONSE_CANARY . '"}' ), 502, null ),
 		);
 
-		foreach ( $fixtures as [$response, $code] ) {
+		foreach ( $fixtures as [$response, $code, $expected_message] ) {
 			$this->queue( array( $response ) );
 
 			try {
@@ -608,6 +774,9 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 				self::fail( 'Expected a safe Bitbucket request failure.' );
 			} catch ( RuntimeException $exception ) {
 				self::assertSame( $code, $exception->getCode() );
+				if ( null !== $expected_message ) {
+					self::assertSame( $expected_message, $exception->getMessage() );
+				}
 				$this->assert_safe_message( $exception->getMessage() );
 			}
 		}
