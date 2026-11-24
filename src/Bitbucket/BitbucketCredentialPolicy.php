@@ -7,6 +7,7 @@ namespace RAN\Booster\Bitbucket;
 use RAN\RepositoryProvider\ProviderCode;
 use RAN\RepositoryProvider\ProviderCredentialPolicy;
 use RuntimeException;
+use SensitiveParameter;
 
 final readonly class BitbucketCredentialPolicy implements ProviderCredentialPolicy {
 
@@ -18,7 +19,7 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		return ProviderCode::parse( 'bb' );
 	}
 
-	public function normalize_credential( array $metadata, mixed $secret ): array {
+	public function normalize_credential( #[SensitiveParameter] array $metadata, #[SensitiveParameter] mixed $secret ): array {
 		$label         = $this->required_string( $metadata['label'] ?? null, 'Credential label' );
 		$kind          = $this->required_string( $metadata['kind'] ?? null, 'Credential kind' );
 		$configuration = $metadata['configuration'] ?? array();
@@ -64,7 +65,7 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		return array( self::WORKSPACE_CONSTANT, self::EMAIL_CONSTANT, self::TOKEN_CONSTANT );
 	}
 
-	public function credential_from_constants( array $constants ): ?array {
+	public function credential_from_constants( #[SensitiveParameter] array $constants ): ?array {
 		$workspace = $constants[ self::WORKSPACE_CONSTANT ] ?? '';
 		$email     = $constants[ self::EMAIL_CONSTANT ] ?? '';
 		$token     = $constants[ self::TOKEN_CONSTANT ] ?? '';
@@ -94,7 +95,7 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		);
 	}
 
-	private function required_string( mixed $value, string $name ): string {
+	private function required_string( #[SensitiveParameter] mixed $value, string $name ): string {
 		if ( ! is_string( $value ) || '' === trim( $value ) ) {
 			throw new RuntimeException( $name . ' must be a non-empty string.' );
 		}
@@ -106,11 +107,11 @@ final readonly class BitbucketCredentialPolicy implements ProviderCredentialPoli
 		return 1 === preg_match( '/\A[A-Za-z0-9](?:[A-Za-z0-9_-]{0,62}[A-Za-z0-9])?\z/D', $owner );
 	}
 
-	private function has_email_delimiter_or_control( mixed $email ): bool {
+	private function has_email_delimiter_or_control( #[SensitiveParameter] mixed $email ): bool {
 		return is_string( $email ) && 1 === preg_match( '/[:\x00-\x1F\x7F]/', $email );
 	}
 
-	private function has_ascii_control( mixed $value ): bool {
+	private function has_ascii_control( #[SensitiveParameter] mixed $value ): bool {
 		return is_string( $value ) && 1 === preg_match( '/[\x00-\x1F\x7F]/', $value );
 	}
 }

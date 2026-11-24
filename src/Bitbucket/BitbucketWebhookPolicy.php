@@ -8,6 +8,7 @@ use RAN\RepositoryProvider\ProviderCode;
 use RAN\RepositoryProvider\ProviderWebhookPolicy;
 use RAN\RepositoryProvider\SignedWebhookVerification;
 use RuntimeException;
+use SensitiveParameter;
 
 final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 
@@ -23,7 +24,7 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		return 'x-hub-signature';
 	}
 
-	public function normalize_webhook( array $metadata, mixed $secret ): array {
+	public function normalize_webhook( array $metadata, #[SensitiveParameter] mixed $secret ): array {
 		$label        = $this->required_string( $metadata['label'] ?? null, 'Webhook secret label' );
 		$scope        = $this->required_string( $metadata['scope'] ?? null, 'Webhook secret scope' );
 		$target       = isset( $metadata['target'] ) && is_string( $metadata['target'] )
@@ -62,7 +63,7 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		return array();
 	}
 
-	public function webhook_from_constants( array $constants ): ?array {
+	public function webhook_from_constants( #[SensitiveParameter] array $constants ): ?array {
 		return null;
 	}
 
@@ -96,13 +97,13 @@ final readonly class BitbucketWebhookPolicy implements ProviderWebhookPolicy {
 		return 0 === strcasecmp( trim( $target, '/' ), trim( $repository_locator, '/' ) );
 	}
 
-	private function assert_secret( string $secret ): void {
+	private function assert_secret( #[SensitiveParameter] string $secret ): void {
 		if ( strlen( $secret ) < 32 || strlen( $secret ) > 512 || 1 === preg_match( '/[\x00-\x1F\x7F]/', $secret ) ) {
 			throw new RuntimeException( 'Webhook secrets must contain 32 to 512 bytes without control characters.' );
 		}
 	}
 
-	private function required_secret( mixed $secret ): string {
+	private function required_secret( #[SensitiveParameter] mixed $secret ): string {
 		if ( ! is_string( $secret ) ) {
 			throw new RuntimeException( 'Webhook secret must be a string.' );
 		}

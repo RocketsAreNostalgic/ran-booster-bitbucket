@@ -11,6 +11,7 @@ use RAN\RepositoryProvider\RepositoryBrowseRequest;
 use RAN\RepositoryProvider\RepositoryBrowseResult;
 use RAN\RepositoryProvider\RepositoryDescriptor;
 use RuntimeException;
+use SensitiveParameter;
 
 final readonly class BitbucketRepositoryBrowser {
 
@@ -129,7 +130,7 @@ final readonly class BitbucketRepositoryBrowser {
 	 */
 	private function list_repositories(
 		string $workspace,
-		?BitbucketCredential $credential,
+		#[SensitiveParameter] ?BitbucketCredential $credential,
 		?string $credential_id,
 		bool $public_only,
 		RepositoryBrowseRequest $browse_request
@@ -251,7 +252,7 @@ final readonly class BitbucketRepositoryBrowser {
 
 	private function request(
 		string $url,
-		?BitbucketCredential $credential,
+		#[SensitiveParameter] ?BitbucketCredential $credential,
 		string $not_found_message,
 		float|int $timeout = 15,
 		int $response_size = 262144,

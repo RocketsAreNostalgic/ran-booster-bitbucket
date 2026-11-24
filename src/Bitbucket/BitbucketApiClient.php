@@ -4,14 +4,46 @@ declare(strict_types=1);
 
 namespace RAN\Booster\Bitbucket;
 
+use SensitiveParameter;
+
 final readonly class BitbucketApiClient {
 
-	private const API_ORIGIN = 'https://api.bitbucket.org';
-	private const API_PATH   = '/2.0/repositories/';
+	private const API_ORIGIN                  = 'https://api.bitbucket.org';
+	private const API_PATH                    = '/2.0/repositories/';
+	private const CREDENTIAL_QUERY_PARAMETERS = array(
+		'access_token',
+		'api_key',
+		'api_token',
+		'api-token',
+		'apikey',
+		'app_password',
+		'app-password',
+		'auth',
+		'authorization',
+		'bearer',
+		'email',
+		'jwt',
+		'key',
+		'password',
+		'secret',
+		'sig',
+		'signature',
+		'token',
+		'username',
+	);
+	private const COLLECTION_QUERY_PARAMETERS = array(
+		'after',
+		'fields',
+		'page',
+		'pagelen',
+	);
+	private const RESOURCE_QUERY_PARAMETERS   = array(
+		'fields',
+	);
 
 	public function get(
 		string $url,
-		?BitbucketCredential $credential = null,
+		#[SensitiveParameter] ?BitbucketCredential $credential = null,
 		float|int $timeout = 15,
 		int $response_size = 262144
 	): BitbucketApiResponse {
@@ -80,7 +112,7 @@ final readonly class BitbucketApiClient {
 			|| 1 === preg_match( '/%(?:25|2e|2f|5c)/i', $path )
 			|| 1 === preg_match( '/[\x00-\x1F\x7F]/', $decoded_path )
 			|| ! $this->has_canonical_repository_path( $decoded_path )
-			|| $this->query_contains_credential( $parts['query'] ?? null )
+			|| ! $this->has_allowed_query( $parts['query'] ?? null, $decoded_path )
 		) {
 			throw BitbucketApiException::invalid_url();
 		}
@@ -102,24 +134,51 @@ final readonly class BitbucketApiClient {
 		return true;
 	}
 
-	private function query_contains_credential( mixed $query ): bool {
+	private function has_allowed_query( mixed $query, string $decoded_path ): bool {
 		if ( null === $query ) {
-			return false;
-		}
-
-		if ( ! is_string( $query ) ) {
 			return true;
 		}
 
-		foreach ( explode( '&', $query ) as $field ) {
-			$key = strtolower( rawurldecode( explode( '=', $field, 2 )[0] ) );
-			$key = explode( '[', $key, 2 )[0];
+		if ( ! is_string( $query ) || '' === $query ) {
+			return false;
+		}
 
-			if ( in_array( $key, array( 'access_token', 'api_token', 'api-token', 'app_password', 'app-password', 'token', 'password', 'secret', 'authorization', 'email', 'username' ), true ) ) {
-				return true;
+		$allowed_parameters = $this->allowed_query_parameters( $decoded_path );
+
+		foreach ( explode( '&', $query ) as $field ) {
+			$raw_key        = explode( '=', $field, 2 )[0];
+			$decoded_key    = rawurldecode( $raw_key );
+			$normalized_key = strtolower( explode( '[', $decoded_key, 2 )[0] );
+
+			if ( in_array( $normalized_key, self::CREDENTIAL_QUERY_PARAMETERS, true ) ) {
+				return false;
+			}
+
+			if ( ! in_array( $raw_key, $allowed_parameters, true ) ) {
+				return false;
 			}
 		}
 
-		return false;
+		return true;
+	}
+
+	/** @return list<string> */
+	private function allowed_query_parameters( string $decoded_path ): array {
+		$segments = explode( '/', substr( $decoded_path, strlen( self::API_PATH ) ) );
+		$count    = count( $segments );
+
+		if ( 1 === $count || 2 === $count ) {
+			return self::COLLECTION_QUERY_PARAMETERS;
+		}
+
+		if ( 4 === $count && 'commit' === $segments[2] ) {
+			return self::RESOURCE_QUERY_PARAMETERS;
+		}
+
+		if ( 5 <= $count && 'refs' === $segments[2] && in_array( $segments[3], array( 'branches', 'tags' ), true ) ) {
+			return self::RESOURCE_QUERY_PARAMETERS;
+		}
+
+		return array();
 	}
 }

@@ -109,6 +109,93 @@ final class BitbucketApiClientTest extends TestCase {
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 	}
 
+	public function test_rejects_widened_credential_parameters_case_insensitively_and_unlisted_endpoint_parameters(): void {
+		$credential_parameters = array(
+			'access_token',
+			'api_key',
+			'api_token',
+			'api-token',
+			'apikey',
+			'app_password',
+			'app-password',
+			'auth',
+			'authorization',
+			'bearer',
+			'email',
+			'jwt',
+			'key',
+			'password',
+			'secret',
+			'sig',
+			'signature',
+			'token',
+			'username',
+		);
+
+		$urls = array();
+		foreach ( $credential_parameters as $parameter ) {
+			$mixed   = ucfirst( $parameter );
+			$upper   = strtoupper( $parameter );
+			$encoded = '%' . strtoupper( bin2hex( $parameter[0] ) ) . substr( $parameter, 1 );
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace?' . $parameter . '=secret';
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace?pagelen=100&' . $mixed . '=secret';
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace?after=cursor&' . $upper . '=secret';
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace?' . $encoded . '=secret';
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace?' . $mixed . '%5B0%5D=secret';
+			$urls[]  = 'https://api.bitbucket.org/2.0/repositories/workspace/repo/commit/0123456789abcdef0123456789abcdef01234567?fields=hash&' . $parameter . '=secret';
+		}
+
+		$urls = array_merge(
+			$urls,
+			array(
+				'https://api.bitbucket.org/2.0/repositories/workspace?unexpected=1',
+				'https://api.bitbucket.org/2.0/repositories/workspace?PageLen=10',
+				'https://api.bitbucket.org/2.0/repositories/workspace?%66ields=uuid',
+				'https://api.bitbucket.org/2.0/repositories/workspace?fields%5B0%5D=uuid',
+				'https://api.bitbucket.org/2.0/repositories/workspace/repo/commit/0123456789abcdef0123456789abcdef01234567?after=cursor',
+				'https://api.bitbucket.org/2.0/repositories/workspace/repo/refs/branches/main?pagelen=10',
+				'https://api.bitbucket.org/2.0/repositories/workspace/repo/refs/tags/v1.0.0?page=2',
+				'https://api.bitbucket.org/2.0/repositories/workspace/repo/unknown?fields=uuid',
+			)
+		);
+
+		$client     = new BitbucketApiClient();
+		$credential = $this->credential();
+
+		foreach ( $urls as $url ) {
+			try {
+				$client->get( $url, $credential );
+				self::fail( 'Expected the blocked Bitbucket query parameter URL to be rejected: ' . $url );
+			} catch ( BitbucketApiException $exception ) {
+				self::assertSame( BitbucketApiException::INVALID_URL, $exception->get_reason(), $url );
+				self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage(), $url );
+				self::assertStringNotContainsString( self::TOKEN, $exception->getMessage(), $url );
+			}
+		}
+
+		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
+	}
+
+	public function test_allows_known_query_parameters_for_each_bitbucket_endpoint(): void {
+		$urls = array(
+			'https://api.bitbucket.org/2.0/repositories/workspace?pagelen=100&fields=values.uuid%2Cnext&after=opaque%3Acursor&page=2',
+			'https://api.bitbucket.org/2.0/repositories/workspace/repo?fields=uuid%2Cfull_name',
+			'https://api.bitbucket.org/2.0/repositories/workspace/repo/commit/0123456789abcdef0123456789abcdef01234567?fields=hash',
+			'https://api.bitbucket.org/2.0/repositories/workspace/repo/refs/branches/feature/test?fields=name',
+			'https://api.bitbucket.org/2.0/repositories/workspace/repo/refs/tags/v1.0.0?fields=name',
+		);
+
+		$client = new BitbucketApiClient();
+		foreach ( $urls as $url ) {
+			\RAN\Booster\Bitbucket\bitbucket_credential_validation_http_reset(
+				$this->response( 200, '{"values":[]}' )
+			);
+			$response = $client->get( $url );
+			self::assertSame( 200, $response->get_status(), $url );
+			self::assertCount( 1, \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests(), $url );
+		}
+	}
+
 	public function test_transport_and_malformed_responses_become_fixed_safe_exceptions(): void {
 		$fixtures = array(
 			array(

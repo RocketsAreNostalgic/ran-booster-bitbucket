@@ -477,6 +477,82 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 		$this->expect_browse_failure_after_requests( 5, 503 );
 	}
 
+	public function test_pagination_rejects_credential_and_unlisted_query_parameters_in_next_url(): void {
+		$blocked_parameters = array(
+			'access_token',
+			'api_key',
+			'api_token',
+			'api-token',
+			'apikey',
+			'app_password',
+			'app-password',
+			'auth',
+			'authorization',
+			'bearer',
+			'email',
+			'jwt',
+			'key',
+			'password',
+			'secret',
+			'sig',
+			'signature',
+			'token',
+			'username',
+			'extra_param',
+		);
+
+		$secrets = $this->secrets( array( 'primary' => $this->credential( 'acme', self::TOKEN_CANARY ) ) );
+
+		foreach ( $blocked_parameters as $parameter ) {
+			foreach ( array( $parameter, ucfirst( $parameter ), strtoupper( $parameter ) ) as $variant ) {
+				$hostile_next = 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=cursor&' . $variant . '=leaked';
+
+				$this->queue(
+					array(
+						$this->response(
+							200,
+							$this->json(
+								array(
+									'values' => array(),
+									'next'   => $hostile_next,
+								)
+							)
+						),
+					)
+				);
+
+				try {
+					$this->accessible_repositories( $this->browser( $secrets ), 'primary' );
+					self::fail( 'Expected hostile pagination parameter to be rejected: ' . $variant );
+				} catch ( RuntimeException $exception ) {
+					self::assertSame( 422, $exception->getCode(), $variant );
+					$this->assert_safe_message( $exception->getMessage() );
+				}
+
+				self::assertCount( 1, $this->requests(), $variant );
+			}
+		}
+
+		$this->queue(
+			array(
+				$this->response(
+					200,
+					$this->json(
+						array(
+							'values' => array( $this->item( '{one}', 'acme/one' ) ),
+							'next'   => 'https://api.bitbucket.org/2.0/repositories/acme?pagelen=100&after=cursor&Api_Key=leaked',
+						)
+					)
+				),
+			)
+		);
+
+		$result = $this->browser( $secrets )->browse( RepositoryBrowseRequest::accessible( 'primary' ) );
+		self::assertTrue( $result->is_partial() );
+		self::assertSame( RepositoryBrowseResult::PROVIDER, $result->partial_reason );
+		self::assertCount( 1, $this->requests() );
+	}
+
 	public function test_malformed_lists_fail_and_malformed_rows_are_skipped(): void {
 		foreach ( array( '', 'not-json', '{}', '{"values":"invalid"}' ) as $body ) {
 			$this->queue( array( $this->response( 200, $body ) ) );
