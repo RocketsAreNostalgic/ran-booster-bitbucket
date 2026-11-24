@@ -173,16 +173,26 @@ final class SensitiveParameterCoverageTest extends TestCase {
 			},
 		);
 
+		$canaries = array( $email_canary, $token_canary, $secret_canary );
+
 		foreach ( $cases as $context => $trigger ) {
 			try {
 				$trigger();
 				self::fail( 'Expected exception from ' . $context );
 			} catch ( BitbucketCredentialException | RuntimeException $exception ) {
-				$this->assert_trace_contains_no_canary(
+				foreach ( $canaries as $canary ) {
+					self::assertStringNotContainsString( $canary, $exception->getMessage(), $context );
+				}
+
+				$redacted_count = $this->assert_trace_contains_no_canary(
 					$exception->getTrace(),
-					array( $email_canary, $token_canary, $secret_canary ),
+					$canaries,
 					$context
 				);
+
+				if ( ! filter_var( ini_get( 'zend.exception_ignore_args' ), FILTER_VALIDATE_BOOLEAN ) ) {
+					self::assertGreaterThan( 0, $redacted_count, $context );
+				}
 			}
 		}
 	}
@@ -214,7 +224,9 @@ final class SensitiveParameterCoverageTest extends TestCase {
 	 * @param array<int, array<string, mixed>> $trace
 	 * @param list<string>                     $canaries
 	 */
-	private function assert_trace_contains_no_canary( array $trace, array $canaries, string $context ): void {
+	private function assert_trace_contains_no_canary( array $trace, array $canaries, string $context ): int {
+		$redacted_count = 0;
+
 		foreach ( $trace as $frame ) {
 			$args = $frame['args'] ?? array();
 			if ( ! is_array( $args ) ) {
@@ -222,28 +234,33 @@ final class SensitiveParameterCoverageTest extends TestCase {
 			}
 
 			foreach ( $args as $arg ) {
-				$this->assert_value_contains_no_canary( $arg, $canaries, $context );
+				$redacted_count += $this->assert_value_contains_no_canary( $arg, $canaries, $context );
 			}
 		}
+
+		return $redacted_count;
 	}
 
 	/** @param list<string> $canaries */
-	private function assert_value_contains_no_canary( mixed $value, array $canaries, string $context ): void {
+	private function assert_value_contains_no_canary( mixed $value, array $canaries, string $context ): int {
 		if ( $value instanceof SensitiveParameterValue ) {
-			return;
+			return 1;
 		}
 
 		if ( is_string( $value ) ) {
 			foreach ( $canaries as $canary ) {
 				self::assertStringNotContainsString( $canary, $value, $context );
 			}
-			return;
+			return 0;
 		}
 
+		$redacted_count = 0;
 		if ( is_array( $value ) ) {
 			foreach ( $value as $item ) {
-				$this->assert_value_contains_no_canary( $item, $canaries, $context );
+				$redacted_count += $this->assert_value_contains_no_canary( $item, $canaries, $context );
 			}
 		}
+
+		return $redacted_count;
 	}
 }

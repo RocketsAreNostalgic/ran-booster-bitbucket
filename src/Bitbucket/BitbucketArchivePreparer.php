@@ -105,7 +105,7 @@ final readonly class BitbucketArchivePreparer {
 			throw new RuntimeException( 'The selected Bitbucket credential is unavailable or invalid.', 400 );
 		}
 
-		if ( 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
+		if ( $repository->private && 0 !== strcasecmp( $workspace, $credential->get_workspace() ) ) {
 			throw new RuntimeException( 'The selected Bitbucket credential belongs to another workspace.', 400 );
 		}
 

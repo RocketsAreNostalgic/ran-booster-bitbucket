@@ -122,6 +122,36 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$this->assert_no_archive_hooks();
 	}
 
+	public function test_public_immutable_commit_with_cross_workspace_credential_authenticates_api_and_archive(): void {
+		$this->queue(
+			array(
+				$this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+			)
+		);
+		$secrets  = $this->secrets( array( 'public_lookup' => $this->credential( 'other' ) ) );
+		$archive  = $this->preparer( $secrets )->prepare_archive(
+			$this->request( strtoupper( self::COMMIT ), false, 'public_lookup' )
+		);
+		$requests = $this->requests();
+
+		self::assertSame(
+			'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip',
+			$archive->get_url()
+		);
+		self::assertCount( 1, $requests );
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( array( array( 'bb', 'public_lookup' ) ), $secrets->material_lookups );
+		self::assertCount( 1, $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
+
+		$callback  = $this->archive_filters()[0]['callback'];
+		$arguments = $callback( array( 'headers' => array() ), $archive->get_url() );
+		self::assertSame( $this->basic_authorization(), $arguments['headers']['Authorization'] );
+
+		$archive->cleanup();
+		$this->assert_no_archive_hooks();
+	}
+
 	public function test_public_slash_branch_resolves_an_immutable_repository_bound_commit_without_auth(): void {
 		$this->queue(
 			array(
@@ -370,11 +400,11 @@ final class BitbucketArchivePreparerTest extends TestCase {
 				$this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
 			)
 		);
-		$secrets           = $this->secrets( array( 'profile' => $this->credential() ) );
+		$secrets           = $this->secrets( array( 'profile' => $this->credential( 'other' ) ) );
 		$archive           = $this->preparer( $secrets )->prepare_archive(
 			$this->request( self::COMMIT, false, 'profile', 'acme/example', 'main' )
 		);
-		$rotated           = $this->credential( 'ACME' );
+		$rotated           = $this->credential( 'another' );
 		$rotated['secret'] = 'rotated-public-archive-token-canary';
 		$secrets->replace_material( 'profile', $rotated );
 
@@ -385,7 +415,21 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		self::assertCount( 2, $requests );
 		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
 		self::assertSame( $this->basic_authorization( $rotated['secret'] ), $requests[1]['arguments']['headers']['Authorization'] );
-		$archive->cleanup();
+
+		$secrets->replace_material( 'profile', null );
+
+		try {
+			$archive->verify_current_head();
+			self::fail( 'Expected a removed explicit credential to fail public head recheck.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 400, $exception->getCode() );
+			self::assertSame( 'The selected Bitbucket credential is unavailable or invalid.', $exception->getMessage() );
+			$this->assert_safe_failure( $exception );
+		} finally {
+			$archive->cleanup();
+		}
+
+		self::assertCount( 2, $this->requests() );
 		$this->assert_no_archive_hooks();
 	}
 
@@ -505,25 +549,20 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$this->assert_no_archive_hooks( $name );
 		}
 
-		foreach ( array(
-			'private workspace mismatch' => true,
-			'public workspace mismatch'  => false,
-		) as $context => $is_private ) {
-			$this->reset_harness();
-			$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
+		$this->reset_harness();
+		$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
 
-			try {
-				$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, $is_private, 'other' ) );
-				self::fail( 'Expected a credential for another workspace to fail: ' . $context );
-			} catch ( RuntimeException $exception ) {
-				self::assertSame( 400, $exception->getCode(), $context );
-				self::assertSame( 'The selected Bitbucket credential belongs to another workspace.', $exception->getMessage(), $context );
-				$this->assert_safe_failure( $exception, $context );
-			}
-
-			self::assertSame( array(), $this->requests(), $context );
-			$this->assert_no_archive_hooks( $context );
+		try {
+			$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, true, 'other' ) );
+			self::fail( 'Expected a credential for another workspace to fail for a private repository.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 400, $exception->getCode(), 'private workspace mismatch' );
+			self::assertSame( 'The selected Bitbucket credential belongs to another workspace.', $exception->getMessage(), 'private workspace mismatch' );
+			$this->assert_safe_failure( $exception, 'private workspace mismatch' );
 		}
+
+		self::assertSame( array(), $this->requests() );
+		$this->assert_no_archive_hooks();
 	}
 
 	public function test_branch_status_transport_and_malformed_responses_fail_safely_without_archive_hooks(): void {
