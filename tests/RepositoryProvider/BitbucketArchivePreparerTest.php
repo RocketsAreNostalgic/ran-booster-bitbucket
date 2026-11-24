@@ -66,7 +66,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 		$secrets  = $this->secrets( array( 'profile' => $this->credential() ) );
 		$archive  = $this->preparer( $secrets )->prepare_archive(
-			$this->request( strtoupper( self::COMMIT ), false, 'profile' )
+			$this->request( strtoupper( self::COMMIT ), false, null )
 		);
 		$requests = $this->requests();
 
@@ -84,6 +84,40 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		$this->assert_no_archive_hooks();
 
 		$archive->cleanup();
+		$archive->cleanup();
+		$this->assert_no_archive_hooks();
+	}
+
+	public function test_public_immutable_commit_with_explicit_credential_authenticates_api_and_archive(): void {
+		$this->queue(
+			array(
+				$this->response( 200, $this->commit_body( self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+			)
+		);
+		$secrets  = $this->secrets( array( 'profile' => $this->credential() ) );
+		$archive  = $this->preparer( $secrets )->prepare_archive(
+			$this->request( strtoupper( self::COMMIT ), false, 'profile' )
+		);
+		$requests = $this->requests();
+
+		self::assertSame(
+			'https://bitbucket.org/acme/example/get/' . self::COMMIT . '.zip',
+			$archive->get_url()
+		);
+		self::assertCount( 1, $requests );
+		self::assertSame(
+			'https://api.bitbucket.org/2.0/repositories/acme/example/commit/' . self::COMMIT . '?fields=hash%2Crepository.uuid%2Crepository.full_name',
+			$requests[0]['url']
+		);
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( array( array( 'bb', 'profile' ) ), $secrets->material_lookups );
+		self::assertCount( 1, $this->archive_filters() );
+		self::assertCount( 1, $this->archive_actions() );
+
+		$callback  = $this->archive_filters()[0]['callback'];
+		$arguments = $callback( array( 'headers' => array() ), $archive->get_url() );
+		self::assertSame( $this->basic_authorization(), $arguments['headers']['Authorization'] );
+
 		$archive->cleanup();
 		$this->assert_no_archive_hooks();
 	}
@@ -306,7 +340,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		}
 	}
 
-	public function test_public_head_recheck_ignores_a_selected_credential_at_both_reads(): void {
+	public function test_public_head_recheck_without_credential_stays_anonymous_at_both_reads(): void {
 		$this->queue(
 			array(
 				$this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
@@ -315,7 +349,7 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		);
 		$secrets = $this->secrets( array( 'profile' => $this->credential( 'other' ) ) );
 		$archive = $this->preparer( $secrets )->prepare_archive(
-			$this->request( self::COMMIT, false, 'profile', 'acme/example', 'main' )
+			$this->request( self::COMMIT, false, null, 'acme/example', 'main' )
 		);
 		$secrets->replace_material( 'profile', null );
 		$archive->verify_current_head();
@@ -325,6 +359,32 @@ final class BitbucketArchivePreparerTest extends TestCase {
 		foreach ( $this->requests() as $request ) {
 			self::assertArrayNotHasKey( 'Authorization', $request['arguments']['headers'] );
 		}
+		$archive->cleanup();
+		$this->assert_no_archive_hooks();
+	}
+
+	public function test_public_head_recheck_with_explicit_credential_authenticates_both_reads_and_validates_credential(): void {
+		$this->queue(
+			array(
+				$this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+				$this->response( 200, $this->branch_body( 'main', self::COMMIT, 'acme/example', self::REPOSITORY_UUID ) ),
+			)
+		);
+		$secrets           = $this->secrets( array( 'profile' => $this->credential() ) );
+		$archive           = $this->preparer( $secrets )->prepare_archive(
+			$this->request( self::COMMIT, false, 'profile', 'acme/example', 'main' )
+		);
+		$rotated           = $this->credential( 'ACME' );
+		$rotated['secret'] = 'rotated-public-archive-token-canary';
+		$secrets->replace_material( 'profile', $rotated );
+
+		$archive->verify_current_head();
+
+		self::assertSame( array( array( 'bb', 'profile' ), array( 'bb', 'profile' ) ), $secrets->material_lookups );
+		$requests = $this->requests();
+		self::assertCount( 2, $requests );
+		self::assertSame( $this->basic_authorization(), $requests[0]['arguments']['headers']['Authorization'] );
+		self::assertSame( $this->basic_authorization( $rotated['secret'] ), $requests[1]['arguments']['headers']['Authorization'] );
 		$archive->cleanup();
 		$this->assert_no_archive_hooks();
 	}
@@ -397,21 +457,47 @@ final class BitbucketArchivePreparerTest extends TestCase {
 
 	public function test_invalid_provider_repository_ref_credential_and_workspace_fail_before_http_or_hooks(): void {
 		$fixtures = array(
-			'repository traversal' => fn (): ArchiveRequest => $this->request( self::COMMIT, false, null, 'acme/../example' ),
-			'ref traversal'        => fn (): ArchiveRequest => $this->request( '../main', false ),
-			'ref repeated slash'   => fn (): ArchiveRequest => $this->request( 'feature//candidate', false ),
-			'ref control'          => fn (): ArchiveRequest => $this->request( "main\n", false ),
-			'missing credential'   => fn (): ArchiveRequest => $this->request( self::COMMIT, true, 'missing' ),
-			'implicit credential'  => fn (): ArchiveRequest => $this->request( self::COMMIT, true ),
+			'repository traversal'      => array(
+				fn (): ArchiveRequest => $this->request( self::COMMIT, false, null, 'acme/../example' ),
+				null,
+			),
+			'ref traversal'             => array(
+				fn (): ArchiveRequest => $this->request( '../main', false ),
+				null,
+			),
+			'ref repeated slash'        => array(
+				fn (): ArchiveRequest => $this->request( 'feature//candidate', false ),
+				null,
+			),
+			'ref control'               => array(
+				fn (): ArchiveRequest => $this->request( "main\n", false ),
+				null,
+			),
+			'missing credential'        => array(
+				fn (): ArchiveRequest => $this->request( self::COMMIT, true, 'missing' ),
+				'The selected Bitbucket credential is unavailable or invalid.',
+			),
+			'public missing credential' => array(
+				fn (): ArchiveRequest => $this->request( self::COMMIT, false, 'missing' ),
+				'The selected Bitbucket credential is unavailable or invalid.',
+			),
+			'implicit credential'       => array(
+				fn (): ArchiveRequest => $this->request( self::COMMIT, true ),
+				'A private Bitbucket repository requires an explicit credential.',
+			),
 		);
 
-		foreach ( $fixtures as $name => $request_factory ) {
+		foreach ( $fixtures as $name => [$request_factory, $expected_message] ) {
 			$this->reset_harness();
 
 			try {
 				$this->preparer()->prepare_archive( $request_factory() );
 				self::fail( 'Expected invalid archive input to fail: ' . $name );
 			} catch ( \Throwable $exception ) {
+				if ( null !== $expected_message ) {
+					self::assertSame( 400, $exception->getCode(), $name );
+					self::assertSame( $expected_message, $exception->getMessage(), $name );
+				}
 				$this->assert_safe_failure( $exception, $name );
 			}
 
@@ -419,18 +505,25 @@ final class BitbucketArchivePreparerTest extends TestCase {
 			$this->assert_no_archive_hooks( $name );
 		}
 
-		$this->reset_harness();
-		$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
+		foreach ( array(
+			'private workspace mismatch' => true,
+			'public workspace mismatch'  => false,
+		) as $context => $is_private ) {
+			$this->reset_harness();
+			$secrets = $this->secrets( array( 'other' => $this->credential( 'other' ) ) );
 
-		try {
-			$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, true, 'other' ) );
-			self::fail( 'Expected a credential for another workspace to fail.' );
-		} catch ( RuntimeException $exception ) {
-			$this->assert_safe_failure( $exception, 'workspace mismatch' );
+			try {
+				$this->preparer( $secrets )->prepare_archive( $this->request( self::COMMIT, $is_private, 'other' ) );
+				self::fail( 'Expected a credential for another workspace to fail: ' . $context );
+			} catch ( RuntimeException $exception ) {
+				self::assertSame( 400, $exception->getCode(), $context );
+				self::assertSame( 'The selected Bitbucket credential belongs to another workspace.', $exception->getMessage(), $context );
+				$this->assert_safe_failure( $exception, $context );
+			}
+
+			self::assertSame( array(), $this->requests(), $context );
+			$this->assert_no_archive_hooks( $context );
 		}
-
-		self::assertSame( array(), $this->requests() );
-		$this->assert_no_archive_hooks();
 	}
 
 	public function test_branch_status_transport_and_malformed_responses_fail_safely_without_archive_hooks(): void {

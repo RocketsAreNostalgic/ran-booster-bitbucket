@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace RAN\Booster\Bitbucket;
 
+use LogicException;
+use SensitiveParameter;
+use SensitiveParameterValue;
+
 final readonly class BitbucketCredential {
 
 	private function __construct(
 		private string $workspace,
-		private string $authorization
+		#[SensitiveParameter] private SensitiveParameterValue $email,
+		#[SensitiveParameter] private SensitiveParameterValue $token
 	) {
 	}
 
-	public static function from_material( mixed $workspace, mixed $email, mixed $token ): self {
+	public static function from_material(
+		mixed $workspace,
+		#[SensitiveParameter] mixed $email,
+		#[SensitiveParameter] mixed $token
+	): self {
 		if ( ! self::is_workspace( $workspace )
 			|| ! is_string( $email )
 			|| false === filter_var( $email, FILTER_VALIDATE_EMAIL )
@@ -26,8 +35,8 @@ final readonly class BitbucketCredential {
 
 		return new self(
 			$workspace,
-			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Bitbucket API tokens use HTTP Basic authentication.
-			'Basic ' . base64_encode( $email . ':' . $token )
+			new SensitiveParameterValue( $email ),
+			new SensitiveParameterValue( $token )
 		);
 	}
 
@@ -46,10 +55,41 @@ final readonly class BitbucketCredential {
 			throw BitbucketCredentialException::unavailable();
 		}
 
-		$headers['Authorization'] = $this->authorization;
+		$email = $this->email->getValue();
+		$token = $this->token->getValue();
+
+		if ( ! is_string( $email ) || ! is_string( $token ) ) {
+			throw BitbucketCredentialException::unavailable();
+		}
+
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Bitbucket API tokens use HTTP Basic authentication.
+		$headers['Authorization'] = 'Basic ' . base64_encode( $email . ':' . $token );
 		$arguments['headers']     = $headers;
 
 		return $arguments;
+	}
+
+	/** @return array{workspace: string} */
+	public function __debugInfo(): array {
+		return array(
+			'workspace' => $this->workspace,
+		);
+	}
+
+	/** @return array<string, mixed> */
+	public function __serialize(): array {
+		throw new LogicException( 'Bitbucket credentials cannot be serialized.' );
+	}
+
+	/** @param array<string, mixed> $data */
+	public function __unserialize( #[SensitiveParameter] array $data ): void {
+		unset( $data );
+
+		throw new LogicException( 'Bitbucket credentials cannot be unserialized.' );
+	}
+
+	public function __clone(): void {
+		throw new LogicException( 'Bitbucket credentials cannot be cloned.' );
 	}
 
 	private static function is_workspace( mixed $workspace ): bool {

@@ -12,6 +12,7 @@ use RAN\RepositoryProvider\PreparedArchive;
 use RAN\RepositoryProvider\RepositoryReference;
 use RAN\RepositoryProvider\StaleDeployment;
 use RuntimeException;
+use SensitiveParameter;
 
 final readonly class BitbucketArchivePreparer {
 
@@ -89,12 +90,12 @@ final readonly class BitbucketArchivePreparer {
 	}
 
 	private function archive_credential( RepositoryReference $repository, string $workspace ): ?BitbucketCredential {
-		if ( ! $repository->private ) {
-			return null;
-		}
-
 		$credential_id = $repository->credential_id;
 		if ( null === $credential_id ) {
+			if ( ! $repository->private ) {
+				return null;
+			}
+
 			throw new RuntimeException( 'A private Bitbucket repository requires an explicit credential.', 400 );
 		}
 
@@ -118,7 +119,7 @@ final readonly class BitbucketArchivePreparer {
 		?string $provider_repository_id,
 		string $ref,
 		?string $expected_branch,
-		?BitbucketCredential $credential
+		#[SensitiveParameter] ?BitbucketCredential $credential
 	): string {
 		if ( null !== $expected_branch && 1 !== preg_match( '/\A[0-9a-f]{40}\z/iD', $ref ) ) {
 			throw new RuntimeException( 'The Bitbucket deployment event does not contain a valid commit.', 400 );
@@ -185,7 +186,7 @@ final readonly class BitbucketArchivePreparer {
 		string $full_name,
 		?string $provider_repository_id,
 		string $ref,
-		?BitbucketCredential $credential
+		#[SensitiveParameter] ?BitbucketCredential $credential
 	): string {
 		$tag = $this->validate_ref( $ref );
 		$url = self::API_BASE
@@ -208,7 +209,7 @@ final readonly class BitbucketArchivePreparer {
 		string $full_name,
 		?string $provider_repository_id,
 		string $ref,
-		?BitbucketCredential $credential
+		#[SensitiveParameter] ?BitbucketCredential $credential
 	): string {
 		$branch = $this->validate_branch( $ref );
 		$url    = self::API_BASE
@@ -265,7 +266,7 @@ final readonly class BitbucketArchivePreparer {
 		string $full_name,
 		?string $provider_repository_id,
 		string $commit,
-		?BitbucketCredential $credential
+		#[SensitiveParameter] ?BitbucketCredential $credential
 	): string {
 		$url = self::API_BASE
 			. rawurlencode( $workspace )
@@ -295,7 +296,7 @@ final readonly class BitbucketArchivePreparer {
 	/** @return array<string, mixed> */
 	private function request_json(
 		string $url,
-		?BitbucketCredential $credential,
+		#[SensitiveParameter] ?BitbucketCredential $credential,
 		string $kind
 	): array {
 		try {
