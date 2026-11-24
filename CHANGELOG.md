@@ -3,6 +3,14 @@
 All notable changes are documented here. Release Please maintains released
 sections from Conventional Commits.
 
+## [0.1.0-beta.20](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.19...v0.1.0-beta.20) (2026-11-24)
+
+
+### Bug Fixes
+
+* anchor validation regexes and reject dot repo segments ([#141](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/141)) ([b790a45](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/b790a4505a17f90e44c1cd8c183dc5bfb2beeffa))
+* **bitbucket:** retain public archive auth and harden secrets ([#143](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/issues/143)) ([4d8a21f](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/commit/4d8a21f01348917f0b41dac889e4de6568820433))
+
 ## [0.1.0-beta.19](https://github.com/RocketsAreNostalgic/ran-booster-bitbucket/compare/v0.1.0-beta.18...v0.1.0-beta.19) (2026-10-25)
 
 
