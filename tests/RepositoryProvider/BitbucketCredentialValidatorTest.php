@@ -16,8 +16,10 @@ use RAN\Booster\Bitbucket\BitbucketCredentialValidator;
 use RAN\Booster\Bitbucket\BitbucketProvider;
 use RAN\Booster\Bitbucket\BitbucketRepositoryBrowser;
 use RAN\Booster\Bitbucket\BitbucketWebhookNormalizer;
+use RAN\RepositoryProvider\CredentialValidationResult;
 use RAN\RepositoryProvider\ProviderCode;
 use RAN\Secrets\SecretsFile;
+use RuntimeException;
 
 final class BitbucketCredentialValidatorTest extends TestCase {
 
@@ -90,10 +92,12 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 
 		self::assertFalse( $blank->is_valid() );
 		self::assertFalse( $missing->is_valid() );
+		self::assertSame( CredentialValidationResult::UNAVAILABLE, $blank->reason );
+		self::assertSame( CredentialValidationResult::UNAVAILABLE, $missing->reason );
 		self::assertSame( array( array( 'bb', 'missing-profile' ) ), $secrets->lookups );
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 		self::assertSame(
-			'The repository provider rejected this credential.',
+			'The repository provider could not validate this credential. Try again later.',
 			$missing->get_display_message()
 		);
 	}
@@ -111,12 +115,34 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		$result = $this->validator( $secrets )->validate_credential( 'constant' );
 
 		self::assertFalse( $result->is_valid() );
+		self::assertSame( CredentialValidationResult::UNAVAILABLE, $result->reason );
 		self::assertSame(
-			'The repository provider rejected this credential.',
+			'The repository provider could not validate this credential. Try again later.',
 			$result->get_display_message()
 		);
 		$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message() );
 		self::assertStringNotContainsString( 'credential-material-canary', (string) $result->get_display_message() );
+		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
+	}
+
+	public function test_credential_store_failure_returns_unavailable_without_sending_http_or_leaking_message(): void {
+		$secrets = new class( null, array() ) extends SecretsFile {
+			/** @return array<string, mixed>|null */
+			public function credential_material( ProviderCode|string $provider, ?string $id = null ): ?array {
+				unset( $provider, $id );
+				throw new RuntimeException( 'store-failure-secret-canary' );
+			}
+		};
+
+		$result = $this->validator( $secrets )->validate_credential( 'profile' );
+
+		self::assertFalse( $result->is_valid() );
+		self::assertSame( CredentialValidationResult::UNAVAILABLE, $result->reason );
+		self::assertSame(
+			'The repository provider could not validate this credential. Try again later.',
+			$result->get_display_message()
+		);
+		self::assertStringNotContainsString( 'store-failure-secret-canary', (string) $result->get_display_message() );
 		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
 	}
 
@@ -156,8 +182,9 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			$result    = $validator->validate_credential( 'profile' );
 
 			self::assertFalse( $result->is_valid(), $name );
+			self::assertSame( CredentialValidationResult::UNAVAILABLE, $result->reason, $name );
 			self::assertSame(
-				'The repository provider rejected this credential.',
+				'The repository provider could not validate this credential. Try again later.',
 				$result->get_display_message(),
 				$name
 			);
@@ -169,30 +196,61 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 		}
 	}
 
+	public function test_invalid_url_guard_throws_distinct_fixed_code_and_message_without_http(): void {
+		\RAN\Booster\Bitbucket\bitbucket_credential_validation_parse_url_override( static fn (): false => false );
+
+		try {
+			$this->validator( $this->secrets() )->validate_credential( 'profile' );
+			self::fail( 'Expected invalid API URL guard to throw instead of returning invalid_response.' );
+		} catch ( RuntimeException $exception ) {
+			self::assertSame( 500, $exception->getCode() );
+			self::assertSame( 'The Bitbucket API request URL is not allowed.', $exception->getMessage() );
+			$this->assert_message_does_not_contain_credential_or_response_material( $exception->getMessage() );
+		}
+
+		self::assertSame( array(), \RAN\Booster\Bitbucket\bitbucket_credential_validation_http_requests() );
+	}
+
 	public function test_transport_and_status_failures_use_only_fixed_safe_messages(): void {
 		$fixtures = array(
-			'transport' => array(
+			'transport'       => array(
 				'response' => new BitbucketCredentialValidationTransportError(),
+				'reason'   => CredentialValidationResult::UNAVAILABLE,
 				'message'  => 'The repository provider could not validate this credential. Try again later.',
 			),
-			'401'       => array(
+			'blocked by site' => array(
+				'response' => new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ),
+				'reason'   => CredentialValidationResult::UNAVAILABLE,
+				'message'  => 'The repository provider could not validate this credential. Try again later.',
+			),
+			'other wp_error'  => array(
+				'response' => new BitbucketCredentialValidationTransportError( 'http_failure' ),
+				'reason'   => CredentialValidationResult::UNAVAILABLE,
+				'message'  => 'The repository provider could not validate this credential. Try again later.',
+			),
+			'401'             => array(
 				'response' => $this->response( 401, '{"error":"' . self::TOKEN . '"}' ),
+				'reason'   => CredentialValidationResult::INVALID,
 				'message'  => 'The repository provider rejected this credential.',
 			),
-			'403'       => array(
+			'403'             => array(
 				'response' => $this->response( 403, '{"error":"' . self::TOKEN . '"}' ),
+				'reason'   => CredentialValidationResult::INVALID,
 				'message'  => 'The repository provider rejected this credential.',
 			),
-			'404'       => array(
+			'404'             => array(
 				'response' => $this->response( 404, '{"error":"' . self::TOKEN . '"}' ),
+				'reason'   => CredentialValidationResult::INVALID,
 				'message'  => 'The repository provider rejected this credential.',
 			),
-			'429'       => array(
+			'429'             => array(
 				'response' => $this->response( 429, '{"error":"' . self::TOKEN . '"}' ),
+				'reason'   => CredentialValidationResult::RATE_LIMITED,
 				'message'  => 'The repository provider rate-limited credential validation. Try again later.',
 			),
-			'500'       => array(
+			'500'             => array(
 				'response' => $this->response( 500, '{"error":"' . self::TOKEN . '"}' ),
+				'reason'   => CredentialValidationResult::UNAVAILABLE,
 				'message'  => 'The repository provider could not validate this credential. Try again later.',
 			),
 		);
@@ -202,6 +260,7 @@ final class BitbucketCredentialValidatorTest extends TestCase {
 			$result = $this->validator( $this->secrets() )->validate_credential( 'profile' );
 
 			self::assertFalse( $result->is_valid(), (string) $name );
+			self::assertSame( $fixture['reason'], $result->reason, (string) $name );
 			self::assertSame( $fixture['message'], $result->get_display_message(), (string) $name );
 			$this->assert_message_does_not_contain_credential_or_response_material( $result->get_display_message(), (string) $name );
 		}

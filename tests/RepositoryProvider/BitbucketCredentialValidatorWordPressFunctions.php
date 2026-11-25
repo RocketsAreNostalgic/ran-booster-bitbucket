@@ -18,6 +18,16 @@ function bitbucket_credential_validation_http_reset( mixed $response ): void {
 function bitbucket_repository_http_queue( array $responses ): void {
 	$GLOBALS['ran_booster_bitbucket_repository_responses']           = array_values( $responses );
 	$GLOBALS['ran_booster_bitbucket_credential_validation_requests'] = array();
+	$GLOBALS['ran_booster_bitbucket_parse_url_override']             = null;
+}
+
+/**
+ * Override wp_parse_url() for a single test case; cleared on queue reset.
+ *
+ * @param (callable(string): (array<string, int|string>|false))|null $override Optional parser override.
+ */
+function bitbucket_credential_validation_parse_url_override( ?callable $override ): void {
+	$GLOBALS['ran_booster_bitbucket_parse_url_override'] = $override;
 }
 
 /**
@@ -50,6 +60,13 @@ function is_wp_error( mixed $response ): bool {
 
 /** @return array<string, int|string>|false */
 function wp_parse_url( string $url ): array|false {
+	$override = $GLOBALS['ran_booster_bitbucket_parse_url_override'] ?? null;
+	if ( is_callable( $override ) ) {
+		/** @var array<string, int|string>|false $parsed */
+		$parsed = $override( $url );
+		return $parsed;
+	}
+
 	// phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Unit-test stand-in for WordPress's wp_parse_url().
 	return parse_url( $url );
 }

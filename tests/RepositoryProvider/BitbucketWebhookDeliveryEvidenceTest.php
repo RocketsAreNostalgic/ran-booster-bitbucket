@@ -45,9 +45,12 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 				return true;
 			}
 		};
-		$evidence = new class() implements AuthenticatedWebhookDeliveryEvidenceReader {
+		$failure  = new \RuntimeException( 'private-delivery-evidence-canary', 57 );
+		$evidence = new class( $failure ) implements AuthenticatedWebhookDeliveryEvidenceReader {
+			public function __construct( private \RuntimeException $failure ) {}
+
 			public function latest_authenticated_delivery(): ?AuthenticatedWebhookDeliveryEvidence {
-				throw new \RuntimeException( 'private-delivery-evidence-canary' );
+				throw $this->failure;
 			}
 		};
 		$result   = ( new BitbucketWebhookNormalizer( $profiles, $evidence ) )->diagnose_webhook_readiness();
@@ -55,6 +58,9 @@ final class BitbucketWebhookDeliveryEvidenceTest extends TestCase {
 
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );
 		self::assertSame( 'bb.webhook.delivery_evidence_unavailable', $result->code );
+		self::assertSame( $failure, $result->failure );
+		self::assertSame( \RuntimeException::class, $result->failure::class );
+		self::assertSame( 57, $result->failure->getCode() );
 		self::assertStringNotContainsString( 'private-delivery-evidence-canary', $output );
 	}
 

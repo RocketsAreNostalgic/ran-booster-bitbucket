@@ -6,6 +6,7 @@ namespace RAN\Booster\Bitbucket;
 
 use RAN\RepositoryProvider\CredentialValidationResult;
 use RAN\RepositoryProvider\CredentialValidator;
+use RuntimeException;
 
 final readonly class BitbucketCredentialValidator implements CredentialValidator {
 
@@ -21,7 +22,7 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 		try {
 			$credential = $this->credentials->load( $credential_id );
 		} catch ( BitbucketCredentialException ) {
-			return CredentialValidationResult::invalid();
+			return CredentialValidationResult::unavailable();
 		}
 
 		$url = self::API_BASE . rawurlencode( $credential->get_workspace() ) . '?pagelen=1';
@@ -29,7 +30,15 @@ final readonly class BitbucketCredentialValidator implements CredentialValidator
 		try {
 			$response = $this->api->get( $url, $credential, $timeout, $response_size );
 		} catch ( BitbucketApiException $exception ) {
-			if ( BitbucketApiException::TRANSPORT_ERROR === $exception->get_reason() ) {
+			if ( BitbucketApiException::INVALID_URL === $exception->get_reason() ) {
+				throw new RuntimeException( 'The Bitbucket API request URL is not allowed.', 500 );
+			}
+
+			if ( in_array(
+				$exception->get_reason(),
+				array( BitbucketApiException::TRANSPORT_ERROR, BitbucketApiException::BLOCKED_BY_SITE ),
+				true
+			) ) {
 				return CredentialValidationResult::unavailable();
 			}
 

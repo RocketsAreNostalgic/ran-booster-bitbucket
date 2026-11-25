@@ -209,19 +209,48 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
-	public function test_signed_unrelated_event_is_ignored_without_delivery_or_json_parsing(): void {
-		$body    = 'not-json-' . self::BODY_CANARY;
-		$request = ( new WebhookRequest(
-			ProviderCode::parse( 'bb' ),
-			$body,
-			array(
-				'X-Event-Key'     => 'repo:updated',
-				'X-Hub-Signature' => $this->signature( $body ),
-			),
-			self::RETAINED_HEADERS
-		) )->with_verification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
+	public function test_signed_non_push_events_including_diagnostics_ping_are_ignored_without_delivery_or_json_parsing(): void {
+		foreach ( array(
+			'repo updated'     => array( 'not-json-' . self::BODY_CANARY, 'repo:updated' ),
+			'diagnostics ping' => array( '{"test":true}', 'diagnostics:ping' ),
+			'empty ping body'  => array( '', 'diagnostics:ping' ),
+			'trimmed ping key' => array( '{"test":true}', " \tdiagnostics:ping\t " ),
+		) as $context => [$body, $event_key] ) {
+			$request  = ( new WebhookRequest(
+				ProviderCode::parse( 'bb' ),
+				$body,
+				array(
+					'X-Event-Key'     => $event_key,
+					'X-Hub-Signature' => $this->signature( $body ),
+				),
+				self::RETAINED_HEADERS
+			) )->with_verification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
+			$envelope = $this->normalizer()->normalize_webhook( $request );
 
-		self::assertTrue( $this->normalizer()->normalize_webhook( $request )->is_ignored() );
+			self::assertTrue( $envelope->is_ignored(), $context );
+			self::assertFalse( $envelope->is_probe(), $context );
+			self::assertFalse( $envelope->has_events(), $context );
+			self::assertSame( array(), $envelope->get_events(), $context );
+		}
+	}
+
+	public function test_unverified_diagnostics_ping_is_rejected_with_401(): void {
+		$body = '{"test":true}';
+
+		$this->assert_rejected(
+			401,
+			fn (): WebhookEnvelope => $this->normalizer()->normalize_webhook(
+				new WebhookRequest(
+					ProviderCode::parse( 'bb' ),
+					$body,
+					array(
+						'X-Event-Key'     => 'diagnostics:ping',
+						'X-Hub-Signature' => 'sha256=' . str_repeat( 'a', 64 ),
+					),
+					self::RETAINED_HEADERS
+				)
+			)
+		);
 	}
 
 	#[DataProvider( 'invalid_event_provider' )]
@@ -597,16 +626,17 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 	}
 
 	public function test_webhook_readiness_safely_reports_unreadable_configuration(): void {
-		$secrets = new class() extends SecretsFile {
+		$failure = new \RuntimeException( 'bitbucket-webhook-secret-canary', 53 );
+		$secrets = new class( $failure ) extends SecretsFile {
 			public int $reads = 0;
 
-			public function __construct() {
+			public function __construct( private \RuntimeException $failure ) {
 				parent::__construct( '/unused/test-secrets.php', array() );
 			}
 
 			public function webhook_materials( ProviderCode|string $provider ): array {
 				++$this->reads;
-				throw new \RuntimeException( 'bitbucket-webhook-secret-canary' );
+				throw $this->failure;
 			}
 		};
 		$result  = ( new BitbucketWebhookNormalizer( new BitbucketProviderCredentialStore( $secrets ) ) )->diagnose_webhook_readiness();
@@ -615,6 +645,9 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		self::assertSame( ProviderDiagnosticResult::FAILED, $result->status );
 		self::assertSame( 1, $secrets->reads, 'The current Core override must throw; an undefined adapter method must not satisfy this test.' );
 		self::assertSame( 'bb.webhook.configuration_unavailable', $result->code );
+		self::assertSame( $failure, $result->failure );
+		self::assertSame( \RuntimeException::class, $result->failure::class );
+		self::assertSame( 53, $result->failure->getCode() );
 		self::assertStringNotContainsString( 'bitbucket-webhook-secret-canary', $output );
 	}
 

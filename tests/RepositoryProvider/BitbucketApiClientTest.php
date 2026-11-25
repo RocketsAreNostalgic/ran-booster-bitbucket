@@ -200,23 +200,23 @@ final class BitbucketApiClientTest extends TestCase {
 		$fixtures = array(
 			array(
 				'response' => new BitbucketCredentialValidationTransportError( '' ),
-				'reason'   => BitbucketApiException::INVALID_RESPONSE,
-				'message'  => 'Bitbucket returned an invalid API response.',
+				'reason'   => BitbucketApiException::TRANSPORT_ERROR,
+				'message'  => 'Bitbucket could not be reached.',
 			),
 			array(
 				'response' => new BitbucketCredentialValidationTransportError( 'http_request_not_executed' ),
-				'reason'   => BitbucketApiException::INVALID_RESPONSE,
-				'message'  => 'Bitbucket returned an invalid API response.',
+				'reason'   => BitbucketApiException::BLOCKED_BY_SITE,
+				'message'  => 'This site blocked the Bitbucket API request.',
 			),
 			array(
 				'response' => new BitbucketCredentialValidationTransportError( 'local_policy_canary' ),
-				'reason'   => BitbucketApiException::INVALID_RESPONSE,
-				'message'  => 'Bitbucket returned an invalid API response.',
+				'reason'   => BitbucketApiException::TRANSPORT_ERROR,
+				'message'  => 'Bitbucket could not be reached.',
 			),
 			array(
 				'response' => new BitbucketCredentialValidationTransportError( 'http_failure' ),
-				'reason'   => BitbucketApiException::INVALID_RESPONSE,
-				'message'  => 'Bitbucket returned an invalid API response.',
+				'reason'   => BitbucketApiException::TRANSPORT_ERROR,
+				'message'  => 'Bitbucket could not be reached.',
 			),
 			array(
 				'response' => new BitbucketCredentialValidationTransportError(),
