@@ -209,28 +209,12 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 		);
 	}
 
-	public function test_signed_unrelated_event_is_ignored_without_delivery_or_json_parsing(): void {
-		$body    = 'not-json-' . self::BODY_CANARY;
-		$request = ( new WebhookRequest(
-			ProviderCode::parse( 'bb' ),
-			$body,
-			array(
-				'X-Event-Key'     => 'repo:updated',
-				'X-Hub-Signature' => $this->signature( $body ),
-			),
-			self::RETAINED_HEADERS
-		) )->with_verification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
-
-		$envelope = $this->normalizer()->normalize_webhook( $request );
-		self::assertTrue( $envelope->is_ignored() );
-		self::assertFalse( $envelope->is_probe() );
-	}
-
-	public function test_signed_diagnostics_ping_returns_probe_without_delivery_id_or_push_payload(): void {
+	public function test_signed_non_push_events_including_diagnostics_ping_are_ignored_without_delivery_or_json_parsing(): void {
 		foreach ( array(
-			'json test body' => array( '{"test":true}', 'diagnostics:ping' ),
-			'empty body'     => array( '', 'diagnostics:ping' ),
-			'trimmed header' => array( '{"test":true}', " \tdiagnostics:ping\t " ),
+			'repo updated'     => array( 'not-json-' . self::BODY_CANARY, 'repo:updated' ),
+			'diagnostics ping' => array( '{"test":true}', 'diagnostics:ping' ),
+			'empty ping body'  => array( '', 'diagnostics:ping' ),
+			'trimmed ping key' => array( '{"test":true}', " \tdiagnostics:ping\t " ),
 		) as $context => [$body, $event_key] ) {
 			$request  = ( new WebhookRequest(
 				ProviderCode::parse( 'bb' ),
@@ -243,8 +227,8 @@ final class BitbucketWebhookNormalizerTest extends TestCase {
 			) )->with_verification( $this->verification( 'owner', 'RocketsAreNostalgic' ) );
 			$envelope = $this->normalizer()->normalize_webhook( $request );
 
-			self::assertTrue( $envelope->is_probe(), $context );
-			self::assertFalse( $envelope->is_ignored(), $context );
+			self::assertTrue( $envelope->is_ignored(), $context );
+			self::assertFalse( $envelope->is_probe(), $context );
 			self::assertFalse( $envelope->has_events(), $context );
 			self::assertSame( array(), $envelope->get_events(), $context );
 		}

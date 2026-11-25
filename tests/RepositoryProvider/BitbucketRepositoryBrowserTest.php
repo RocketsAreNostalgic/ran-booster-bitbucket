@@ -285,6 +285,8 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			array( $this->item( '{mismatch}', 'other/repository', false, '' ), 502, 'Bitbucket returned an invalid repository response.' ),
 			array( $this->item( '{wrong-slug}', 'acme/other-repository', false, '' ), 502, 'Bitbucket returned an invalid repository response.' ),
 			array( array( 'uuid' => '{missing-fields}' ), 502, 'Bitbucket returned an invalid repository response.' ),
+			array( $this->item( '{' . str_repeat( 'a', 192 ) . '}', 'acme/repository' ), 502, 'Bitbucket returned an invalid repository response.' ),
+			array( $this->item( "{bad\nuuid}", 'acme/repository' ), 502, 'Bitbucket returned an invalid repository response.' ),
 			array( $this->item( '{empty-branch}', 'acme/repository', false, '' ), 422, 'That Bitbucket repository has no default branch to deploy.' ),
 			array(
 				array(
@@ -637,6 +639,20 @@ final class BitbucketRepositoryBrowserTest extends TestCase {
 			'bad shape row'                      => array(
 				array(
 					array( 'uuid' => '{missing}' ),
+					$this->item( '{valid}', 'acme/valid' ),
+				),
+				array( 'acme/valid' ),
+			),
+			'oversized uuid row'                 => array(
+				array(
+					$this->item( '{' . str_repeat( 'a', 192 ) . '}', 'acme/oversized-uuid' ),
+					$this->item( '{valid}', 'acme/valid' ),
+				),
+				array( 'acme/valid' ),
+			),
+			'control-char uuid row'              => array(
+				array(
+					$this->item( "{bad\nuuid}", 'acme/control-uuid' ),
 					$this->item( '{valid}', 'acme/valid' ),
 				),
 				array( 'acme/valid' ),

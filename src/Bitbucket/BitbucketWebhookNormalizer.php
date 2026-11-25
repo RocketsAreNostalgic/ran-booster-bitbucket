@@ -102,11 +102,6 @@ final readonly class BitbucketWebhookNormalizer implements WebhookNormalizer {
 		$body = $request->get_body();
 
 		$event_key = $this->event_key( $request );
-		if ( 'diagnostics:ping' === $event_key ) {
-			$request->require_verification();
-			return WebhookEnvelope::probe();
-		}
-
 		if ( 'repo:push' !== $event_key ) {
 			$request->require_verification();
 			return WebhookEnvelope::ignored();

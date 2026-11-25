@@ -397,15 +397,19 @@ final readonly class BitbucketRepositoryBrowser {
 			return null;
 		}
 
-		return new RepositoryDescriptor(
-			ProviderCode::parse( 'bb' ),
-			$full_name,
-			$coordinates->get_repository_slug(),
-			trim( $item['uuid'] ),
-			$item['is_private'],
-			trim( $item['mainbranch']['name'] ),
-			$credential_id
-		);
+		try {
+			return new RepositoryDescriptor(
+				ProviderCode::parse( 'bb' ),
+				$full_name,
+				$coordinates->get_repository_slug(),
+				trim( $item['uuid'] ),
+				$item['is_private'],
+				trim( $item['mainbranch']['name'] ),
+				$credential_id
+			);
+		} catch ( InvalidArgumentException ) {
+			return null;
+		}
 	}
 	/**
 	 * @param list<RepositoryDescriptor> $repositories Repositories to normalize.
